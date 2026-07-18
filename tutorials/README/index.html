@@ -1,0 +1,384 @@
+<!DOCTYPE html><html lang="en" data-astro-cid-ykvenys5><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>C++26 std::execution Tutorial Series — std::execution Tutorial</title><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" crossorigin="anonymous"><script>
+      (function(){
+        var theme="dark";
+        try{var s=localStorage.getItem("exectutorial-theme");if(s)theme=s}catch(e){}
+        if(!s&&matchMedia("(prefers-color-scheme:light)").matches)theme="light";
+        document.documentElement.setAttribute("data-theme",theme);
+      })();
+    </script><link rel="stylesheet" href="/exec/_astro/01-why-stdexec.hXKgsPrw.css"></head><body data-astro-cid-ykvenys5><div class="container" data-astro-cid-ykvenys5><header data-astro-cid-ykvenys5><div class="title-area" data-astro-cid-ykvenys5><a href="/exec" style="color:var(--fg-muted);text-decoration:none;font-size:0.85rem;" data-astro-cid-ykvenys5>← Back to index</a><h1 data-astro-cid-ykvenys5>C++26 std::execution Tutorial Series</h1></div><button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" data-astro-cid-ykvenys5>🌙</button></header><article class="article-content" data-astro-cid-ykvenys5>
+<p>A systematic introduction to the P2300 Sender/Receiver model from scratch, combining the C++ Standard Draft (<code>cplusplus/draft</code>) and the NVIDIA reference implementation (<code>stdexec</code>).</p>
+<h2 id="table-of-contents">Table of Contents</h2>
+<h3 id="phase-1-motivation-and-core-concepts">Phase 1: Motivation and Core Concepts</h3>
+<div class="table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>#</th><th>Topic</th><th>Standard Section</th><th>stdexec Reference</th></tr></thead><tbody><tr><td><a href="/exectutorial-blog/tutorials/01-why-stdexec/">01</a></td><td>Why std::execution?</td><td><code>[exec]</code></td><td>—</td></tr><tr><td><a href="/exectutorial-blog/tutorials/02-core-abstractions/">02</a></td><td>Three Core Abstractions — receiver / sender / scheduler</td><td><code>[exec.async.ops]</code></td><td><code>execution.hpp</code></td></tr><tr><td><a href="/exectutorial-blog/tutorials/03-completion-signals/">03</a></td><td>Three Completion Signals — set_value / set_error / set_stopped</td><td><code>[exec.set.value]</code> +</td><td><code>__senders.hpp</code></td></tr></tbody></table></div>
+<h3 id="phase-2-getting-started-with-stdexec">Phase 2: Getting Started with stdexec</h3>
+<div class="table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>#</th><th>Topic</th><th>Standard Section</th><th>stdexec Reference</th></tr></thead><tbody><tr><td><a href="/exectutorial-blog/tutorials/04-hello-world-pipeline/">04</a></td><td>Hello World Pipeline — schedule | then | sync_wait</td><td><code>[exec.sched]</code> <code>[exec.sync.wait]</code></td><td><code>hello_world.cpp</code></td></tr><tr><td><a href="/exectutorial-blog/tutorials/05-thread-pools/">05</a></td><td>Thread Pools and Execution Contexts</td><td><code>[exec.ctx]</code></td><td><code>static_thread_pool.hpp</code></td></tr><tr><td><a href="/exectutorial-blog/tutorials/06-pipe-operators/">06</a></td><td>Pipe Operators — operator|</td><td><code>[exec.adapt.obj]</code></td><td><code>execution.hpp</code></td></tr><tr><td><a href="/exectutorial-blog/tutorials/07-coroutines/">07</a></td><td>Coroutine Integration — co_await sender in task&#x3C;T></td><td><code>[exec.task]</code></td><td><code>hello_coro.cpp</code></td></tr></tbody></table></div>
+<h3 id="phase-3-in-depth-standard-concepts">Phase 3: In-Depth Standard Concepts</h3>
+<div class="table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>#</th><th>Topic</th><th>Standard Section</th><th>stdexec Reference</th></tr></thead><tbody><tr><td><a href="/exectutorial-blog/tutorials/08-receiver-concept/">08</a></td><td>Receiver Concept</td><td><code>[exec.recv]</code></td><td><code>concepts.hpp</code></td></tr><tr><td><a href="/exectutorial-blog/tutorials/09-sender-concept/">09</a></td><td>Sender Concept</td><td><code>[exec.snd.concepts]</code></td><td><code>concepts.hpp</code></td></tr><tr><td><a href="/exectutorial-blog/tutorials/10-scheduler-concept/">10</a></td><td>Scheduler Concept</td><td><code>[exec.sched]</code></td><td><code>concepts.hpp</code></td></tr><tr><td><a href="/exectutorial-blog/tutorials/11-operation-state/">11</a></td><td>Operation State Lifecycle</td><td><code>[exec.opstate]</code> <code>[exec.connect]</code></td><td><code>then.cpp</code></td></tr><tr><td><a href="/exectutorial-blog/tutorials/12-completion-signatures/">12</a></td><td>Completion Signatures</td><td><code>[exec.cmplsig]</code></td><td><code>__basic_sender.hpp</code></td></tr></tbody></table></div>
+<h3 id="phase-4-sender-algorithms">Phase 4: Sender Algorithms</h3>
+<div class="table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>#</th><th>Topic</th><th>Standard Section</th><th>stdexec Reference</th></tr></thead><tbody><tr><td><a href="/exectutorial-blog/tutorials/13-sender-factory-just/">13</a></td><td>Sender Factories: just / just_error / just_stopped</td><td><code>[exec.just]</code></td><td><code>__just.hpp</code></td></tr><tr><td><a href="/exectutorial-blog/tutorials/14-read-env/">14</a></td><td>read_env</td><td><code>[exec.read.env]</code></td><td><code>__detail/</code></td></tr><tr><td><a href="/exectutorial-blog/tutorials/15-schedule/">15</a></td><td>schedule</td><td><code>[exec.schedule]</code></td><td><code>hello_world.cpp</code></td></tr><tr><td><a href="/exectutorial-blog/tutorials/16-then-upon/">16</a></td><td>then / upon_error / upon_stopped</td><td><code>[exec.then]</code> +</td><td><code>then_upon.cpp</code></td></tr><tr><td><a href="/exectutorial-blog/tutorials/17-let-value/">17</a></td><td>let_value / let_error / let_stopped</td><td><code>[exec.let.value]</code> +</td><td><code>let_value.cpp</code></td></tr><tr><td><a href="/exectutorial-blog/tutorials/18-starts-on-continues-on/">18</a></td><td>starts_on / continues_on / on</td><td><code>[exec.starts.on]</code> +</td><td><code>on_transfer.cpp</code></td></tr><tr><td><a href="/exectutorial-blog/tutorials/19-when-all/">19</a></td><td>when_all</td><td><code>[exec.when.all]</code></td><td><code>split_bulk.cpp</code></td></tr><tr><td><a href="/exectutorial-blog/tutorials/20-bulk/">20</a></td><td>bulk</td><td><code>[exec.bulk]</code></td><td><code>nvexec/bulk.cu</code></td></tr><tr><td><a href="/exectutorial-blog/tutorials/21-into-variant/">21</a></td><td>into_variant / stopped_as_optional / stopped_as_error</td><td><code>[exec.into.variant]</code> +</td><td><code>__detail/</code></td></tr><tr><td><a href="/exectutorial-blog/tutorials/22-sync-wait/">22</a></td><td>sync_wait / sync_wait_with_variant</td><td><code>[exec.sync.wait]</code></td><td><code>hello_world.cpp</code></td></tr><tr><td><a href="/exectutorial-blog/tutorials/23-spawn-ensure-started/">23</a></td><td>spawn / ensure_started</td><td><code>[exec.spawn]</code></td><td><code>scope.cpp</code></td></tr><tr><td><a href="/exectutorial-blog/tutorials/24-write-env-unstoppable/">24</a></td><td>write_env / unstoppable</td><td><code>[exec.write.env]</code></td><td><code>__detail/</code></td></tr></tbody></table></div>
+<h3 id="phase-5-advanced-topics">Phase 5: Advanced Topics</h3>
+<div class="table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>#</th><th>Topic</th><th>Standard Section</th><th>stdexec Reference</th></tr></thead><tbody><tr><td><a href="/exectutorial-blog/tutorials/25-query-system-env/">25</a></td><td>Query System and Environment</td><td><code>[exec.queries]</code></td><td><code>functional.hpp</code></td></tr><tr><td><a href="/exectutorial-blog/tutorials/26-domain-mechanism/">26</a></td><td>Domain Mechanism</td><td><code>[exec.domain]</code></td><td><code>__detail/</code></td></tr><tr><td><a href="/exectutorial-blog/tutorials/27-tag-invoke-cpo/">27</a></td><td>tag_invoke and CPOs</td><td><code>[exec.general]</code></td><td><code>functional.hpp</code></td></tr><tr><td><a href="/exectutorial-blog/tutorials/28-stop-token-cancellation/">28</a></td><td>Stop Tokens and Cancellation</td><td><code>[exec.get.stop.token]</code></td><td><code>stop_token.hpp</code></td></tr><tr><td><a href="/exectutorial-blog/tutorials/29-structured-concurrency/">29</a></td><td>Structured Concurrency — async_scope</td><td><code>[exec.scope]</code></td><td><code>async_scope.hpp</code></td></tr><tr><td><a href="/exectutorial-blog/tutorials/30-run-loop/">30</a></td><td>run_loop</td><td><code>[exec.run.loop]</code></td><td><code>__run_loop.hpp</code></td></tr><tr><td><a href="/exectutorial-blog/tutorials/31-parallel-scheduler/">31</a></td><td>parallel_scheduler</td><td><code>[exec.par.scheduler]</code></td><td><code>parallel_scheduler/</code></td></tr></tbody></table></div>
+<h3 id="phase-6-hands-on-implementation">Phase 6: Hands-On Implementation</h3>
+<div class="table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>#</th><th>Topic</th><th>Standard Section</th><th>stdexec Reference</th></tr></thead><tbody><tr><td><a href="/exectutorial-blog/tutorials/32-implement-then/">32</a></td><td>Implementing then from Scratch</td><td><code>[exec.then]</code></td><td><code>algorithms/then.hpp</code></td></tr><tr><td><a href="/exectutorial-blog/tutorials/33-implement-retry/">33</a></td><td>Implementing retry from Scratch</td><td>—</td><td><code>algorithms/retry.hpp</code></td></tr><tr><td><a href="/exectutorial-blog/tutorials/34-custom-scheduler/">34</a></td><td>Writing a Custom Scheduler</td><td><code>[exec.sched]</code></td><td><code>inline_scheduler.hpp</code></td></tr><tr><td><a href="/exectutorial-blog/tutorials/35-impls-for/">35</a></td><td>Using the impls-for System</td><td><code>[exec.snd.expos]</code></td><td><code>__detail/</code></td></tr></tbody></table></div>
+<h3 id="phase-7-backends-and-ecosystem">Phase 7: Backends and Ecosystem</h3>
+<div class="table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>#</th><th>Topic</th><th>Standard Section</th><th>stdexec Reference</th></tr></thead><tbody><tr><td><a href="/exectutorial-blog/tutorials/36-linux-io-uring/">36</a></td><td>Linux io_uring Integration</td><td>—</td><td><code>linux/io_uring_context.hpp</code></td></tr><tr><td><a href="/exectutorial-blog/tutorials/37-windows-thread-pool/">37</a></td><td>Windows Thread Pool</td><td>—</td><td><code>windows/windows_thread_pool.hpp</code></td></tr><tr><td><a href="/exectutorial-blog/tutorials/38-gpu-nvexec/">38</a></td><td>GPU Programming with nvexec</td><td>—</td><td><code>nvexec/</code></td></tr><tr><td><a href="/exectutorial-blog/tutorials/39-third-party-integration/">39</a></td><td>Integration with Third-Party Frameworks</td><td>—</td><td><code>execpools/</code></td></tr><tr><td><a href="/exectutorial-blog/tutorials/40-boost-beast-http-server/">40</a></td><td><strong>Boost.Beast HTTP Server</strong> — writing network services with sender pipeline</td><td>—</td><td><code>exec/asio/use_sender.hpp</code></td></tr></tbody></table></div>
+<h3 id="appendix">Appendix</h3>
+<div class="table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>#</th><th>Topic</th><th>Source</th></tr></thead><tbody><tr><td><a href="/exectutorial-blog/tutorials/41-appendix-port-libunifex/">41</a></td><td><strong>Appendix: Porting libunifex Synchronization Primitives</strong> — async_mutex(v1/v2) / async_manual_reset_event / async_pass</td><td><code>libunifex</code> → <code>stdexec</code></td></tr></tbody></table></div>
+<h2 id="reference-resources">Reference Resources</h2>
+<h3 id="standard-draft">Standard Draft</h3>
+<pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="plaintext"><code><span class="line"><span>C:\Users\dingle\code\github.com\cplusplus\draft\source\exec.tex</span></span></code></pre>
+<p>Complete <code>std::execution</code> specification (9,469 lines), covering all concepts, algorithms, and APIs.</p>
+<h3 id="stdexec-reference-implementation">stdexec Reference Implementation</h3>
+<pre class="mermaid">graph LR
+  A["stdexec/"] --> B["include/stdexec/"]
+  B --> B1["Standard P2300 Implementation"]
+  A --> C["include/exec/"]
+  C --> C1["Extended Features"]
+  A --> D["include/nvexec/"]
+  D --> D1["GPU Backend"]
+  A --> E["examples/"]
+  E --> E1["Compilable Examples"]
+  A --> F["examples/algorithms/"]
+  F --> F1["Custom Algorithm Reference"]</pre>
+<h2 id="how-to-use">How to Use</h2>
+<p>Each tutorial follows the same structure:</p>
+<ol>
+<li><strong>Standard Section Reference</strong>: Corresponding section numbers from <code>exec.tex</code></li>
+<li><strong>stdexec Reference</strong>: Corresponding source files and examples</li>
+<li><strong>Core Concepts</strong>: Clear explanations and definitions</li>
+<li><strong>Code Examples</strong>: Directly compilable code snippets</li>
+<li><strong>Key Takeaways</strong>: Summary tips</li>
+</ol>
+<p>It is recommended to read in order, but you can jump to topics of interest if you are already familiar with some concepts.</p></article><nav class="nav-links" data-astro-cid-ykvenys5><span class="disabled" data-astro-cid-ykvenys5>← Previous</span><a href="/exectutorials/01-why-stdexec/" data-astro-cid-ykvenys5>01 · Why std::execution? →</a></nav></div><script type="module" src="/exec/_astro/TutorialLayout.astro_astro_type_script_index_0_lang.CtUiiL97.js"></script><script type="module">(function(){function e(e){let t=function(){if(typeof mermaid>`u`){setTimeout(t,100);return}mermaid.initialize({startOnLoad:!1,theme:e}),document.querySelectorAll(`.mermaid`).forEach(function(e){e.removeAttribute(`data-processed`),e.textContent=e.textContent}),mermaid.run()};t()}function t(t){document.documentElement.setAttribute(`data-theme`,t);var n=document.getElementById(`themeToggle`);n&&(n.textContent=t===`dark`?`🌙`:`☀️`),e(t===`dark`?`dark`:`default`)}e((document.documentElement.getAttribute(`data-theme`)||`dark`)===`dark`?`dark`:`default`),document.getElementById(`themeToggle`)?.addEventListener(`click`,function(){var e=document.documentElement.getAttribute(`data-theme`)===`dark`?`light`:`dark`;try{localStorage.setItem(`exectutorial-theme`,e)}catch{}t(e)})})();</script></body></html>
