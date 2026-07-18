@@ -1,133 +1,121 @@
-<!DOCTYPE html><html lang="en" data-astro-cid-ykvenys5><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>29 · Structured Concurrency — async_scope / counting_scope — std::execution Tutorial</title><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" crossorigin="anonymous"><script>
+<!DOCTYPE html><html lang="en" data-astro-cid-ykvenys5><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>29 · Structured Concurrency — Giving Every Async Operation a Home — std::execution Tutorial</title><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" crossorigin="anonymous"><script>
       (function(){
         var theme="dark";
         try{var s=localStorage.getItem("exectutorial-theme");if(s)theme=s}catch(e){}
         if(!s&&matchMedia("(prefers-color-scheme:light)").matches)theme="light";
         document.documentElement.setAttribute("data-theme",theme);
       })();
-    </script><link rel="stylesheet" href="/exec/_astro/01-why-stdexec.hXKgsPrw.css"></head><body data-astro-cid-ykvenys5><div class="container" data-astro-cid-ykvenys5><header data-astro-cid-ykvenys5><div class="title-area" data-astro-cid-ykvenys5><a href="/exec/tutorials/" style="color:var(--fg-muted);text-decoration:none;font-size:0.85rem;" data-astro-cid-ykvenys5>← Back to index</a><h1 data-astro-cid-ykvenys5>29 · Structured Concurrency — async_scope / counting_scope</h1></div><button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" data-astro-cid-ykvenys5>🌙</button></header><article class="article-content" data-astro-cid-ykvenys5>
-<blockquote>
-<p><strong>Standard section</strong>: <code>[exec.scope]</code>
-<strong>stdexec reference</strong>: <code>exec/async_scope.hpp</code>, <code>examples/scope.cpp</code>
-<strong>Related tests</strong>: <code>tests/test_spawn_scope.cpp</code></p>
-</blockquote>
-<h2 id="overview">Overview</h2>
-<p>Structured concurrency is a key design goal of <code>std::execution</code>: <strong>guaranteeing that all child operations complete before the parent operation completes</strong>, preventing task leaks and resource leaks.</p>
-<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">namespace</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> std</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">execution</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
-<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  template</span><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Token</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
-<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    concept</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> scope_token </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6A737D;--shiki-dark:#6A737D"> /* ... */</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
-<span class="line"></span>
-<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  template</span><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Token</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
-<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    concept</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> scope_association </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6A737D;--shiki-dark:#6A737D"> /* ... */</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
-<span class="line"></span>
-<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> simple_counting_scope</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
-<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> counting_scope</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
-<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span></code></pre></div>
-<h2 id="why-structured-concurrency">Why Structured Concurrency?</h2>
-<p>Without structured concurrency:</p>
+    </script><link rel="stylesheet" href="/exec/_astro/01-why-stdexec.hXKgsPrw.css"></head><body data-astro-cid-ykvenys5><div class="container" data-astro-cid-ykvenys5><header data-astro-cid-ykvenys5><div class="title-area" data-astro-cid-ykvenys5><a href="/exec/tutorials/" style="color:var(--fg-muted);text-decoration:none;font-size:0.85rem;" data-astro-cid-ykvenys5>← Back to index</a><h1 data-astro-cid-ykvenys5>29 · Structured Concurrency — Giving Every Async Operation a Home</h1></div><button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" data-astro-cid-ykvenys5>🌙</button></header><article class="article-content" data-astro-cid-ykvenys5>
+<h2 id="traditional-multithreading-is-like-a-parking-lot-with-no-exit">Traditional Multithreading Is Like a Parking Lot With No Exit</h2>
+<p>Look at this code:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">void</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> bad</span><span style="color:#24292E;--shiki-dark:#E1E4E8">() {</span></span>
-<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">  spawn</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">async_work</span><span style="color:#24292E;--shiki-dark:#E1E4E8">());</span><span style="color:#6A737D;--shiki-dark:#6A737D">  // fire-and-forget</span></span>
-<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">  // The function returns, but async_work may still be executing!</span></span>
-<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">  // Local variables referenced by async_work may have been destroyed</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  int</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> local_data </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 42</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">  spawn</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">async_work</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x26;</span><span style="color:#24292E;--shiki-dark:#E1E4E8">local_data));</span><span style="color:#6A737D;--shiki-dark:#6A737D">  // Fire and forget</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">  // Function returns, local_data is destroyed</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">  // But async_work may still be running on another thread…</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">  // It's accessing a variable that's already been destroyed</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span></code></pre></div>
-<p>With structured concurrency:</p>
-<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">void</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> good</span><span style="color:#24292E;--shiki-dark:#E1E4E8">() {</span></span>
-<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">  exec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::async_scope scope;</span></span>
-<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  scope.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">spawn</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">async_work</span><span style="color:#24292E;--shiki-dark:#E1E4E8">());</span></span>
-<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">  // Before the function exits, wait for all child operations to complete</span></span>
-<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">  sync_wait</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(scope.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">on_empty</span><span style="color:#24292E;--shiki-dark:#E1E4E8">());</span></span>
-<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">  // Now it is safe to destroy local variables</span></span>
-<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span></code></pre></div>
-<h2 id="async_scope-stdexec-extension"><code>async_scope</code> (stdexec extension)</h2>
-<p><code>exec::async_scope</code> provides structured concurrency features beyond the <code>p2300</code> standard:</p>
+<p>This is where use-after-free comes from. Traditional <code>std::thread</code> + <code>detach</code> turns your async work into “orphans” — you don’t know when they finish, and you can’t guarantee the data they reference still exists when they do.</p>
+<p><strong>Structured concurrency</strong> aims to eliminate this uncertainty. Its core guarantee:</p>
+<blockquote>
+<p>Before a scope object is destroyed, every operation it manages has already completed (or been cancelled).</p>
+</blockquote>
+<p>In other words, every piece of async work has a clear “guardian.” The guardian won’t leave before every child has come home.</p>
+<hr>
+<h2 id="async_scope--stdexecs-structured-concurrency-solution"><code>async_scope</code> — stdexec’s Structured Concurrency Solution</h2>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">namespace</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> exec</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> async_scope</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  public:</span></span>
-<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">    // Fire-and-forget</span></span>
-<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    void</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> spawn</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">sender</span><span style="color:#D73A49;--shiki-dark:#F97583"> auto</span><span style="color:#E36209;--shiki-dark:#FFAB70"> sndr</span><span style="color:#24292E;--shiki-dark:#E1E4E8">);</span></span>
-<span class="line"></span>
-<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">    // Spawn and return a sender that can observe the result</span></span>
-<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    sender </span><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> spawn_future</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(sender </span><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> sndr);</span></span>
-<span class="line"></span>
-<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">    // Bind the sender's lifetime to the scope</span></span>
-<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    sender </span><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> nest</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(sender </span><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> sndr);</span></span>
-<span class="line"></span>
-<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">    // Wait for the scope to be empty</span></span>
-<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    sender </span><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> on_empty</span><span style="color:#24292E;--shiki-dark:#E1E4E8">() </span><span style="color:#D73A49;--shiki-dark:#F97583">noexcept</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
-<span class="line"></span>
-<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">    // Request all child operations to stop</span></span>
-<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    void</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> request_stop</span><span style="color:#24292E;--shiki-dark:#E1E4E8">() </span><span style="color:#D73A49;--shiki-dark:#F97583">noexcept</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    void</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> spawn</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">sender</span><span style="color:#D73A49;--shiki-dark:#F97583"> auto</span><span style="color:#E36209;--shiki-dark:#FFAB70"> sndr</span><span style="color:#24292E;--shiki-dark:#E1E4E8">);</span><span style="color:#6A737D;--shiki-dark:#6A737D">               // Fire and forget</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    sender </span><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> spawn_future</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(sender </span><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> sndr);</span><span style="color:#6A737D;--shiki-dark:#6A737D">  // Spawn, collect result later</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    sender </span><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> nest</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(sender </span><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> sndr);</span><span style="color:#6A737D;--shiki-dark:#6A737D">           // Don't start, just bind lifetime</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    sender </span><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> on_empty</span><span style="color:#24292E;--shiki-dark:#E1E4E8">() </span><span style="color:#D73A49;--shiki-dark:#F97583">noexcept</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span><span style="color:#6A737D;--shiki-dark:#6A737D">              // Wait until scope is empty</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    void</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> request_stop</span><span style="color:#24292E;--shiki-dark:#E1E4E8">() </span><span style="color:#D73A49;--shiki-dark:#F97583">noexcept</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span><span style="color:#6A737D;--shiki-dark:#6A737D">                 // Request all children to stop</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  };</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span></code></pre></div>
-<h3 id="spawn--fire-and-forget"><code>spawn</code> — Fire-and-Forget</h3>
+<p>A scope is like a babysitter — it keeps track of every operation it has spawned. When the babysitter goes off duty (destructor), she first tells all the kids “come home” (<code>request_stop</code>), then stands at the door waiting for the last one to walk in (waiting for all operations to finish), and only then locks up.</p>
+<hr>
+<h2 id="spawn--order-takeout-leave-dont-wait"><code>spawn</code> — Order Takeout, Leave, Don’t Wait</h2>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">exec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::async_scope scope;</span></span>
 <span class="line"></span>
-<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Spawn work in the scope</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">scope.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">spawn</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">schedule</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(sch) </span><span style="color:#D73A49;--shiki-dark:#F97583">|</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> then</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(work1));</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">scope.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">spawn</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">schedule</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(sch) </span><span style="color:#D73A49;--shiki-dark:#F97583">|</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> then</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(work2));</span></span>
 <span class="line"></span>
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Wait for all work to complete</span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">sync_wait</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(scope.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">on_empty</span><span style="color:#24292E;--shiki-dark:#E1E4E8">());</span></span></code></pre></div>
-<h3 id="spawn_future--spawn-and-observe-results"><code>spawn_future</code> — Spawn and Observe Results</h3>
-<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// spawn_future returns a sender that can observe the result</span></span>
+<p><code>spawn</code> is the simplest — you toss work into the scope. The scope guarantees the work will finish before the scope itself is destroyed. The return value? <code>spawn</code> doesn’t care — it returns <code>void</code>. Errors? The default receiver for <code>spawn</code> does nothing with <code>set_error</code>; exceptions are silently swallowed.</p>
+<p>So <code>spawn</code> is for: <strong>you don’t care about the result, you only care about “is it done yet.”</strong> Think: printing a log line, flushing a cache, sending a heartbeat.</p>
+<hr>
+<h2 id="spawn_future--heres-your-order-number"><code>spawn_future</code> — Here’s Your Order Number</h2>
+<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">sender </span><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> future </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> scope.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">spawn_future</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span></span>
+<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">  schedule</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(sch) </span><span style="color:#D73A49;--shiki-dark:#F97583">|</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> then</span><span style="color:#24292E;--shiki-dark:#E1E4E8">([] { </span><span style="color:#D73A49;--shiki-dark:#F97583">return</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 42</span><span style="color:#24292E;--shiki-dark:#E1E4E8">; })</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Pick it up later</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> [result] </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> sync_wait</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">std</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">move</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(future)).</span><span style="color:#6F42C1;--shiki-dark:#B392F0">value</span><span style="color:#24292E;--shiki-dark:#E1E4E8">();</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// result == 42</span></span></code></pre></div>
+<p><code>spawn_future</code> doesn’t throw away the result like <code>spawn</code> — it returns a sender you can use to retrieve the result later with <code>sync_wait</code> (or plug into another pipeline).</p>
+<p>Comparing the three consumer patterns as restaurant analogies:</p>
+<div class="table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Method</th><th>Analogy</th><th>Behavior</th></tr></thead><tbody><tr><td><code>sync_wait(sndr)</code></td><td>Stand at the kitchen door waiting, grab the dish as it comes out</td><td>Blocks, gets the result</td></tr><tr><td><code>scope.spawn(sndr)</code></td><td>Order and leave, the dish goes in the trash when done</td><td>Doesn’t block, doesn’t care about result</td></tr><tr><td><code>scope.spawn_future(sndr)</code></td><td>Order, get a number, pick it up when you want</td><td>Doesn’t block, result available later</td></tr></tbody></table></div>
+<hr>
+<h2 id="nest--put-your-address-on-file"><code>nest</code> — Put Your Address on File</h2>
+<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">sender </span><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> nested </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> scope.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">nest</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">schedule</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(sch) </span><span style="color:#D73A49;--shiki-dark:#F97583">|</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> then</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(work));</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// nested can be passed around elsewhere</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Its execution will complete under the scope's constraints</span></span></code></pre></div>
+<p><code>nest</code> neither starts execution nor returns a result — it does exactly one thing: <strong>binds a sender pipeline’s lifetime to the scope</strong>. If the scope is destroyed, this pipeline has either already finished or been cancelled. <code>nest</code> is for: you have a sender you want to pass to another function to start later, but you need a guarantee it will be done before the current scope ends.</p>
+<hr>
+<h2 id="scope-destruction-flow">Scope Destruction Flow</h2>
+<pre class="mermaid">graph TD
+  A["scope destructor begins"] --> B["1. request_stop() — tell all children 'please stop'"]
+  B --> C["2. Wait for all children to complete (or exit after cancellation)"]
+  C --> D["3. All children are done — safe to destroy scope"]</pre>
+<p>This flow is deterministic and reliable. <strong>The scope destructor blocks</strong> until every child operation has ended. When destructing a scope, you never have to worry about work still “in the air.”</p>
+<hr>
+<h2 id="complete-example-parallel-work--collect-results">Complete Example: Parallel Work + Collect Results</h2>
+<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">exec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::static_thread_pool ctx{</span><span style="color:#005CC5;--shiki-dark:#79B8FF">4</span><span style="color:#24292E;--shiki-dark:#E1E4E8">};</span></span>
+<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">exec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::async_scope scope;</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> sch </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> ctx.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">get_scheduler</span><span style="color:#24292E;--shiki-dark:#E1E4E8">();</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">scope.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">spawn</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">schedule</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(sch) </span><span style="color:#D73A49;--shiki-dark:#F97583">|</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> then</span><span style="color:#24292E;--shiki-dark:#E1E4E8">([] { </span><span style="color:#6F42C1;--shiki-dark:#B392F0">printf</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"side work</span><span style="color:#005CC5;--shiki-dark:#79B8FF">\n</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">); }));</span></span>
+<span class="line"></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">sender </span><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> future </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> scope.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">spawn_future</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">  schedule</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(sch) </span><span style="color:#D73A49;--shiki-dark:#F97583">|</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> then</span><span style="color:#24292E;--shiki-dark:#E1E4E8">([] { </span><span style="color:#D73A49;--shiki-dark:#F97583">return</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 42</span><span style="color:#24292E;--shiki-dark:#E1E4E8">; })</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">);</span></span>
 <span class="line"></span>
-<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Wait for the result later</span></span>
-<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> [result] </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> sync_wait</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">std</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">move</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(future)).</span><span style="color:#6F42C1;--shiki-dark:#B392F0">value</span><span style="color:#24292E;--shiki-dark:#E1E4E8">();</span></span></code></pre></div>
-<h3 id="nest--bind-lifetime"><code>nest</code> — Bind Lifetime</h3>
-<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">sender </span><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> nested </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> scope.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">nest</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">schedule</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(sch) </span><span style="color:#D73A49;--shiki-dark:#F97583">|</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> then</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(work));</span></span>
-<span class="line"></span>
-<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// nested can be passed around outside the scope</span></span>
-<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// nested will only complete when the scope is empty</span></span></code></pre></div>
-<h3 id="complete-example">Complete Example</h3>
-<p>From <code>examples/scope.cpp</code>:</p>
-<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">exec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::static_thread_pool ctx{</span><span style="color:#005CC5;--shiki-dark:#79B8FF">1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">};</span></span>
-<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">exec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::async_scope scope;</span></span>
-<span class="line"></span>
-<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> sch </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> ctx.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">get_scheduler</span><span style="color:#24292E;--shiki-dark:#E1E4E8">();</span></span>
-<span class="line"></span>
-<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// spawn</span></span>
-<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">scope.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">spawn</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">schedule</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(sch) </span><span style="color:#D73A49;--shiki-dark:#F97583">|</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> then</span><span style="color:#24292E;--shiki-dark:#E1E4E8">([] { </span><span style="color:#6F42C1;--shiki-dark:#B392F0">printf</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"void</span><span style="color:#005CC5;--shiki-dark:#79B8FF">\n</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">); }));</span></span>
-<span class="line"></span>
-<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// spawn_future</span></span>
-<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">sender </span><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> fortyTwoFuture </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> scope.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">spawn_future</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span></span>
-<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">  schedule</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(sch) </span><span style="color:#D73A49;--shiki-dark:#F97583">|</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> then</span><span style="color:#24292E;--shiki-dark:#E1E4E8">([] { </span><span style="color:#D73A49;--shiki-dark:#F97583">return</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 42</span><span style="color:#24292E;--shiki-dark:#E1E4E8">; })</span></span>
-<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">);</span></span>
-<span class="line"></span>
-<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Wait for all to complete</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Wait for both scope empty and future result simultaneously</span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">sync_wait</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">when_all</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  scope.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">on_empty</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(),</span></span>
-<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  fortyTwoFuture </span><span style="color:#D73A49;--shiki-dark:#F97583">|</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> then</span><span style="color:#24292E;--shiki-dark:#E1E4E8">([](</span><span style="color:#D73A49;--shiki-dark:#F97583">int</span><span style="color:#E36209;--shiki-dark:#FFAB70"> x</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) { </span><span style="color:#6F42C1;--shiki-dark:#B392F0">printf</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"</span><span style="color:#005CC5;--shiki-dark:#79B8FF">%d\n</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, x); })</span></span>
-<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">));</span></span>
-<span class="line"></span>
-<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// nest</span></span>
-<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">{</span></span>
-<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  sender </span><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> nest </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> scope.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">nest</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">schedule</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(sch));</span></span>
-<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">  // nest is valid within the scope's lifetime</span></span>
-<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span>
-<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">sync_wait</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(scope.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">on_empty</span><span style="color:#24292E;--shiki-dark:#E1E4E8">());</span></span></code></pre></div>
-<h2 id="scope-in-the-standard">Scope in the Standard</h2>
-<h3 id="simple_counting_scope"><code>simple_counting_scope</code></h3>
-<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> simple_counting_scope</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
-<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">  // Basic counting scope</span></span>
-<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">};</span></span></code></pre></div>
-<h3 id="counting_scope"><code>counting_scope</code></h3>
-<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> counting_scope</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
-<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">  // Counting scope with try semantics</span></span>
-<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">};</span></span></code></pre></div>
-<h2 id="structured-concurrency-guarantees">Structured Concurrency Guarantees</h2>
-<pre class="mermaid">graph TD
-  A["scope created"]
-  A --> B["spawn / spawn_future / nest adds work"]
-  B --> C["work begins executing"]
-  C --> D["scope destructor"]
-  D --> E["1. Request all outstanding work to stop"]
-  E --> F["2. Wait for all work to complete (or stop)"]
-  F --> G["3. Destroy scope"]</pre>
-<p>This means: <strong>a scope object is never destroyed before its child operations complete</strong>.</p>
-<h2 id="usage-recommendations">Usage Recommendations</h2>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  future </span><span style="color:#D73A49;--shiki-dark:#F97583">|</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> then</span><span style="color:#24292E;--shiki-dark:#E1E4E8">([](</span><span style="color:#D73A49;--shiki-dark:#F97583">int</span><span style="color:#E36209;--shiki-dark:#FFAB70"> x</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) { </span><span style="color:#6F42C1;--shiki-dark:#B392F0">printf</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"result: </span><span style="color:#005CC5;--shiki-dark:#79B8FF">%d\n</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, x); })</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">));</span></span></code></pre></div>
+<p>Above, <code>scope.on_empty()</code> only emits <code>set_value</code> after every <code>spawn</code>ed operation in the scope has finished. <code>when_all</code> waits for both “scope is empty” and “future has a result” conditions simultaneously.</p>
+<hr>
+<h2 id="quick-reference">Quick Reference</h2>
 <div class="table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch">
 
 
@@ -157,8 +145,14 @@
 
 
 
-<table><thead><tr><th>Scenario</th><th>Solution</th></tr></thead><tbody><tr><td>Launch a background task, don’t care about the result</td><td><code>scope.spawn(sndr)</code></td></tr><tr><td>Launch a task, collect result later</td><td><code>scope.spawn_future(sndr)</code></td></tr><tr><td>Lifetime binding</td><td><code>scope.nest(sndr)</code></td></tr><tr><td>Wait for scope to empty</td><td><code>scope.on_empty()</code></td></tr><tr><td>Cancel all tasks early</td><td><code>scope.request_stop()</code></td></tr></tbody></table></div>
-<hr></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/28-stop-token-cancellation/" data-astro-cid-ykvenys5>← 28 · Stop Token &amp; Cancellation</a><a href="/exec/tutorials/30-run-loop/" data-astro-cid-ykvenys5>30 · run_loop — The Simplest Execution Context →</a></nav></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
+<table><thead><tr><th>Scenario</th><th>Method</th></tr></thead><tbody><tr><td>Launch a background task, don’t care about the result</td><td><code>scope.spawn(sndr)</code></td></tr><tr><td>Launch a task, collect the result later</td><td><code>scope.spawn_future(sndr)</code></td></tr><tr><td>Bind an extra sender’s lifetime to the scope</td><td><code>scope.nest(sndr)</code></td></tr><tr><td>Wait for all scope work to complete</td><td><code>scope.on_empty()</code></td></tr><tr><td>Cancel all scope tasks early</td><td><code>scope.request_stop()</code></td></tr></tbody></table></div>
+<hr>
+<h2 id="limitations">Limitations</h2>
+<ol>
+<li><strong>A scope cannot be passed between threads</strong> — the destructor assumes clear ownership (RAII). You can’t move a scope object to another thread and expect the original thread to correctly wait for all child operations.</li>
+<li><strong><code>spawn</code> discards errors</strong> — if a spawned operation ends with <code>set_error</code>, the default receiver does nothing, silently swallowing the error. If error handling is required, use <code>spawn_future</code> or do <code>upon_error</code> recovery inside the work.</li>
+<li><strong>The scope destructor blocks</strong> — it isn’t as “elegantly async” as you might wish. In production request-handling loops, scope destruction shouldn’t be on the hot path. It’s best suited for well-bounded scopes like the complete lifecycle of a single HTTP request.</li>
+</ol></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/28-stop-token-cancellation/" data-astro-cid-ykvenys5>← 28 · Stop Token — Cooperative Cancellation</a><a href="/exec/tutorials/30-run-loop/" data-astro-cid-ykvenys5>30 · run_loop — The Simplest Execution Context →</a></nav></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
       (function() {
         const STORAGE_KEY = "exectutorial-theme";
 

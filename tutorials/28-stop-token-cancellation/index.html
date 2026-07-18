@@ -1,25 +1,27 @@
-<!DOCTYPE html><html lang="en" data-astro-cid-ykvenys5><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>28 · Stop Token &amp; Cancellation — std::execution Tutorial</title><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" crossorigin="anonymous"><script>
+<!DOCTYPE html><html lang="en" data-astro-cid-ykvenys5><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>28 · Stop Token — Cooperative Cancellation — std::execution Tutorial</title><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" crossorigin="anonymous"><script>
       (function(){
         var theme="dark";
         try{var s=localStorage.getItem("exectutorial-theme");if(s)theme=s}catch(e){}
         if(!s&&matchMedia("(prefers-color-scheme:light)").matches)theme="light";
         document.documentElement.setAttribute("data-theme",theme);
       })();
-    </script><link rel="stylesheet" href="/exec/_astro/01-why-stdexec.hXKgsPrw.css"></head><body data-astro-cid-ykvenys5><div class="container" data-astro-cid-ykvenys5><header data-astro-cid-ykvenys5><div class="title-area" data-astro-cid-ykvenys5><a href="/exec/tutorials/" style="color:var(--fg-muted);text-decoration:none;font-size:0.85rem;" data-astro-cid-ykvenys5>← Back to index</a><h1 data-astro-cid-ykvenys5>28 · Stop Token &amp; Cancellation</h1></div><button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" data-astro-cid-ykvenys5>🌙</button></header><article class="article-content" data-astro-cid-ykvenys5>
-<blockquote>
-<p><strong>Standard Section</strong>: <code>[exec.get.stop.token]</code>
-<strong>stdexec Reference</strong>: <code>include/stdexec/stop_token.hpp</code>
-<strong>Related Tests</strong>: <code>tests/test_stop_token.cpp</code></p>
-</blockquote>
-<h2 id="overview">Overview</h2>
-<p>The stop token is the <strong>cooperative cancellation</strong> mechanism of <code>std::execution</code>.</p>
-<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">namespace</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> std</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">execution</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
-<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  struct</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> get_stop_token_t</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {};</span></span>
-<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  inline</span><span style="color:#D73A49;--shiki-dark:#F97583"> constexpr</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> get_stop_token_t</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> get_stop_token{};</span></span>
-<span class="line"></span>
-<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  template</span><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> T</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
-<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    using</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> stop_token_of_t</span><span style="color:#D73A49;--shiki-dark:#F97583"> =</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> remove_cvref_t</span><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">decltype</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">get_stop_token</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">declval</span><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#6F42C1;--shiki-dark:#B392F0">T</span><span style="color:#24292E;--shiki-dark:#E1E4E8">>()))>;</span></span>
-<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span></code></pre></div>
+    </script><link rel="stylesheet" href="/exec/_astro/01-why-stdexec.hXKgsPrw.css"></head><body data-astro-cid-ykvenys5><div class="container" data-astro-cid-ykvenys5><header data-astro-cid-ykvenys5><div class="title-area" data-astro-cid-ykvenys5><a href="/exec/tutorials/" style="color:var(--fg-muted);text-decoration:none;font-size:0.85rem;" data-astro-cid-ykvenys5>← Back to index</a><h1 data-astro-cid-ykvenys5>28 · Stop Token — Cooperative Cancellation</h1></div><button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" data-astro-cid-ykvenys5>🌙</button></header><article class="article-content" data-astro-cid-ykvenys5>
+<h2 id="the-hardest-problem-in-async-programming">The Hardest Problem in Async Programming</h2>
+<p>You fire off a network request, wait 5 seconds, and it still hasn’t come back. You want to cancel it. Let’s look at what traditional C++ offers:</p>
+<p>(1) <strong>std::thread</strong> — you can only <code>.join()</code> (block until it finishes) or <code>.detach()</code> (walk away, leak resources). There’s no graceful “please stop.”</p>
+<p>(2) <strong>std::future</strong> — you can only <code>.get()</code> (block for the result) or <code>.wait_for()</code> (wait with timeout). There’s no <code>.cancel()</code> method.</p>
+<p>(3) <strong>OS signals</strong> — <code>pthread_cancel</code> exists, but it’s essentially a violent thread kill. Resources may not be properly released. It’s been labeled “not recommended.”</p>
+<p>P2300’s approach is <strong>cooperative cancellation</strong> — you notify a sender “please stop,” and the sender decides where and how to stop. The key distinction: cancellation is a <strong>request</strong>, not a <strong>command</strong>. The sender chooses an appropriate checkpoint to end itself, guaranteeing resources are properly released.</p>
+<p>What is a <code>stop_token</code>, simply put? It’s the carrier of this “please stop” request — the sender reads the token’s state, and if a stop has been requested, it responds with <code>set_stopped</code>.</p>
+<h2 id="analogy-the-restaurant-call-button">Analogy: The Restaurant Call Button</h2>
+<p>Think of a <code>stop_token</code> as the “call server” button on a restaurant table:</p>
+<ul>
+<li>You press the button — equivalent to <code>stop_source.request_stop()</code></li>
+<li>The button lights up — equivalent to <code>stop_token.stop_requested()</code> returning <code>true</code></li>
+<li>The server sees the light and comes over — equivalent to the sender detecting cancellation at the next checkpoint and completing with <code>set_stopped()</code></li>
+</ul>
+<p>But — pressing the button doesn’t mean the server appears instantly. She might be serving another table. This “delay” reflects the essence of cooperative cancellation: <strong>the sender actively checks the token; it isn’t interrupted</strong>.</p>
+<hr>
 <h2 id="core-types">Core Types</h2>
 <div class="table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch">
 
@@ -42,113 +44,98 @@
 
 
 
-<table><thead><tr><th>Type</th><th>Behavior</th></tr></thead><tbody><tr><td><code>inplace_stop_token</code></td><td>A token that can query stop state</td></tr><tr><td><code>inplace_stop_source</code></td><td>A source that can request a stop</td></tr><tr><td><code>never_stop_token</code></td><td>A token that never stops (compile-time optimization)</td></tr></tbody></table></div>
-<h3 id="inplace_stop_source"><code>inplace_stop_source</code></h3>
-<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Corresponding test: test_stop_token.cpp → "inplace_stop_source requests stop"</span></span>
-<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">stdexec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::inplace_stop_source source;</span></span>
+<table><thead><tr><th>Type</th><th>Role</th></tr></thead><tbody><tr><td><code>inplace_stop_source</code></td><td>The cancellation <strong>initiator</strong> — holds the “has been cancelled” state</td></tr><tr><td><code>inplace_stop_token</code></td><td>The cancellation <strong>reader</strong> — obtained from a source, read-only</td></tr><tr><td><code>never_stop_token</code></td><td>Compile-time guarantee “never cancels” — enables zero-overhead optimization</td></tr></tbody></table></div>
+<h3 id="basic-usage">Basic Usage</h3>
+<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">stdexec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::inplace_stop_source source;</span><span style="color:#6A737D;--shiki-dark:#6A737D">       // The source of cancellation</span></span>
+<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">stdexec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::inplace_stop_token token </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> source.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">get_token</span><span style="color:#24292E;--shiki-dark:#E1E4E8">();</span><span style="color:#6A737D;--shiki-dark:#6A737D">  // Get a "reader" from the source</span></span>
 <span class="line"></span>
-<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Get a token</span></span>
-<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">stdexec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::inplace_stop_token token </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> source.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">get_token</span><span style="color:#24292E;--shiki-dark:#E1E4E8">();</span></span>
-<span class="line"></span>
-<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Request stop</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// At some point, another thread decides to cancel</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">source.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">request_stop</span><span style="color:#24292E;--shiki-dark:#E1E4E8">();</span></span>
 <span class="line"></span>
-<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Query</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Readers can check</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">bool</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> stopped </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> token.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">stop_requested</span><span style="color:#24292E;--shiki-dark:#E1E4E8">();</span><span style="color:#6A737D;--shiki-dark:#6A737D">  // true</span></span></code></pre></div>
-<h3 id="never_stop_token"><code>never_stop_token</code></h3>
-<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Corresponding test: test_stop_token.cpp → "never_stop_token never stops"</span></span>
-<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">stdexec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::never_stop_token token;</span></span>
-<span class="line"></span>
-<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Known at compile time: never stops</span></span>
-<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">bool</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> stopped </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> token.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">stop_requested</span><span style="color:#24292E;--shiki-dark:#E1E4E8">();</span><span style="color:#6A737D;--shiki-dark:#6A737D">  // false (constant)</span></span></code></pre></div>
+<p>Above, <code>source</code> and <code>token</code> are separate — the owner of <code>source</code> controls “whether to cancel,” while recipients of <code>token</code> can only “ask if cancelled.” This separation guarantees that token holders can’t cancel the source in reverse.</p>
+<h3 id="never_stop_token--compile-time-optimization"><code>never_stop_token</code> — Compile-Time Optimization</h3>
+<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">stdexec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::never_stop_token token;</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">static_assert</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(token.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">stop_requested</span><span style="color:#24292E;--shiki-dark:#E1E4E8">() </span><span style="color:#D73A49;--shiki-dark:#F97583">==</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> false</span><span style="color:#24292E;--shiki-dark:#E1E4E8">);</span><span style="color:#6A737D;--shiki-dark:#6A737D">  // Always false</span></span></code></pre></div>
+<p>If a sender knows at compile time that its token is <code>never_stop_token</code>, it can skip every <code>stop_requested()</code> check entirely — zero runtime overhead.</p>
+<hr>
 <h2 id="using-in-a-pipeline">Using in a Pipeline</h2>
-<h3 id="getting-the-stop-token-from-the-environment">Getting the Stop Token from the Environment</h3>
-<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Corresponding test: test_stop_token.cpp → "stop_requested via read_env"</span></span>
-<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Get the stop token inside a sender</span></span>
-<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">sender </span><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> check_stop</span><span style="color:#24292E;--shiki-dark:#E1E4E8">() {</span></span>
+<h3 id="reading-the-stop-token-from-the-environment">Reading the Stop Token from the Environment</h3>
+<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">sender </span><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> check_stop</span><span style="color:#24292E;--shiki-dark:#E1E4E8">() {</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  return</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> read_env</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(get_stop_token)</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">       |</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> then</span><span style="color:#24292E;--shiki-dark:#E1E4E8">([](</span><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#E36209;--shiki-dark:#FFAB70"> token</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) {</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">           if</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (token.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">stop_requested</span><span style="color:#24292E;--shiki-dark:#E1E4E8">()) {</span></span>
-<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">             // Cooperative cancellation checkpoint</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">             // Detected cancellation — do cleanup here…</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">             // Typically leads to set_stopped()</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">           }</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">         });</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span></code></pre></div>
-<h3 id="creating-a-cancellable-pipeline">Creating a Cancellable Pipeline</h3>
+<p>Above, <code>read_env(get_stop_token)</code> pulls the current stop token from the receiver’s environment, then the callback checks whether a stop has been requested.</p>
+<h3 id="providing-a-stop-token-in-a-cancellable-pipeline">Providing a Stop Token in a Cancellable Pipeline</h3>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">stdexec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::inplace_stop_source stop_source;</span></span>
 <span class="line"></span>
-<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Provide a stop token in the receiver's environment</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// A receiver whose environment contains a stop token</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">struct</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> cancellable_receiver</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">  stdexec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::inplace_stop_token token_;</span></span>
 <span class="line"></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  auto</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> get_env</span><span style="color:#24292E;--shiki-dark:#E1E4E8">() </span><span style="color:#D73A49;--shiki-dark:#F97583">const</span><span style="color:#D73A49;--shiki-dark:#F97583"> noexcept</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    return</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> stdexec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::prop{get_stop_token, token_};</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  }</span></span>
-<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">  // ... set_value, set_error, set_stopped</span></span>
-<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">};</span></span>
 <span class="line"></span>
-<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Request stop from another thread</span></span>
-<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// stop_source.request_stop();</span></span></code></pre></div>
-<h2 id="cancellation-propagation">Cancellation Propagation</h2>
-<p>Cancellation propagates through the receiver’s environment:</p>
-<pre class="mermaid">graph TD
-  A["sender"] --> B["connect(rcvr)"]
-  B --> C["op_state"]
-  C --> D["get_env(rcvr)"]
-  D --> E["Environment { get_stop_token: token }"]
-  E --> F["Sender can check internally:"]
-  F --> G["if (token.stop_requested())"]
-  G --> H["→ set_stopped(...)"]</pre>
-<h3 id="key-cancellation-points">Key Cancellation Points</h3>
-<p>Sender algorithms should check the stop token at:</p>
-<ul>
-<li>Checkpoints inside long-running loops</li>
-<li>Before starting child operations</li>
-<li>Before waiting on external resources</li>
-</ul>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  void</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> set_value</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#D73A49;--shiki-dark:#F97583">auto&#x26;&#x26;</span><span style="color:#24292E;--shiki-dark:#E1E4E8">...) </span><span style="color:#D73A49;--shiki-dark:#F97583">&#x26;&#x26;</span><span style="color:#D73A49;--shiki-dark:#F97583"> noexcept</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span><span style="color:#6A737D;--shiki-dark:#6A737D"> /* ... */</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> }</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  void</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> set_error</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#D73A49;--shiki-dark:#F97583">auto&#x26;&#x26;</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) </span><span style="color:#D73A49;--shiki-dark:#F97583">&#x26;&#x26;</span><span style="color:#D73A49;--shiki-dark:#F97583"> noexcept</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span><span style="color:#6A737D;--shiki-dark:#6A737D"> /* ... */</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> }</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  void</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> set_stopped</span><span style="color:#24292E;--shiki-dark:#E1E4E8">() </span><span style="color:#D73A49;--shiki-dark:#F97583">&#x26;&#x26;</span><span style="color:#D73A49;--shiki-dark:#F97583"> noexcept</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span><span style="color:#6A737D;--shiki-dark:#6A737D"> /* ... */</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> }</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">};</span></span></code></pre></div>
+<p>Above, the receiver exposes the stop token through <code>get_env()</code>. When another thread calls <code>stop_source.request_stop()</code>, the sender detects <code>token_.stop_requested() == true</code> at the next checkpoint and gracefully exits with <code>set_stopped</code>.</p>
+<hr>
+<h2 id="key-cancellation-checkpoints">Key Cancellation Checkpoints</h2>
+<p>Sender algorithms should check the stop token at these points:</p>
+<p>(1) <strong>Before each iteration of a long loop</strong> — if your sender has an inner loop processing a million elements, check the token at the top of each iteration so you don’t waste cycles on work whose result is no longer needed.</p>
+<p>(2) <strong>Before starting child operations</strong> — <code>when_all</code> should glance at the token before launching each child sender: if already cancelled, don’t start new children, just <code>set_stopped</code> immediately.</p>
+<p>(3) <strong>Before waiting on external resources</strong> — if a sender is about to block waiting for an IO event, checking the token before blocking avoids “getting stuck.”</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">void</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> start</span><span style="color:#24292E;--shiki-dark:#E1E4E8">() </span><span style="color:#D73A49;--shiki-dark:#F97583">&#x26;</span><span style="color:#D73A49;--shiki-dark:#F97583"> noexcept</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">  // Checkpoint: before starting real work</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  if</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (</span><span style="color:#6F42C1;--shiki-dark:#B392F0">get_stop_token</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">get_env</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(rcvr_)).</span><span style="color:#6F42C1;--shiki-dark:#B392F0">stop_requested</span><span style="color:#24292E;--shiki-dark:#E1E4E8">()) {</span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">    set_stopped</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">std</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">move</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(rcvr_));</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    return</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  }</span></span>
-<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">  // Continue execution...</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">  // Proceed with actual work…</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span></code></pre></div>
-<h2 id="unstoppable-and-write_env"><code>unstoppable</code> and <code>write_env</code></h2>
-<p>Cancellation can be disabled:</p>
-<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Disable cancellation</span></span>
-<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">sender </span><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> work </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> cancellable_op</span></span>
-<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">                 |</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> unstoppable</span></span>
-<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">                 |</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> then</span><span style="color:#24292E;--shiki-dark:#E1E4E8">([](</span><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#E36209;--shiki-dark:#FFAB70"> x</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) {</span></span>
-<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">                     // No longer cancellable here</span></span>
-<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">                     return</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> x;</span></span>
-<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                   });</span></span></code></pre></div>
-<h2 id="cooperation-with-async_scope">Cooperation with <code>async_scope</code></h2>
-<p><code>async_scope</code> requests cancellation of all outstanding operations upon destruction:</p>
-<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">{</span></span>
-<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">  exec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::async_scope scope;</span></span>
-<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  scope.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">spawn</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(long_running_work);</span></span>
-<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">  // scope destructor → request all child operations to stop</span></span>
-<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span><span style="color:#6A737D;--shiki-dark:#6A737D">  // Waits for all operations to complete (via cancellation)</span></span></code></pre></div>
-<h2 id="stop-token-implementation-patterns">Stop Token Implementation Patterns</h2>
-<h3 id="checking-stop">Checking Stop</h3>
-<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">if</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (</span><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> token </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> get_stop_token</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">get_env</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(rcvr_)); token.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">stop_requested</span><span style="color:#24292E;--shiki-dark:#E1E4E8">()) {</span></span>
-<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">  set_stopped</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">std</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">move</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(rcvr_));</span></span>
-<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  return</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
-<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span></code></pre></div>
-<h3 id="registering-a-stop-callback">Registering a Stop Callback</h3>
-<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">struct</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> callback</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
+<hr>
+<h2 id="registering-a-stop-callback">Registering a Stop Callback</h2>
+<p>Beyond periodic polling, you can register a callback that fires immediately when cancellation occurs:</p>
+<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">struct</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> stop_callback</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">  stdexec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::inplace_stop_token token_;</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  operation_state</span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> op_;</span></span>
 <span class="line"></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  void</span><span style="color:#D73A49;--shiki-dark:#F97583"> operator</span><span style="color:#6F42C1;--shiki-dark:#B392F0">()</span><span style="color:#24292E;--shiki-dark:#E1E4E8">() </span><span style="color:#D73A49;--shiki-dark:#F97583">noexcept</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
-<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">    // Stop requested → perform cleanup</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">    // stop_source.request_stop() was called — this runs</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">    // Perform emergency cleanup here</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    op_-></span><span style="color:#6F42C1;--shiki-dark:#B392F0">cancel</span><span style="color:#24292E;--shiki-dark:#E1E4E8">();</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  }</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">};</span></span>
 <span class="line"></span>
-<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Register callback</span></span>
-<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> cb </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> token_.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">stop_callback</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(callback{token_, </span><span style="color:#005CC5;--shiki-dark:#79B8FF">this</span><span style="color:#24292E;--shiki-dark:#E1E4E8">});</span></span>
-<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// When stop_source.request_stop() is called, callback() is executed</span></span></code></pre></div>
-<hr></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/27-tag-invoke-cpo/" data-astro-cid-ykvenys5>← 27 · tag_invoke &amp; CPO</a><a href="/exec/tutorials/29-structured-concurrency/" data-astro-cid-ykvenys5>29 · Structured Concurrency — async_scope / counting_scope →</a></nav></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> cb </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> token_.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">stop_callback</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(stop_callback{token_, </span><span style="color:#005CC5;--shiki-dark:#79B8FF">this</span><span style="color:#24292E;--shiki-dark:#E1E4E8">});</span></span></code></pre></div>
+<p>Above, <code>stop_callback</code> is an RAII object — it registers the callback with the token on construction and unregisters on destruction. Use it to respond to cancellation and perform urgent cleanup.</p>
+<hr>
+<h2 id="cooperation-with-async_scope">Cooperation with <code>async_scope</code></h2>
+<p>When an <code>async_scope</code> is destroyed, it automatically requests all child operations to stop, then waits for them all to finish. This mechanism directly relies on stop tokens — the scope internally holds an <code>inplace_stop_source</code> and calls <code>request_stop()</code> in its destructor:</p>
+<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">{</span></span>
+<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">  exec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::async_scope scope;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  scope.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">spawn</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(long_running_work);</span><span style="color:#6A737D;--shiki-dark:#6A737D">   // long_running_work checks stop token internally</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">  // scope destructor:</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">  //   1. Internal stop_source.request_stop()</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">  //   2. Wait for all child ops to complete (or exit after cancellation)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span></code></pre></div>
+<p>This guarantees that even if <code>long_running_work</code> is “interrupted mid-flight,” the scope’s destruction won’t leak resources or leave dangling pointers.</p>
+<hr>
+<h2 id="limitations">Limitations</h2>
+<ol>
+<li><strong>Cooperative means it depends on the cancel-ee’s cooperation.</strong> If a sender contains an infinite loop that never checks <code>stop_token</code>, the cancellation request falls on deaf ears — the caller waits forever. This is not a “force termination” mechanism.</li>
+<li><strong>Thread safety</strong> — multiple threads concurrently calling <code>request_stop()</code> is safe, but there’s no strict memory ordering guarantee between <code>stop_requested()</code> and <code>request_stop()</code>. Token state changes may have some delay before other threads observe them.</li>
+<li><strong>One-shot</strong> — once <code>inplace_stop_source::request_stop()</code> is called, you can’t “un-cancel” it. If you need a resettable cancellation signal, you’ll need to wrap a new source at a higher level.</li>
+</ol></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/27-tag-invoke-cpo/" data-astro-cid-ykvenys5>← 27 · tag_invoke — Zero-Overhead Extension Points</a><a href="/exec/tutorials/29-structured-concurrency/" data-astro-cid-ykvenys5>29 · Structured Concurrency — Giving Every Async Operation a Home →</a></nav></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
       (function() {
         const STORAGE_KEY = "exectutorial-theme";
 

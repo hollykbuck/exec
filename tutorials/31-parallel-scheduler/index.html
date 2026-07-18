@@ -1,208 +1,95 @@
-<!DOCTYPE html><html lang="en" data-astro-cid-ykvenys5><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>31 · parallel_scheduler — Standard Parallel Scheduler — std::execution Tutorial</title><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" crossorigin="anonymous"><script>
+<!DOCTYPE html><html lang="en" data-astro-cid-ykvenys5><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>31 · parallel_scheduler — CPU Parallel Computing Scheduler — std::execution Tutorial</title><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" crossorigin="anonymous"><script>
       (function(){
         var theme="dark";
         try{var s=localStorage.getItem("exectutorial-theme");if(s)theme=s}catch(e){}
         if(!s&&matchMedia("(prefers-color-scheme:light)").matches)theme="light";
         document.documentElement.setAttribute("data-theme",theme);
       })();
-    </script><link rel="stylesheet" href="/exec/_astro/01-why-stdexec.hXKgsPrw.css"></head><body data-astro-cid-ykvenys5><div class="container" data-astro-cid-ykvenys5><header data-astro-cid-ykvenys5><div class="title-area" data-astro-cid-ykvenys5><a href="/exec/tutorials/" style="color:var(--fg-muted);text-decoration:none;font-size:0.85rem;" data-astro-cid-ykvenys5>← Back to index</a><h1 data-astro-cid-ykvenys5>31 · parallel_scheduler — Standard Parallel Scheduler</h1></div><button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" data-astro-cid-ykvenys5>🌙</button></header><article class="article-content" data-astro-cid-ykvenys5>
-<blockquote>
-<p><strong>Standard section</strong>: <code>[exec.par.scheduler]</code>
-<strong>stdexec reference</strong>: <code>include/stdexec/__detail/__parallel_scheduler*.hpp</code>
-<strong>Related tests</strong>: <code>tests/test_parallel_scheduler.cpp</code></p>
-</blockquote>
-<h2 id="overview">Overview</h2>
-<p><code>parallel_scheduler</code> is a <strong>general-purpose parallel scheduler</strong> provided by the standard library for CPU parallel computing. It is the sender-model counterpart of the C++17 <code>std::execution::par</code> execution policy.</p>
-<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">namespace</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> std</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">execution</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
-<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> parallel_scheduler</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
-<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">  parallel_scheduler</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> get_parallel_scheduler</span><span style="color:#24292E;--shiki-dark:#E1E4E8">();</span></span>
-<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span></code></pre></div>
+    </script><link rel="stylesheet" href="/exec/_astro/01-why-stdexec.hXKgsPrw.css"></head><body data-astro-cid-ykvenys5><div class="container" data-astro-cid-ykvenys5><header data-astro-cid-ykvenys5><div class="title-area" data-astro-cid-ykvenys5><a href="/exec/tutorials/" style="color:var(--fg-muted);text-decoration:none;font-size:0.85rem;" data-astro-cid-ykvenys5>← Back to index</a><h1 data-astro-cid-ykvenys5>31 · parallel_scheduler — CPU Parallel Computing Scheduler</h1></div><button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" data-astro-cid-ykvenys5>🌙</button></header><article class="article-content" data-astro-cid-ykvenys5>
+<h2 id="when-do-you-need-parallel_scheduler">When Do You Need parallel_scheduler?</h2>
+<p>If you’re doing CPU-intensive work — image processing, scientific computing, data compression — you want to use every CPU core. You could build your own thread pool + task queue, but <code>parallel_scheduler</code> has built-in work-stealing that’s more efficient than a hand-rolled load balancer.</p>
+<p><code>parallel_scheduler</code> is P2300’s official counterpart to C++17’s <code>std::execution::par</code>. It’s the only scheduler in the standard specifically designed for CPU parallel computation.</p>
+<hr>
 <h2 id="basic-usage">Basic Usage</h2>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> par_sch </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> get_parallel_scheduler</span><span style="color:#24292E;--shiki-dark:#E1E4E8">();</span></span>
 <span class="line"></span>
-<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> result </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> sync_wait</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span></span>
+<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">sync_wait</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">  starts_on</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(par_sch,</span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">    bulk</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">1000</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, [](</span><span style="color:#D73A49;--shiki-dark:#F97583">int</span><span style="color:#E36209;--shiki-dark:#FFAB70"> idx</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) {</span></span>
-<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">      compute</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(idx);</span><span style="color:#6A737D;--shiki-dark:#6A737D">  // Execute on the parallel thread pool</span></span>
+<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">      compute</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(idx);</span><span style="color:#6A737D;--shiki-dark:#6A737D">  // Parallelizable compute-intensive work</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    })</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  )</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">);</span></span></code></pre></div>
+<p>Simpler than <code>static_thread_pool</code> — you don’t specify thread count; the implementation auto-matches hardware concurrency.</p>
 <hr>
-<h2 id="architecture-overview">Architecture Overview</h2>
-<p><code>parallel_scheduler</code> uses a <strong>frontend-backend</strong> architecture:</p>
-<pre class="mermaid">graph TD
-  User["User code: starts_on(par_sch, bulk(N, f))"]
-  subgraph Frontend ["Frontend (type-erasure layer)"]
-    FS["parallel_scheduler / task_scheduler"]
-    FR["receiver_proxy / bulk_item_receiver_proxy"]
-  end
-  subgraph Backend ["Backend (concrete implementation)"]
-    BI["parallel_scheduler_backend (virtual interface)"]
-    BS["schedule() / schedule_bulk_chunked() / schedule_bulk_unchunked()"]
-  end
-  subgraph Default ["Default Implementation"]
-    DI["std::thread-based work-stealing thread pool"]
-    DR["Replaceable: TBB / Taskflow / custom backend"]
-  end
-  User --> Frontend
-  Frontend --> Backend
-  Backend --> Default</pre>
+<h2 id="architecture-frontend--backend">Architecture: Frontend + Backend</h2>
+<p><code>parallel_scheduler</code> uses a separated frontend (type erasure layer) and backend (concrete implementation) architecture:</p>
+<pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="plaintext"><code><span class="line"><span>┌─────────────────────────────────┐</span></span>
+<span class="line"><span>│  User code: bulk(N, f)          │</span></span>
+<span class="line"><span>├─────────────────────────────────┤</span></span>
+<span class="line"><span>│  Frontend (sender/receiver API)  │  ← receiver_proxy for type erasure</span></span>
+<span class="line"><span>├─────────────────────────────────┤</span></span>
+<span class="line"><span>│  Backend (virtual interface)     │  ← schedule / schedule_bulk_*</span></span>
+<span class="line"><span>├─────────────────────────────────┤</span></span>
+<span class="line"><span>│  Default impl (std::thread pool) │  ← Replaceable with TBB / Taskflow</span></span>
+<span class="line"><span>└─────────────────────────────────┘</span></span></code></pre>
+<p>This layering lets you replace the underlying implementation <strong>without changing a single line of user code</strong>. If your company has a custom GPU task scheduler, or uses TBB’s scheduling system, you just swap the backend layer — all user code stays the same.</p>
 <hr>
-<h2 id="backend-replacement-mechanism">Backend Replacement Mechanism</h2>
-<h3 id="compile-time-replacement-weak-linking">Compile-time Replacement (Weak Linking)</h3>
-<p>The <code>parallel_scheduler_replacement</code> namespace provides a weak symbol:</p>
-<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">namespace</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> std</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">execution</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">parallel_scheduler_replacement</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
-<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">  // weak function: can be overridden by user definition</span></span>
-<span class="line"><span style="color:#005CC5;--shiki-dark:#79B8FF">  [[</span><span style="color:#6F42C1;--shiki-dark:#B392F0">nodiscard</span><span style="color:#005CC5;--shiki-dark:#79B8FF">]]</span></span>
-<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  auto</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> query_parallel_scheduler_backend</span><span style="color:#24292E;--shiki-dark:#E1E4E8">()</span></span>
-<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    -> </span><span style="color:#6F42C1;--shiki-dark:#B392F0">std</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">shared_ptr</span><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#6F42C1;--shiki-dark:#B392F0">parallel_scheduler_backend</span><span style="color:#24292E;--shiki-dark:#E1E4E8">>;</span></span>
-<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span></code></pre></div>
-<p>Users replace the default backend by defining a strong symbol with the same name:</p>
-<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// my_backend.cpp — replace parallel_scheduler backend at compile time</span></span>
+<h2 id="compile-time-backend-replacement">Compile-Time Backend Replacement</h2>
+<p>The replacement uses C++ weak symbol tricks:</p>
+<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Your file: my_backend.cpp</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">#include</span><span style="color:#032F62;--shiki-dark:#9ECBFF"> &#x3C;stdexec/execution.hpp></span></span>
 <span class="line"></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> std</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">execution</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::parallel_scheduler_replacement</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">query_parallel_scheduler_backend</span><span style="color:#24292E;--shiki-dark:#E1E4E8">()</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  -></span><span style="color:#6F42C1;--shiki-dark:#B392F0"> std</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::shared_ptr</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;</span><span style="color:#24292E;--shiki-dark:#E1E4E8">parallel_scheduler_backend</span><span style="color:#D73A49;--shiki-dark:#F97583">></span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">{</span></span>
-<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  return</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> std</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">make_shared</span><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#6F42C1;--shiki-dark:#B392F0">my_parallel_backend</span><span style="color:#24292E;--shiki-dark:#E1E4E8">>();</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  return</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> std</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">make_shared</span><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#6F42C1;--shiki-dark:#B392F0">my_tbb_backend</span><span style="color:#24292E;--shiki-dark:#E1E4E8">>();</span><span style="color:#6A737D;--shiki-dark:#6A737D">  // Swap in a TBB implementation</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span></code></pre></div>
-<h3 id="runtime-replacement-deprecated">Runtime Replacement (Deprecated)</h3>
-<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Deprecated: runtime replacement may cause undefined behavior</span></span>
-<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">namespace</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> std</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">execution</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">parallel_scheduler_replacement</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
-<span class="line"><span style="color:#005CC5;--shiki-dark:#79B8FF">  [[</span><span style="color:#6F42C1;--shiki-dark:#B392F0">deprecated</span><span style="color:#005CC5;--shiki-dark:#79B8FF">]]</span></span>
-<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  auto</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> set_parallel_scheduler_backend</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span></span>
-<span class="line"><span style="color:#005CC5;--shiki-dark:#79B8FF">    __parallel_scheduler_backend_factory_t</span><span style="color:#E36209;--shiki-dark:#FFAB70"> new_factory</span></span>
-<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  ) -> </span><span style="color:#005CC5;--shiki-dark:#79B8FF">__parallel_scheduler_backend_factory_t</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
-<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span></code></pre></div>
-<h3 id="backend-interface">Backend Interface</h3>
-<p><code>parallel_scheduler_backend</code> is a pure virtual interface defined in <code>std::execution::parallel_scheduler_replacement</code>:</p>
-<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">struct</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> parallel_scheduler_backend</span></span>
-<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  : </span><span style="color:#6F42C1;--shiki-dark:#B392F0">__any</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">__iabstract</span><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#6F42C1;--shiki-dark:#B392F0">__iparallel_scheduler_backend</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
-<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">{};</span></span></code></pre></div>
-<p>Its core virtual functions:</p>
-<div class="table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch">
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<table><thead><tr><th>Method</th><th>Purpose</th></tr></thead><tbody><tr><td><code>schedule(rcvr, scratch)</code></td><td>Schedule a single unit of work</td></tr><tr><td><code>schedule_bulk_chunked(count, rcvr, scratch)</code></td><td>Schedule bulk work (chunked)</td></tr><tr><td><code>schedule_bulk_unchunked(count, rcvr, scratch)</code></td><td>Schedule bulk work (item-by-item)</td></tr></tbody></table></div>
-<p>These methods communicate with the frontend via <strong>receiver proxy</strong>:</p>
-<pre class="mermaid">sequenceDiagram
-  participant F as Frontend
-  participant B as Backend
-  F->>B: schedule(proxy, scratch)
-  Note over F: __receiver_proxy&#x3C;br/>(inherits receiver_proxy)
-  B-->>F: On completion, call proxy.set_value()
-  F->>B: schedule_bulk_chunked(count, proxy, scratch)
-  Note over F: __bulk_receiver_proxy&#x3C;br/>(inherits bulk_item_receiver_proxy)
-  B-->>F: For each chunk: proxy.execute(begin, end)
-  B-->>F: On completion: proxy.set_value()</pre>
+<p>Above, defining a strong-symbol function is all it takes — the linker overrides the library’s default weak symbol. No preprocessor macros, no config files, no library modifications. Just one .cpp file.</p>
 <hr>
-<h2 id="receiver_proxy-and-bulk_item_receiver_proxy"><code>receiver_proxy</code> and <code>bulk_item_receiver_proxy</code></h2>
-<p>The frontend exposes the receiver’s communication capabilities to the backend through proxies:</p>
+<h2 id="how-frontend-talks-to-backend-receiver_proxy">How Frontend Talks to Backend: <code>receiver_proxy</code></h2>
+<p>The frontend exposes the receiver to the backend through a <code>receiver_proxy</code> — using virtual functions to erase the concrete receiver type:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> receiver_proxy</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">public:</span></span>
-<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  virtual</span><span style="color:#D73A49;--shiki-dark:#F97583"> void</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> set_value</span><span style="color:#24292E;--shiki-dark:#E1E4E8">() </span><span style="color:#D73A49;--shiki-dark:#F97583">noexcept</span><span style="color:#D73A49;--shiki-dark:#F97583">                   =</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  virtual</span><span style="color:#D73A49;--shiki-dark:#F97583"> void</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> set_value</span><span style="color:#24292E;--shiki-dark:#E1E4E8">() </span><span style="color:#D73A49;--shiki-dark:#F97583">noexcept</span><span style="color:#D73A49;--shiki-dark:#F97583">                  =</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  virtual</span><span style="color:#D73A49;--shiki-dark:#F97583"> void</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> set_error</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">std</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">exception_ptr</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) </span><span style="color:#D73A49;--shiki-dark:#F97583">noexcept</span><span style="color:#D73A49;--shiki-dark:#F97583">  =</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
-<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  virtual</span><span style="color:#D73A49;--shiki-dark:#F97583"> void</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> set_stopped</span><span style="color:#24292E;--shiki-dark:#E1E4E8">() </span><span style="color:#D73A49;--shiki-dark:#F97583">noexcept</span><span style="color:#D73A49;--shiki-dark:#F97583">                  =</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
-<span class="line"></span>
-<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">  // Type-erased environment query</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  virtual</span><span style="color:#D73A49;--shiki-dark:#F97583"> void</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> set_stopped</span><span style="color:#24292E;--shiki-dark:#E1E4E8">() </span><span style="color:#D73A49;--shiki-dark:#F97583">noexcept</span><span style="color:#D73A49;--shiki-dark:#F97583">                   =</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  template</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> &#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Value</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Query</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
-<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  auto</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> try_query</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">Query</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) </span><span style="color:#D73A49;--shiki-dark:#F97583">const</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> noexcept -> std::optional</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;</span><span style="color:#24292E;--shiki-dark:#E1E4E8">Value</span><span style="color:#D73A49;--shiki-dark:#F97583">></span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
-<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">};</span></span>
-<span class="line"></span>
-<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">struct</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> bulk_item_receiver_proxy</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> : receiver_proxy {</span></span>
-<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  virtual</span><span style="color:#D73A49;--shiki-dark:#F97583"> void</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> execute</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#D73A49;--shiki-dark:#F97583">size_t</span><span style="color:#E36209;--shiki-dark:#FFAB70"> begin</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#D73A49;--shiki-dark:#F97583">size_t</span><span style="color:#E36209;--shiki-dark:#FFAB70"> end</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) </span><span style="color:#D73A49;--shiki-dark:#F97583">noexcept</span><span style="color:#D73A49;--shiki-dark:#F97583"> =</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  auto</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> try_query</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">Query</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) </span><span style="color:#D73A49;--shiki-dark:#F97583">const</span><span style="color:#D73A49;--shiki-dark:#F97583"> -></span><span style="color:#6F42C1;--shiki-dark:#B392F0"> std</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::optional</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;</span><span style="color:#24292E;--shiki-dark:#E1E4E8">Value</span><span style="color:#D73A49;--shiki-dark:#F97583">></span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span><span style="color:#6A737D;--shiki-dark:#6A737D">  // Type-erased env query</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">};</span></span></code></pre></div>
-<p>The frontend’s <code>__receiver_proxy_base&#x3C;Rcvr></code> implements the bridge from a real receiver to the proxy:</p>
-<pre class="mermaid">classDiagram
-  class receiver_proxy {
-    +set_value()
-    +set_error()
-    +set_stopped()
-    +try_query()
-  }
-  class __receiver_proxy_base~Rcvr~ {
-    +set_value() Rcvr::set_value()
-    +set_error() Rcvr::set_error()
-    +set_stopped() Rcvr::set_stopped()
-    +try_query() get_stop_token / get_allocator / get_start_scheduler
-  }
-  receiver_proxy &#x3C;|-- __receiver_proxy_base~Rcvr~</pre>
-<p>Cancellation propagation is implemented via <code>__stop_callback_for</code>: when the backend requests a stop, the proxy notifies the frontend through <code>inplace_stop_source</code>.</p>
+<p>The templated <code>__receiver_proxy_base&#x3C;Rcvr></code> implements this virtual interface, bridging “concrete receiver” and “type-erased proxy.” The backend only calls virtual functions — it never needs to know the concrete receiver type.</p>
 <hr>
-<h2 id="parallel_scheduler-and-bulk-interaction"><code>parallel_scheduler</code> and <code>bulk</code> Interaction</h2>
-<p><code>bulk(sndr, N, f)</code> executes on <code>parallel_scheduler</code> through the following path:</p>
+<h2 id="how-bulk-executes-on-parallel_scheduler">How <code>bulk</code> Executes on parallel_scheduler</h2>
 <pre class="mermaid">graph TD
-  A["bulk(just(0), 1000, work_fn)"]
-  A --> B["domain.apply_sender(bulk_t{}, just(0), 1000, work_fn)"]
-  B --> C["Extract parallel_scheduler's domain"]
-  C --> D["Create __bulk_sender"]
-  A --> E["connect(__bulk_sender, rcvr)"]
-  E --> F["Create __bulk_opstate"]
-  F --> G["Outer: the entire bulk operation&#x3C;br/>(schedule + wait for all chunks to complete)"]
-  F --> H["Inner: each chunk"]
-  A --> I["start()"]
-  I --> J["Call backend->schedule_bulk_chunked(N, proxy, scratch)"]
-  J --> K["Backend splits [0, N) into chunks, assigns to worker threads"]
-  K --> L["Each chunk: proxy.execute(begin, end)"]
-  L --> M["for i in [begin, end): work_fn(i)"]
-  I --> N["Wait for all chunks to complete → proxy.set_value()"]
-  A --> O["rcvr.set_value()"]</pre>
+  A["bulk(just(0), 1000, work_fn)"] --> B["Fetch parallel_scheduler's domain"]
+  B --> C["Domain replaces bulk with __bulk_sender"]
+  C --> D["connect → __bulk_opstate"]
+  D --> E["start() → call backend.schedule_bulk_chunked(N, proxy)"]
+  E --> F["Backend splits N into chunks, dispatches to worker threads"]
+  F --> G["Each chunk: proxy.execute(begin, end)"]
+  G --> H["for i in [begin, end): work_fn(i)"]</pre>
 <p>The backend is responsible for the chunking strategy:</p>
-<pre class="mermaid">graph LR
-  T0["Thread 0: [0, 250)"] --> E0["execute(0, 250)"]
-  T1["Thread 1: [250, 500)"] --> E1["execute(250, 500)"]
-  T2["Thread 2: [500, 750)"] --> E2["execute(500, 750)"]
-  T3["Thread 3: [750, 1000)"] --> E3["execute(750, 1000)"]</pre>
-<p><code>schedule_bulk_unchunked</code> is used for scenarios where chunking optimization is unnecessary (each item is very small, and chunking overhead is not worthwhile).</p>
+<pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="plaintext"><code><span class="line"><span>Thread 0: [0, 250)     → execute(0, 250)</span></span>
+<span class="line"><span>Thread 1: [250, 500)   → execute(250, 500)</span></span>
+<span class="line"><span>Thread 2: [500, 750)   → execute(500, 750)</span></span>
+<span class="line"><span>Thread 3: [750, 1000)  → execute(750, 1000)</span></span></code></pre>
+<p>Each thread calls <code>bulk_item_receiver_proxy::execute(begin, end)</code> once, running a <code>for</code> loop over its assigned chunk.</p>
 <hr>
-<h2 id="default-implementation">Default Implementation</h2>
-<p>stdexec’s default parallel backend uses <code>std::thread</code> with a <strong>work-stealing</strong> implementation:</p>
-<pre class="mermaid">block
-  columns 1
-  block:pool:1
-    columns 1
-    w0["Worker 0: [ ][ ][ ][ ] ← Local queue (LIFO)"]
-    w1["Worker 1: [ ][ ][ ][ ] ← Stealable"]
-    w2["Worker 2: [ ][ ][ ][ ] ← Other workers"]
-    w3["Worker 3: [ ][ ][ ][ ] ← Tail stealing"]
-  end
-  idle["Idle threads steal work from busy threads' tails"]</pre>
-<p>Benefits of work-stealing:</p>
+<h2 id="default-backend-work-stealing">Default Backend: Work-Stealing</h2>
+<p>stdexec’s default <code>parallel_scheduler</code> uses <code>std::thread</code> + <strong>work-stealing</strong>:</p>
+<pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="plaintext"><code><span class="line"><span>Worker 0: [task][task][task][ ]  ← Local queue (LIFO, cache-friendly)</span></span>
+<span class="line"><span>Worker 1: [task][task][ ][ ]     ← Others can steal from here</span></span>
+<span class="line"><span>Worker 2: [ ][ ][ ][ ]          ← Idle → will steal from others</span></span>
+<span class="line"><span>Worker 3: [task][task][task][ ]  ← Tail can be stolen</span></span></code></pre>
+<p>Three benefits of work-stealing:</p>
 <ul>
-<li>Load balancing: idle threads steal work from busy threads</li>
-<li>Cache-friendly: threads prioritize their local queue (LIFO — recently added tasks are still in cache)</li>
-<li>No centralized scheduler: reduces lock contention</li>
+<li><strong>Load balancing</strong>: idle threads steal work from busy threads’ tails</li>
+<li><strong>Cache-friendly</strong>: each thread prioritizes its local queue (LIFO), so recently accessed data is still in cache</li>
+<li><strong>No central scheduler</strong>: no global task distribution lock, reducing contention</li>
 </ul>
 <hr>
-<h2 id="task_scheduler-type-erased-wrapper"><code>task_scheduler</code>: Type-erased Wrapper</h2>
-<p><code>task_scheduler</code> is a type-erased scheduler wrapper:</p>
-<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> task_scheduler</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
-<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  template</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> &#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">scheduler</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Sch</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
-<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">  task_scheduler</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">Sch</span><span style="color:#E36209;--shiki-dark:#FFAB70"> sched</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#E36209;--shiki-dark:#FFAB70"> allocator</span><span style="color:#24292E;--shiki-dark:#E1E4E8">);</span></span>
-<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">};</span></span></code></pre></div>
-<p>It wraps any scheduler into a uniform <code>parallel_scheduler_backend</code> interface, allowing <code>parallel_scheduler</code> to dispatch work to different types of execution contexts through the backend mechanism.</p>
-<p>Internal implementation: <code>task_scheduler</code> creates a <code>receiver_proxy</code> for the wrapped scheduler, forwarding <code>parallel_scheduler_backend::schedule()</code> as <code>schedule(wrapped_sch) | then(complete_proxy)</code>.</p>
-<hr>
-<h2 id="parallel_scheduler-vs-static_thread_pool"><code>parallel_scheduler</code> vs <code>static_thread_pool</code></h2>
+<h2 id="parallel_scheduler-vs-static_thread_pool">parallel_scheduler vs static_thread_pool</h2>
 <div class="table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch">
 
 
@@ -248,23 +135,15 @@
 
 
 
-
-
-
-
-
-<table><thead><tr><th>Feature</th><th><code>static_thread_pool</code></th><th><code>parallel_scheduler</code></th></tr></thead><tbody><tr><td>Standard</td><td>None (stdexec extension)</td><td>Standard <code>[exec.par.scheduler]</code></td></tr><tr><td>Thread count</td><td>Specified at construction</td><td>Implementation-defined (usually = hardware concurrency)</td></tr><tr><td>Work distribution</td><td>Per-worker MPSC queue</td><td>Work-stealing</td></tr><tr><td>Backend replaceable</td><td>Fixed implementation</td><td>Via <code>parallel_scheduler_replacement</code></td></tr><tr><td><code>bulk</code> support</td><td>Via <code>bulk</code> algorithm outer dispatch</td><td>Native backend support (<code>schedule_bulk_*</code>)</td></tr><tr><td>Cancellation</td><td>Depends on receiver environment</td><td>Via <code>receiver_proxy</code> + <code>inplace_stop_source</code></td></tr><tr><td>Use case</td><td>General async work</td><td>CPU parallel computing / data parallelism</td></tr><tr><td>Heap allocation</td><td>Operation state stack-allocated</td><td>May involve heap allocation via proxy</td></tr></tbody></table></div>
+<table><thead><tr><th>Feature</th><th>static_thread_pool</th><th>parallel_scheduler</th></tr></thead><tbody><tr><td>Standard</td><td>stdexec extension</td><td>Standard <code>[exec.par.scheduler]</code></td></tr><tr><td>Thread count</td><td>Specified at construction</td><td>Implementation-defined (usually = hardware concurrency)</td></tr><tr><td>Work distribution</td><td>Per-worker MPSC queue</td><td>Work-stealing</td></tr><tr><td>Backend replaceable</td><td>No (fixed impl)</td><td>Yes (weak symbol override)</td></tr><tr><td><code>bulk</code> support</td><td>Via bulk algorithm outer dispatch</td><td>Native backend <code>schedule_bulk_*</code></td></tr><tr><td>Use case</td><td>General async tasks</td><td>CPU parallel / data parallelism</td></tr><tr><td>Heap allocation</td><td>Operation states typically stack-allocated</td><td>May involve proxy heap allocation</td></tr></tbody></table></div>
 <hr>
-<h2 id="key-takeaways">Key Takeaways</h2>
+<h2 id="limitations">Limitations</h2>
 <ol>
-<li><strong>Frontend-Backend architecture</strong>: <code>parallel_scheduler</code> decouples scheduling policy from parallel implementation via the virtual <code>parallel_scheduler_backend</code> interface</li>
-<li><strong>Compile-time backend replacement</strong>: the weak linking mechanism allows users to replace the default implementation (TBB / Taskflow / custom) without modifying library code</li>
-<li><strong><code>receiver_proxy</code> type erasure</strong>: bridges sender receivers and the parallel backend through virtual functions, hiding the concrete receiver type</li>
-<li><strong>Native <code>bulk</code> support</strong>: the backend directly provides <code>schedule_bulk_chunked</code> / <code>schedule_bulk_unchunked</code>, avoiding manual chunking in the frontend layer</li>
-<li><strong>Cancellation forwarding</strong>: the backend indirectly notifies the frontend of stop requests via <code>inplace_stop_source</code></li>
-<li><strong><code>task_scheduler</code></strong>: a type-erased wrapper that adapts any scheduler to <code>parallel_scheduler_backend</code></li>
-</ol>
-<hr></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/30-run-loop/" data-astro-cid-ykvenys5>← 30 · run_loop — The Simplest Execution Context</a><a href="/exec/tutorials/32-implement-then/" data-astro-cid-ykvenys5>32 · Implementing then from Scratch — Custom Sender + Receiver + Operation State →</a></nav></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
+<li><strong>Default implementation depends on <code>std::thread</code></strong> — may be unavailable in embedded or WASM environments. These platforms need a backend replacement.</li>
+<li><strong>Not suited for precise thread count control</strong> — thread count is implementation-defined. If you need exactly N threads (e.g., hardware pinning), use <code>static_thread_pool</code>.</li>
+<li><strong>Heap allocation</strong> — <code>receiver_proxy</code> type erasure may introduce heap allocation. By contrast, <code>static_thread_pool</code> operation states can be fully stack-allocated.</li>
+<li><strong>Platform dependency</strong> — <code>get_parallel_scheduler()</code> behavior may differ subtly across Windows, Linux, and macOS.</li>
+</ol></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/30-run-loop/" data-astro-cid-ykvenys5>← 30 · run_loop — The Simplest Execution Context</a><a href="/exec/tutorials/32-implement-then/" data-astro-cid-ykvenys5>32 · Implementing then from Scratch — Custom Sender + Receiver + Operation State →</a></nav></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
       (function() {
         const STORAGE_KEY = "exectutorial-theme";
 

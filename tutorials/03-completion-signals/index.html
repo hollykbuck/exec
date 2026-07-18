@@ -61,7 +61,7 @@
 <p>You might ask: what’s the difference between an error and cancellation? Aren’t they both “didn’t get the result”?</p>
 <p>The difference is <strong>intent</strong>.</p>
 <ul>
-<li><code>set_error</code> means <strong>something went wrong</strong> — the network is down, the file doesn’t exist, parsing failed. It’s an意外 that the caller might want to retry or log</li>
+<li><code>set_error</code> means <strong>something went wrong</strong> — the network is down, the file doesn’t exist, parsing failed. It’s an exception that the caller might want to retry or log</li>
 <li><code>set_stopped</code> means <strong>someone asked to stop</strong> — not a bug, but an intentional decision to halt. The caller typically does nothing</li>
 </ul>
 <pre class="mermaid">graph LR

@@ -6,295 +6,150 @@
         document.documentElement.setAttribute("data-theme",theme);
       })();
     </script><link rel="stylesheet" href="/exec/_astro/01-why-stdexec.hXKgsPrw.css"></head><body data-astro-cid-ykvenys5><div class="container" data-astro-cid-ykvenys5><header data-astro-cid-ykvenys5><div class="title-area" data-astro-cid-ykvenys5><a href="/exec/tutorials/" style="color:var(--fg-muted);text-decoration:none;font-size:0.85rem;" data-astro-cid-ykvenys5>← Back to index</a><h1 data-astro-cid-ykvenys5>30 · run_loop — The Simplest Execution Context</h1></div><button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" data-astro-cid-ykvenys5>🌙</button></header><article class="article-content" data-astro-cid-ykvenys5>
-<blockquote>
-<p><strong>Standard section</strong>: <code>[exec.run.loop]</code>
-<strong>stdexec reference</strong>: <code>include/stdexec/__detail/__run_loop.hpp</code>
-<strong>Related tests</strong>: <code>tests/test_run_loop.cpp</code></p>
-</blockquote>
-<h2 id="overview">Overview</h2>
-<p><code>run_loop</code> is the simplest execution context in the standard. It is a <strong>thread-safe FIFO work queue</strong>, manually driven.</p>
-<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">namespace</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> std</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">execution</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
-<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> run_loop</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
-<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  public:</span></span>
-<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> scheduler</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
-<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">    scheduler</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> get_scheduler</span><span style="color:#24292E;--shiki-dark:#E1E4E8">();</span></span>
-<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    void</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> run</span><span style="color:#24292E;--shiki-dark:#E1E4E8">();</span><span style="color:#6A737D;--shiki-dark:#6A737D">        // Consume work from the queue, blocks until finish()</span></span>
-<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    void</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> finish</span><span style="color:#24292E;--shiki-dark:#E1E4E8">();</span><span style="color:#6A737D;--shiki-dark:#6A737D">     // Signal completion, run() returns</span></span>
-<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  };</span></span>
-<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span></code></pre></div>
+<h2 id="why-do-we-need-run_loop">Why Do We Need run_loop?</h2>
+<p>What’s the most painful thing about debugging async code? You set a breakpoint to trace a sender’s execution, but the work runs on another thread and your breakpoint never hits.</p>
+<p><code>run_loop</code> exists to pull async back into sync — it concentrates all sender execution onto a <strong>single thread</strong> that you drive manually. With <code>run_loop</code> you can:</p>
+<ul>
+<li>Run senders sequentially on one thread in unit tests, making assertions straightforward</li>
+<li>Debug sender pipelines with printf, because every operation shares the same call stack</li>
+<li>Implement a simple event loop that serializes all async work</li>
+</ul>
+<p>This also explains why <code>sync_wait</code> uses <code>run_loop</code> internally — <code>sync_wait</code> creates a temporary <code>run_loop</code>, runs the entire sender pipeline on it, and returns the result.</p>
+<hr>
 <h2 id="basic-usage">Basic Usage</h2>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">stdexec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::run_loop loop;</span></span>
 <span class="line"></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Run the event loop on a background thread</span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">std</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">thread</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> worker</span><span style="color:#24292E;--shiki-dark:#E1E4E8">([</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x26;</span><span style="color:#E36209;--shiki-dark:#FFAB70">loop</span><span style="color:#24292E;--shiki-dark:#E1E4E8">] { loop.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">run</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(); });</span></span>
 <span class="line"></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> sch </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> loop.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">get_scheduler</span><span style="color:#24292E;--shiki-dark:#E1E4E8">();</span></span>
 <span class="line"></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Submit work</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> [v] </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> stdexec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">sync_wait</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">  schedule</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(sch) </span><span style="color:#D73A49;--shiki-dark:#F97583">|</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> then</span><span style="color:#24292E;--shiki-dark:#E1E4E8">([] { </span><span style="color:#D73A49;--shiki-dark:#F97583">return</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 42</span><span style="color:#24292E;--shiki-dark:#E1E4E8">; })</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">).</span><span style="color:#6F42C1;--shiki-dark:#B392F0">value</span><span style="color:#24292E;--shiki-dark:#E1E4E8">();</span></span>
 <span class="line"></span>
-<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">loop.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">finish</span><span style="color:#24292E;--shiki-dark:#E1E4E8">();</span></span>
-<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">worker.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">join</span><span style="color:#24292E;--shiki-dark:#E1E4E8">();</span></span></code></pre></div>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">loop.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">finish</span><span style="color:#24292E;--shiki-dark:#E1E4E8">();</span><span style="color:#6A737D;--shiki-dark:#6A737D">   // Signal the event loop to exit</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">worker.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">join</span><span style="color:#24292E;--shiki-dark:#E1E4E8">();</span><span style="color:#6A737D;--shiki-dark:#6A737D">   // Wait for the background thread to finish</span></span></code></pre></div>
+<p>Three steps: create the loop → get the scheduler and submit work → call <code>finish()</code> to exit.</p>
 <hr>
-<h2 id="architecture-overview">Architecture Overview</h2>
-<p><code>run_loop</code>’s internals consist of 4 layers:</p>
-<pre class="mermaid">graph BT
-  Q["__atomic_intrusive_queue&#x3C;br/>MPSC lock-free queue"] --> T["Layer 1: __task&#x3C;br/>Basic work unit in atomic queue"]
-  T --> O["Layer 2: __opstate_t~Rcvr~&#x3C;br/>Operation state from connect"]
-  O --> S["Layer 3: __sndr_t&#x3C;br/>Sender returned by schedule()"]
-  S --> SC["Layer 4: __scheduler_t&#x3C;br/>User-visible scheduler"]</pre>
-<p>Each layer achieves type erasure through <strong>inheritance</strong> and <strong>function pointers</strong>:</p>
-<pre class="mermaid">graph TB
-  T["__task (function pointer + next_ pointer)"]
-  O["__opstate_t~Rcvr~ (template, embeds specific receiver)"]
-  F["connect returns opstate → start() enqueues → run() consumes"]
-  T --> O
-  O --> F</pre>
+<h2 id="architecture-overview-four-layers">Architecture Overview: Four Layers</h2>
+<p><code>run_loop</code>’s internals are organized into four layers, each with a single responsibility:</p>
+<pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="plaintext"><code><span class="line"><span>Layer 4: __scheduler_t     ← User-visible scheduler, provides schedule()</span></span>
+<span class="line"><span>Layer 3: __sndr_t          ← Sender returned by schedule(), provides connect() / get_env()</span></span>
+<span class="line"><span>Layer 2: __opstate_t       ← Operation state produced by connect(), embeds the concrete receiver</span></span>
+<span class="line"><span>Layer 1: __task            ← Type-erased work unit, hanging on the lock-free queue</span></span></code></pre>
+<p>Let’s look from the bottom up.</p>
 <hr>
-<h2 id="layer-1-__task--type-erased-work-unit">Layer 1: <code>__task</code> — Type-erased Work Unit</h2>
-<p>All operations scheduled on <code>run_loop</code> inherit from <code>__task</code>:</p>
+<h2 id="layer-1-__task--function-pointers-instead-of-virtual-functions">Layer 1: <code>__task</code> — Function Pointers Instead of Virtual Functions</h2>
+<p>Every operation scheduled on <code>run_loop</code> becomes a <code>__task</code> hanging on a queue:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">struct</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> __task</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  using</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> __execute_fn_t</span><span style="color:#D73A49;--shiki-dark:#F97583"> =</span><span style="color:#D73A49;--shiki-dark:#F97583"> void</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(__task</span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) </span><span style="color:#D73A49;--shiki-dark:#F97583">noexcept</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
-<span class="line"></span>
-<span class="line"><span style="color:#005CC5;--shiki-dark:#79B8FF">  __execute_fn_t</span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> __execute_fn_ </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> nullptr</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
-<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  __task</span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8">         __next_       </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> nullptr</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#005CC5;--shiki-dark:#79B8FF">  __execute_fn_t</span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> __execute_fn_;</span><span style="color:#6A737D;--shiki-dark:#6A737D">  // Function pointer → actual execution function</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  __task</span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8">         __next_;</span><span style="color:#6A737D;--shiki-dark:#6A737D">        // Linked list pointer → for the intrusive queue</span></span>
 <span class="line"></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  void</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> __execute</span><span style="color:#24292E;--shiki-dark:#E1E4E8">() </span><span style="color:#D73A49;--shiki-dark:#F97583">noexcept</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
-<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    (</span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8">__execute_fn_)(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">this</span><span style="color:#24292E;--shiki-dark:#E1E4E8">);</span><span style="color:#6A737D;--shiki-dark:#6A737D">   // Call via function pointer</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    (</span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8">__execute_fn_)(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">this</span><span style="color:#24292E;--shiki-dark:#E1E4E8">);</span><span style="color:#6A737D;--shiki-dark:#6A737D">       // Indirect call through function pointer</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  }</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">};</span></span></code></pre></div>
-<p>Core design:</p>
-<ul>
-<li><strong><code>__execute_fn_</code></strong>: Function pointer pointing to <code>__opstate_t::__execute_impl</code> static function. This is a manual implementation of a virtual function — each <code>__opstate_t&#x3C;Rcvr></code> specialization provides its own <code>__execute_impl</code>, dispatching <code>set_value</code>/<code>set_stopped</code> to the receiver.</li>
-<li><strong><code>__next_</code></strong>: Intrusive linked list node pointer, used by <code>__atomic_intrusive_queue</code>.</li>
-<li><strong><code>__execute()</code></strong>: Indirectly calls the actual execution function via the function pointer.</li>
-</ul>
-<p>Why not virtual functions? Because <code>__execute</code> needs <code>noexcept</code>, and virtual functions are unavailable in GPU (CUDA) environments. Function pointers + <code>static</code> member functions are the most portable choice across platforms.</p>
+<p>The key design decision above: <strong>why a function pointer instead of a virtual function?</strong></p>
+<p>Because <code>__execute</code> needs <code>noexcept</code> (the standard requires <code>start()</code> not to throw), and virtual functions are unavailable in GPU (CUDA) environments. Function pointers + <code>static</code> member function templates are the most portable, zero-overhead “late binding” solution. Each <code>__opstate_t&#x3C;Rcvr></code> specialization provides its own <code>__execute_impl</code> static function, and the function pointer is set to point to it.</p>
 <hr>
-<h2 id="layer-2-__opstate_trcvr--senders-operation-state">Layer 2: <code>__opstate_t&#x3C;Rcvr></code> — Sender’s Operation State</h2>
-<p>The sender returned by <code>schedule(sch)</code> produces <code>__opstate_t</code> when <code>connect(rcvr)</code> is called:</p>
-<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">template</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> &#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> _Rcvr</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<h2 id="layer-2-__opstate_trcvr--what-connect-produces">Layer 2: <code>__opstate_t&#x3C;Rcvr></code> — What connect Produces</h2>
+<p>When <code>connect(sndr, rcvr)</code> is called, it produces an <code>__opstate_t</code> that inherits from <code>__task</code>:</p>
+<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">template</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> &#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Rcvr</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">struct</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> __opstate_t</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> : __task {</span></span>
-<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  __atomic_intrusive_queue</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;&#x26;</span><span style="color:#6F42C1;--shiki-dark:#B392F0">__task</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::__next_</span><span style="color:#D73A49;--shiki-dark:#F97583">>*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> __queue_;</span></span>
-<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">  __std</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::atomic</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;</span><span style="color:#6F42C1;--shiki-dark:#B392F0">std</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#D73A49;--shiki-dark:#F97583">size_t>*</span><span style="color:#24292E;--shiki-dark:#E1E4E8">                __task_count_;</span></span>
-<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  _Rcvr                                      __rcvr_;</span></span>
-<span class="line"></span>
-<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  static</span><span style="color:#D73A49;--shiki-dark:#F97583"> constexpr</span><span style="color:#D73A49;--shiki-dark:#F97583"> void</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> __execute_impl</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">__task</span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#E36209;--shiki-dark:#FFAB70"> __p</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) </span><span style="color:#D73A49;--shiki-dark:#F97583">noexcept</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
-<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    auto&#x26;</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> __rcvr </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#D73A49;--shiki-dark:#F97583"> static_cast&#x3C;</span><span style="color:#005CC5;--shiki-dark:#79B8FF">__opstate_t</span><span style="color:#D73A49;--shiki-dark:#F97583">*></span><span style="color:#24292E;--shiki-dark:#E1E4E8">(__p)->__rcvr_;</span></span>
-<span class="line"></span>
-<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    if</span><span style="color:#D73A49;--shiki-dark:#F97583"> constexpr</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (unstoppable_token</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;</span><span style="color:#005CC5;--shiki-dark:#79B8FF">stop_token_of_t</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;</span><span style="color:#005CC5;--shiki-dark:#79B8FF">env_of_t</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;</span><span style="color:#24292E;--shiki-dark:#E1E4E8">_Rcvr</span><span style="color:#D73A49;--shiki-dark:#F97583">>>></span><span style="color:#24292E;--shiki-dark:#E1E4E8">) {</span></span>
-<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">      set_value</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#D73A49;--shiki-dark:#F97583">static_cast&#x3C;</span><span style="color:#24292E;--shiki-dark:#E1E4E8">_Rcvr</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x26;&#x26;></span><span style="color:#24292E;--shiki-dark:#E1E4E8">(__rcvr));</span></span>
-<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    }</span></span>
-<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    else</span><span style="color:#D73A49;--shiki-dark:#F97583"> if</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (</span><span style="color:#6F42C1;--shiki-dark:#B392F0">get_stop_token</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">get_env</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(__rcvr)).</span><span style="color:#6F42C1;--shiki-dark:#B392F0">stop_requested</span><span style="color:#24292E;--shiki-dark:#E1E4E8">()) {</span></span>
-<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">      set_stopped</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#D73A49;--shiki-dark:#F97583">static_cast&#x3C;</span><span style="color:#24292E;--shiki-dark:#E1E4E8">_Rcvr</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x26;&#x26;></span><span style="color:#24292E;--shiki-dark:#E1E4E8">(__rcvr));</span></span>
-<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    }</span></span>
-<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    else</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
-<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">      set_value</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#D73A49;--shiki-dark:#F97583">static_cast&#x3C;</span><span style="color:#24292E;--shiki-dark:#E1E4E8">_Rcvr</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x26;&#x26;></span><span style="color:#24292E;--shiki-dark:#E1E4E8">(__rcvr));</span></span>
-<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    }</span></span>
-<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  }</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  __atomic_intrusive_queue</span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> __queue_;</span><span style="color:#6A737D;--shiki-dark:#6A737D">   // → Points to run_loop's task queue</span></span>
+<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">  std</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::atomic</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;size_t>*</span><span style="color:#24292E;--shiki-dark:#E1E4E8">      __task_count_;</span><span style="color:#6A737D;--shiki-dark:#6A737D"> // → In-flight task counter</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  Rcvr                      __rcvr_;</span><span style="color:#6A737D;--shiki-dark:#6A737D">    // → Embedded receiver</span></span>
 <span class="line"></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  void</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> start</span><span style="color:#24292E;--shiki-dark:#E1E4E8">() </span><span style="color:#D73A49;--shiki-dark:#F97583">noexcept</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
-<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    __task_count_-></span><span style="color:#6F42C1;--shiki-dark:#B392F0">fetch_add</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#6F42C1;--shiki-dark:#B392F0">std</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::memory_order_release);</span></span>
-<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    __queue_-></span><span style="color:#6F42C1;--shiki-dark:#B392F0">push</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">this</span><span style="color:#24292E;--shiki-dark:#E1E4E8">);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    __task_count_-></span><span style="color:#6F42C1;--shiki-dark:#B392F0">fetch_add</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#6F42C1;--shiki-dark:#B392F0">std</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::memory_order_release);</span><span style="color:#6A737D;--shiki-dark:#6A737D">  // Count +1</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    __queue_-></span><span style="color:#6F42C1;--shiki-dark:#B392F0">push</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">this</span><span style="color:#24292E;--shiki-dark:#E1E4E8">);</span><span style="color:#6A737D;--shiki-dark:#6A737D">                                    // Enqueue</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  }</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">  // __execute_fn_ points to this static function:</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  static</span><span style="color:#D73A49;--shiki-dark:#F97583"> void</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> __execute_impl</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">__task</span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#E36209;--shiki-dark:#FFAB70"> p</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) </span><span style="color:#D73A49;--shiki-dark:#F97583">noexcept</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    auto&#x26;</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> rcvr </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#D73A49;--shiki-dark:#F97583"> static_cast&#x3C;</span><span style="color:#005CC5;--shiki-dark:#79B8FF">__opstate_t</span><span style="color:#D73A49;--shiki-dark:#F97583">*></span><span style="color:#24292E;--shiki-dark:#E1E4E8">(p)->__rcvr_;</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    if</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (</span><span style="color:#6F42C1;--shiki-dark:#B392F0">get_stop_token</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">get_env</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(rcvr)).</span><span style="color:#6F42C1;--shiki-dark:#B392F0">stop_requested</span><span style="color:#24292E;--shiki-dark:#E1E4E8">())</span></span>
+<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">      set_stopped</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">std</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">move</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(rcvr));</span><span style="color:#6A737D;--shiki-dark:#6A737D">      // Cancelled</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    else</span></span>
+<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">      set_value</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">std</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">move</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(rcvr));</span><span style="color:#6A737D;--shiki-dark:#6A737D">        // Normal completion</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  }</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">};</span></span></code></pre></div>
-<p><code>start()</code> does only two things:</p>
-<ol>
-<li><strong>Increment the task count</strong> (<code>__task_count_</code>) — notifies <code>run_loop</code> of a new in-flight task</li>
-<li><strong>Enqueue</strong> (<code>__queue_->push(this)</code>) — submits itself to the MPSC queue</li>
-</ol>
-<p>Note: <code>start()</code> does not execute any actual work. Work is deferred until the <code>run()</code> thread consumes the queue.</p>
-<h3 id="cancellation-check-in-__execute_impl">Cancellation Check in <code>__execute_impl</code></h3>
-<p><code>__execute_impl</code> checks the stop token before calling <code>set_value</code>. If the environment’s stop token is <code>never_stop_token</code> (compile-time known to be non-cancellable), it skips the check and directly calls <code>set_value</code>. This is a zero-overhead abstraction.</p>
+<p>Key design points:</p>
+<ul>
+<li><code>start()</code> does no real work — it only pushes <code>this</code> onto the queue and bumps the task counter</li>
+<li>Actual work happens when the <code>run()</code> thread pulls the task off the queue</li>
+<li><code>__execute_impl</code> checks the stop token before calling <code>set_value</code>; if cancelled, goes to <code>set_stopped</code></li>
+</ul>
+<p><strong>Zero-overhead optimization</strong>: if the receiver’s environment has <code>never_stop_token</code> (compile-time known to never cancel), the <code>stop_requested()</code> check is optimized out at compile time.</p>
 <hr>
-<h2 id="layer-3-__sndr_t--schedule-sender">Layer 3: <code>__sndr_t</code> — Schedule Sender</h2>
-<p>The sender returned by <code>run_loop::scheduler::schedule()</code>:</p>
+<h2 id="layer-3-__sndr_t--the-sender-returned-by-schedule">Layer 3: <code>__sndr_t</code> — The Sender Returned by schedule</h2>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">struct</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> __sndr_t</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
-<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  using</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> sender_concept</span><span style="color:#D73A49;--shiki-dark:#F97583"> =</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> sender_tag</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
-<span class="line"></span>
-<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  template</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> &#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> _Rcvr</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
-<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  auto</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> connect</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">_Rcvr</span><span style="color:#E36209;--shiki-dark:#FFAB70"> __rcvr</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) </span><span style="color:#D73A49;--shiki-dark:#F97583">const</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> noexcept -> __opstate_t</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;</span><span style="color:#24292E;--shiki-dark:#E1E4E8">_Rcvr</span><span style="color:#D73A49;--shiki-dark:#F97583">></span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
-<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    return</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> __opstate_t</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;</span><span style="color:#24292E;--shiki-dark:#E1E4E8">_Rcvr</span><span style="color:#D73A49;--shiki-dark:#F97583">></span><span style="color:#24292E;--shiki-dark:#E1E4E8">{</span></span>
-<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">      &#x26;</span><span style="color:#24292E;--shiki-dark:#E1E4E8">__loop_->__task_count_,</span></span>
-<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">      &#x26;</span><span style="color:#24292E;--shiki-dark:#E1E4E8">__loop_->__queue_,</span></span>
-<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">      static_cast&#x3C;</span><span style="color:#24292E;--shiki-dark:#E1E4E8">_Rcvr</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x26;&#x26;></span><span style="color:#24292E;--shiki-dark:#E1E4E8">(__rcvr)</span></span>
-<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    };</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">  // connect: directly constructs __opstate_t, no heap allocation</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  template</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> &#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Rcvr</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  auto</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> connect</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">Rcvr</span><span style="color:#E36209;--shiki-dark:#FFAB70"> rcvr</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) </span><span style="color:#D73A49;--shiki-dark:#F97583">const</span><span style="color:#D73A49;--shiki-dark:#F97583"> -></span><span style="color:#005CC5;--shiki-dark:#79B8FF"> __opstate_t</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;</span><span style="color:#24292E;--shiki-dark:#E1E4E8">Rcvr</span><span style="color:#D73A49;--shiki-dark:#F97583">></span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    return</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x26;</span><span style="color:#24292E;--shiki-dark:#E1E4E8">__queue_, </span><span style="color:#D73A49;--shiki-dark:#F97583">&#x26;</span><span style="color:#24292E;--shiki-dark:#E1E4E8">__task_count_, </span><span style="color:#6F42C1;--shiki-dark:#B392F0">std</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">move</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(rcvr)};</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  }</span></span>
 <span class="line"></span>
-<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  template</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> &#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> _RcvrEnv</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">  // get_completion_signatures: compile-time decision based on stop token type</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  template</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> &#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> RcvrEnv</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  static</span><span style="color:#D73A49;--shiki-dark:#F97583"> consteval</span><span style="color:#D73A49;--shiki-dark:#F97583"> auto</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> get_completion_signatures</span><span style="color:#24292E;--shiki-dark:#E1E4E8">() </span><span style="color:#D73A49;--shiki-dark:#F97583">noexcept</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
-<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    if</span><span style="color:#D73A49;--shiki-dark:#F97583"> constexpr</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (unstoppable_token</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;</span><span style="color:#005CC5;--shiki-dark:#79B8FF">stop_token_of_t</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;</span><span style="color:#24292E;--shiki-dark:#E1E4E8">_RcvrEnv</span><span style="color:#D73A49;--shiki-dark:#F97583">>></span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
-<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">      return</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> completion_signatures</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;</span><span style="color:#005CC5;--shiki-dark:#79B8FF">set_value_t</span><span style="color:#24292E;--shiki-dark:#E1E4E8">()</span><span style="color:#D73A49;--shiki-dark:#F97583">></span><span style="color:#24292E;--shiki-dark:#E1E4E8">{};</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    if</span><span style="color:#D73A49;--shiki-dark:#F97583"> constexpr</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (unstoppable_token</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;</span><span style="color:#005CC5;--shiki-dark:#79B8FF">stop_token_of_t</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;</span><span style="color:#24292E;--shiki-dark:#E1E4E8">RcvrEnv</span><span style="color:#D73A49;--shiki-dark:#F97583">>></span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">      return</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> completion_signatures</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;</span><span style="color:#005CC5;--shiki-dark:#79B8FF">set_value_t</span><span style="color:#24292E;--shiki-dark:#E1E4E8">()</span><span style="color:#D73A49;--shiki-dark:#F97583">></span><span style="color:#24292E;--shiki-dark:#E1E4E8">{};</span><span style="color:#6A737D;--shiki-dark:#6A737D">  // Never cancelled → no set_stopped</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    else</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">      return</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> completion_signatures</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;</span><span style="color:#005CC5;--shiki-dark:#79B8FF">set_value_t</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(), </span><span style="color:#005CC5;--shiki-dark:#79B8FF">set_stopped_t</span><span style="color:#24292E;--shiki-dark:#E1E4E8">()</span><span style="color:#D73A49;--shiki-dark:#F97583">></span><span style="color:#24292E;--shiki-dark:#E1E4E8">{};</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  }</span></span>
-<span class="line"></span>
-<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  auto</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> get_env</span><span style="color:#24292E;--shiki-dark:#E1E4E8">() </span><span style="color:#D73A49;--shiki-dark:#F97583">const</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> noexcept -> __attrs_t {</span></span>
-<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    return</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> __attrs_t</span><span style="color:#24292E;--shiki-dark:#E1E4E8">{__loop_};</span></span>
-<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  }</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">};</span></span></code></pre></div>
-<p>Key points:</p>
-<ul>
-<li><strong><code>connect</code></strong>: Directly constructs <code>__opstate_t</code>, passing the queue pointer and task counter. No allocation — all state is stack- or embedded-allocated.</li>
-<li><strong><code>get_completion_signatures</code></strong>: Determines whether <code>set_stopped</code> is possible based on the stop token type of the receiver’s environment. This is a compile-time conditional branch with zero runtime overhead.</li>
-<li><strong><code>get_env</code></strong>: The returned environment contains the <code>get_completion_scheduler&#x3C;set_value_t></code> query, enabling algorithms like <code>continues_on</code> to find the <code>run_loop</code> scheduler.</li>
-</ul>
+<p><code>connect</code> directly constructs the operation state — no heap allocation, all state lives inside the operation state object. <code>get_completion_signatures</code> decides at compile time whether to declare <code>set_stopped</code> based on the receiver’s stop token type, enabling dead code elimination downstream.</p>
 <hr>
-<h2 id="layer-4-__scheduler_t--scheduler">Layer 4: <code>__scheduler_t</code> — Scheduler</h2>
-<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">struct</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> __scheduler</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> : __attrs_t {</span></span>
-<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  using</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> scheduler_concept</span><span style="color:#D73A49;--shiki-dark:#F97583"> =</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> scheduler_tag</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
-<span class="line"></span>
-<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  auto</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> schedule</span><span style="color:#24292E;--shiki-dark:#E1E4E8">() </span><span style="color:#D73A49;--shiki-dark:#F97583">const</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> noexcept -> __sndr_t {</span></span>
-<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    return</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> __sndr_t</span><span style="color:#24292E;--shiki-dark:#E1E4E8">{</span><span style="color:#005CC5;--shiki-dark:#79B8FF">this</span><span style="color:#24292E;--shiki-dark:#E1E4E8">->__loop_};</span></span>
-<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  }</span></span>
-<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">};</span></span></code></pre></div>
-<p><code>__scheduler</code> inherits from <code>__attrs_t</code>, which implements queries like <code>get_completion_scheduler</code>, <code>get_completion_domain</code>, <code>__execute_may_block_caller</code>, etc.</p>
+<h2 id="mpsc-lock-free-queue-treiber-stack">MPSC Lock-Free Queue: Treiber Stack</h2>
+<p>The core data structure of <code>run_loop</code> is a multi-producer, single-consumer lock-free queue:</p>
+<pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="plaintext"><code><span class="line"><span>push(node):                     pop_all():</span></span>
+<span class="line"><span>  CAS write to stack head         atomic exchange the whole linked list</span></span>
+<span class="line"><span>  → notify_one() if first node    → reverse the list (LIFO → FIFO)</span></span>
+<span class="line"><span>                                  → return batch of tasks</span></span></code></pre>
+<p>Why a stack-and-reverse instead of a double-ended queue? Because a Treiber Stack’s <code>push</code> only needs to CAS one atomic variable (<code>head</code>) — simple and efficient. <code>pop_all</code> grabs everything at once in a batch and reverses, amortizing the reversal cost.</p>
+<p><code>alignas(64)</code> ensures <code>head</code> occupies its own cache line, avoiding false sharing.</p>
 <hr>
-<h2 id="__atomic_intrusive_queue-mpsc-lock-free-queue"><code>__atomic_intrusive_queue</code>: MPSC Lock-Free Queue</h2>
-<p><code>run_loop</code>’s core data structure is a <strong>multi-producer, single-consumer</strong> lock-free queue:</p>
-<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">template</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> &#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> _Tp</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, _Tp</span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> _Tp</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#D73A49;--shiki-dark:#F97583"> _NextPtr</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
-<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> alignas(64)</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> __atomic_intrusive_queue</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
-<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">  std</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::atomic</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;</span><span style="color:#24292E;--shiki-dark:#E1E4E8">_Tp</span><span style="color:#D73A49;--shiki-dark:#F97583">*></span><span style="color:#24292E;--shiki-dark:#E1E4E8"> __head_{</span><span style="color:#005CC5;--shiki-dark:#79B8FF">nullptr</span><span style="color:#24292E;--shiki-dark:#E1E4E8">};</span></span>
-<span class="line"></span>
-<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">public:</span></span>
-<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  bool</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> push</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">_Tp</span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#E36209;--shiki-dark:#FFAB70"> __node</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) </span><span style="color:#D73A49;--shiki-dark:#F97583">noexcept</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
-<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    _Tp</span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> __old_head </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> __head_.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">load</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">std</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::memory_order_relaxed);</span></span>
-<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    do</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
-<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">      __node->*_NextPtr </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> __old_head;</span></span>
-<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    } </span><span style="color:#D73A49;--shiki-dark:#F97583">while</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (</span><span style="color:#D73A49;--shiki-dark:#F97583">!</span><span style="color:#24292E;--shiki-dark:#E1E4E8">__head_.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">compare_exchange_weak</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span></span>
-<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        __old_head, __node, </span><span style="color:#6F42C1;--shiki-dark:#B392F0">std</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::memory_order_acq_rel));</span></span>
-<span class="line"></span>
-<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    if</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (__old_head </span><span style="color:#D73A49;--shiki-dark:#F97583">!=</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> nullptr</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
-<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">      return</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> false</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span><span style="color:#6A737D;--shiki-dark:#6A737D">                // Queue not empty, no notification needed</span></span>
-<span class="line"></span>
-<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    __head_.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">notify_one</span><span style="color:#24292E;--shiki-dark:#E1E4E8">();</span><span style="color:#6A737D;--shiki-dark:#6A737D">          // Queue went from empty→non-empty, wake consumer</span></span>
-<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    return</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> true</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
-<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  }</span></span>
-<span class="line"></span>
-<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  void</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> wait_for_item</span><span style="color:#24292E;--shiki-dark:#E1E4E8">() </span><span style="color:#D73A49;--shiki-dark:#F97583">noexcept</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
-<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    __head_.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">wait</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">nullptr</span><span style="color:#24292E;--shiki-dark:#E1E4E8">);</span><span style="color:#6A737D;--shiki-dark:#6A737D">          // Block until __head_ != nullptr</span></span>
-<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  }</span></span>
-<span class="line"></span>
-<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  auto</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> pop_all</span><span style="color:#24292E;--shiki-dark:#E1E4E8">() noexcept -> __intrusive_queue {</span></span>
-<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    auto*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> __list </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> __head_.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">exchange</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">nullptr</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#6F42C1;--shiki-dark:#B392F0">std</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::memory_order_acquire);</span></span>
-<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    return</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> __intrusive_queue</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">make_reversed</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(__list);</span></span>
-<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  }</span></span>
-<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">};</span></span></code></pre></div>
-<h3 id="how-it-works">How It Works</h3>
-<pre class="mermaid">graph LR
-  subgraph push ["push(node)"]
-    P1["CAS push onto stack"]
-    P2["notify (if needed)"]
-    P1 --> P2
-  end
-  subgraph pop_all ["pop_all()"]
-    Q1["exchange(nullptr)"]
-    Q2["Reverse stack → FIFO queue"]
-    Q1 --> Q2
-  end
-  push --> pop_all</pre>
-<ol>
-<li><strong>push</strong>: Uses the Treiber stack algorithm (CAS at the head). If the queue was empty before insertion, calls <code>notify_one()</code> to wake the consumer.</li>
-<li><strong>pop_all</strong>: Atomically swaps out the entire linked list, then <strong>reverses</strong> it (since the Treiber stack is LIFO; reversing makes it FIFO).</li>
-<li><strong>wait_for_item</strong>: Uses <code>std::atomic::wait</code> primitive to block, more efficient than busy-waiting.</li>
-</ol>
-<p><code>alignas(64)</code> ensures <code>__head_</code> occupies its own cache line, avoiding false sharing.</p>
-<h3 id="why-stack--reverse-instead-of-a-queue">Why Stack + Reverse Instead of a Queue?</h3>
-<p>The Treiber stack’s <code>push</code> only needs CAS at the head, making it simple to implement. <code>pop_all</code> + <code>make_reversed</code> batch-retrieves all elements, spreading the cost. Compared to CAS at the tail of a linked list or a double-linked scheme, this design is more efficient in the MPSC scenario.</p>
-<hr>
-<h2 id="coordination-of-run-and-finish">Coordination of <code>run()</code> and <code>finish()</code></h2>
-<h3 id="run--event-loop"><code>run()</code> — Event Loop</h3>
-<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">void</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> run</span><span style="color:#24292E;--shiki-dark:#E1E4E8">() </span><span style="color:#D73A49;--shiki-dark:#F97583">noexcept</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
-<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  while</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (</span><span style="color:#D73A49;--shiki-dark:#F97583">!</span><span style="color:#24292E;--shiki-dark:#E1E4E8">__finishing_.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">load</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">std</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::memory_order_acquire)) {</span></span>
-<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    __queue_.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">wait_for_item</span><span style="color:#24292E;--shiki-dark:#E1E4E8">();</span><span style="color:#6A737D;--shiki-dark:#6A737D">       // Block waiting for work</span></span>
-<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">    __execute_all</span><span style="color:#24292E;--shiki-dark:#E1E4E8">();</span><span style="color:#6A737D;--shiki-dark:#6A737D">                 // Execute batch tasks</span></span>
-<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  }</span></span>
-<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">  // Cleanup phase: execute remaining tasks, wait for in-flight tasks to complete</span></span>
-<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  while</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (</span><span style="color:#6F42C1;--shiki-dark:#B392F0">__execute_all</span><span style="color:#24292E;--shiki-dark:#E1E4E8">()</span></span>
-<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">      ||</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> __task_count_.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">load</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">std</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::memory_order_acquire) </span><span style="color:#D73A49;--shiki-dark:#F97583">></span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
-<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    ;</span></span>
-<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span></code></pre></div>
+<h2 id="the-dance-of-run-and-finish">The Dance of <code>run()</code> and <code>finish()</code></h2>
+<h3 id="run--the-event-loop"><code>run()</code> — The Event Loop</h3>
+<pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="plaintext"><code><span class="line"><span>while (!finishing) {</span></span>
+<span class="line"><span>  queue.wait_for_item();    // Block until new tasks arrive (atomic::wait)</span></span>
+<span class="line"><span>  execute_all();            // Batch-execute all queued tasks</span></span>
+<span class="line"><span>}</span></span>
+<span class="line"><span>// Cleanup phase: finish() has been called</span></span>
+<span class="line"><span>while (execute_all() || task_count > 0)</span></span>
+<span class="line"><span>  ;  // Drain remaining tasks, wait for all in-flight ops to complete</span></span></code></pre>
 <p>Two phases:</p>
-<p><strong>Phase 1 — Normal loop</strong>: When <code>__finishing_</code> is <code>false</code>, block waiting for new tasks → batch-execute all queued tasks → continue waiting. Multiple threads may call <code>run()</code> simultaneously (but there is only one consumer, since <code>pop_all</code> is single-consumer).</p>
-<p><strong>Phase 2 — Cleanup</strong>: <code>finish()</code> has been called. Continue executing remaining tasks and wait for all in-flight tasks to complete (<code>__task_count_</code> reaches zero).</p>
-<h3 id="finish--request-stop"><code>finish()</code> — Request Stop</h3>
+<ul>
+<li><strong>Phase 1 (normal operation)</strong>: block waiting for new tasks → batch-dequeue everything → execute one by one → back to waiting</li>
+<li><strong>Phase 2 (cleanup)</strong>: <code>finish()</code> has been called, drain the remaining queue, wait until every in-flight task has ended</li>
+</ul>
+<h3 id="finish--request-exit"><code>finish()</code> — Request Exit</h3>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">void</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> finish</span><span style="color:#24292E;--shiki-dark:#E1E4E8">() </span><span style="color:#D73A49;--shiki-dark:#F97583">noexcept</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
-<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  __task_count_.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">fetch_add</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">2</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#6F42C1;--shiki-dark:#B392F0">std</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::memory_order_release);</span><span style="color:#6A737D;--shiki-dark:#6A737D">  // Prevent lifetime race</span></span>
-<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  if</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (</span><span style="color:#D73A49;--shiki-dark:#F97583">!</span><span style="color:#24292E;--shiki-dark:#E1E4E8">__finishing_.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">exchange</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">true</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#6F42C1;--shiki-dark:#B392F0">std</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::memory_order_acq_rel)) {</span></span>
-<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    __queue_.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">push</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x26;</span><span style="color:#24292E;--shiki-dark:#E1E4E8">__noop_task);</span><span style="color:#6A737D;--shiki-dark:#6A737D">       // Wake consumer</span></span>
-<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    __task_count_.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">fetch_sub</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#6F42C1;--shiki-dark:#B392F0">std</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::memory_order_release);</span></span>
-<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    return</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  __task_count_.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">fetch_add</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">2</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#6F42C1;--shiki-dark:#B392F0">std</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::memory_order_release);</span><span style="color:#6A737D;--shiki-dark:#6A737D">  // Protect self from early run() exit</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  if</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (</span><span style="color:#D73A49;--shiki-dark:#F97583">!</span><span style="color:#24292E;--shiki-dark:#E1E4E8">__finishing_.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">exchange</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">true</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)) {</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    __queue_.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">push</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x26;</span><span style="color:#24292E;--shiki-dark:#E1E4E8">__noop_task);</span><span style="color:#6A737D;--shiki-dark:#6A737D">  // Push a dummy task to wake run()</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    __task_count_.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">fetch_sub</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">);</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  }</span></span>
-<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  __task_count_.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">fetch_sub</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">2</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#6F42C1;--shiki-dark:#B392F0">std</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::memory_order_release);</span><span style="color:#6A737D;--shiki-dark:#6A737D">  // Repeated finish</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span></code></pre></div>
-<p>The <code>__task_count_</code> increment logic here is key:</p>
-<pre class="mermaid">graph TD
-  A["finish() adds 2"]
-  A --> B["+1: protect itself&#x3C;br/>prevent run() from exiting before finish() completes"]
-  A --> C["+1: noop_task&#x3C;br/>ensure it is consumed after enqueueing"]
-  C --> D["-1 when noop_task executes"]
-  A --> E["finish() decrements by 1"]
-  D --> F["Net effect: +2 -1 -1 = 0"]
-  E --> F</pre>
-<p>If <code>finish()</code> is called repeatedly, the second call directly does <code>fetch_sub(2)</code> and returns.</p>
-<h3 id="__execute_all--batch-consumption"><code>__execute_all()</code> — Batch Consumption</h3>
-<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">bool</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> __execute_all</span><span style="color:#24292E;--shiki-dark:#E1E4E8">() </span><span style="color:#D73A49;--shiki-dark:#F97583">noexcept</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
-<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> __queue </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> __queue_.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">pop_all</span><span style="color:#24292E;--shiki-dark:#E1E4E8">();</span></span>
-<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  if</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (__queue.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">begin</span><span style="color:#24292E;--shiki-dark:#E1E4E8">() </span><span style="color:#D73A49;--shiki-dark:#F97583">==</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> __queue.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">end</span><span style="color:#24292E;--shiki-dark:#E1E4E8">())</span></span>
-<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    return</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> false</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
-<span class="line"></span>
-<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">  std</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#D73A49;--shiki-dark:#F97583">size_t</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> __task_count </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
-<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> __it </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> __queue.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">begin</span><span style="color:#24292E;--shiki-dark:#E1E4E8">();</span></span>
-<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  do</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
-<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> __prev </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> __it</span><span style="color:#D73A49;--shiki-dark:#F97583">++</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span><span style="color:#6A737D;--shiki-dark:#6A737D">       // Advance iterator first, then execute task</span></span>
-<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    (</span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8">__prev)-></span><span style="color:#6F42C1;--shiki-dark:#B392F0">__execute</span><span style="color:#24292E;--shiki-dark:#E1E4E8">();</span><span style="color:#6A737D;--shiki-dark:#6A737D">     // Execute → may trigger set_value/set_stopped</span></span>
-<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    ++</span><span style="color:#24292E;--shiki-dark:#E1E4E8">__task_count;</span></span>
-<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  } </span><span style="color:#D73A49;--shiki-dark:#F97583">while</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (__it </span><span style="color:#D73A49;--shiki-dark:#F97583">!=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> __queue.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">end</span><span style="color:#24292E;--shiki-dark:#E1E4E8">());</span></span>
-<span class="line"></span>
-<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  __queue.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">clear</span><span style="color:#24292E;--shiki-dark:#E1E4E8">();</span></span>
-<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  __task_count_.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">fetch_sub</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(__task_count, </span><span style="color:#6F42C1;--shiki-dark:#B392F0">std</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::memory_order_release);</span></span>
-<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  return</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> true</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
-<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span></code></pre></div>
-<p>Note the order in the <code>do-while</code> loop: <strong>advance the iterator first, then execute the task</strong>. Executing the task may cause the node pointed to by <code>__prev</code> to be destroyed (because the receiver’s <code>set_value</code> may release the operation state), but <code>__it</code> already points to the next node, so access is safe.</p>
+<p>The net effect of <code>+2 -1 = +1</code> is to prevent <code>run()</code> from exiting and freeing the loop object before <code>finish()</code> has completed — a clever lifetime protection trick.</p>
+<p>The batch execution loop also has a subtle iteration order: <strong>advance the iterator first, then execute the task</strong>. Executing a task may destroy the current node (the receiver’s <code>set_value</code> could free the operation state), but the iterator has already moved to the next node, so the access is safe.</p>
 <hr>
-<h2 id="sync_waits-use-of-run_loop"><code>sync_wait</code>’s Use of <code>run_loop</code></h2>
-<p><code>sync_wait</code> internally uses <code>run_loop</code> to drive asynchronous operations:</p>
+<h2 id="how-sync_wait-uses-run_loop">How <code>sync_wait</code> Uses <code>run_loop</code></h2>
 <pre class="mermaid">graph TD
-  A["sync_wait(sndr)"]
-  A --> B["Create run_loop loop"]
-  A --> C["connect(sndr, internal receiver)"]
-  C --> D["receiver.get_env() returns&#x3C;br/>{get_scheduler: loop.get_scheduler()}"]
-  A --> E["start(op)"]
-  A --> F["loop.run()"]
-  F --> G["Block current thread until finish()"]
-  A --> H["Return result"]</pre>
-<p>This is why <code>sync_wait(get_scheduler())</code> returns <code>run_loop::scheduler</code>:</p>
-<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Test: "sync_wait provides run_loop::scheduler via get_scheduler"</span></span>
-<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> [sched] </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> stdexec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">sync_wait</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">stdexec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">get_scheduler</span><span style="color:#24292E;--shiki-dark:#E1E4E8">()).</span><span style="color:#6F42C1;--shiki-dark:#B392F0">value</span><span style="color:#24292E;--shiki-dark:#E1E4E8">();</span></span>
-<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// sched's type is run_loop::scheduler</span></span></code></pre></div>
-<p><code>sync_wait</code>’s receiver environment points <code>get_scheduler</code> to the internal <code>run_loop</code>:</p>
-<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">struct</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> __receiver</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
-<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  run_loop</span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> __loop_;</span></span>
-<span class="line"></span>
-<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  auto</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> get_env</span><span style="color:#24292E;--shiki-dark:#E1E4E8">() </span><span style="color:#D73A49;--shiki-dark:#F97583">const</span><span style="color:#D73A49;--shiki-dark:#F97583"> noexcept</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
-<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    return</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> env{prop{get_scheduler, __loop_-></span><span style="color:#6F42C1;--shiki-dark:#B392F0">get_scheduler</span><span style="color:#24292E;--shiki-dark:#E1E4E8">()}};</span></span>
-<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  }</span></span>
-<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">  // set_value / set_error / set_stopped all call __loop_.finish()</span></span>
-<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">};</span></span></code></pre></div>
-<p>This means any work redirected to the <code>run_loop</code> scheduler via <code>continues_on</code> or <code>starts_on</code> will execute synchronously on the calling thread of <code>sync_wait</code>.</p>
+  A["sync_wait(sndr)"] --> B["Create run_loop"]
+  B --> C["connect(sndr, internal receiver)"]
+  C --> D["receiver.get_env() → {get_scheduler: loop.get_scheduler()}"]
+  D --> E["start(op)"]
+  E --> F["loop.run() — blocks the calling thread"]
+  F --> G["receiver's set_value / set_error calls loop.finish()"]
+  G --> H["loop.run() returns → sync_wait returns result"]</pre>
+<p>This is the secret of how <code>sync_wait</code> turns async into sync — it creates a <code>run_loop</code> internally, then stands on <code>loop.run()</code> blocking until the sender pipeline completes and calls <code>finish()</code>.</p>
+<p>This also explains why <code>sync_wait(get_scheduler())</code> returns <code>run_loop::scheduler</code> — the <code>sync_wait</code> internal receiver’s environment has its <code>get_scheduler</code> query pointing to this internal run_loop’s scheduler.</p>
 <hr>
-<h2 id="run_loop-vs-other-execution-contexts"><code>run_loop</code> vs Other Execution Contexts</h2>
-<pre class="mermaid">block
-  columns 5
-  Attribute_Comparison:5
-  L0[" "] inline["inline"] pool["static_thread_pool"] loop["run_loop"] par["parallel_scheduler"]
-  L1["Driven by"] imm["Immediate"] tp["Thread pool auto"] man["Manual run()"] sys["System parallel backend"]
-  L2["Queue"] none["None"] mpsc["Per-worker MPSC"] shared["Shared MPSC"] ws["Work-stealing"]
-  L3["Use case"] test["Testing"] async["General async"] event["Event loop"] cpu["CPU parallelism"]
-  L4["blocking"] nev["never"] blk["blocking"] maybe["maybe"] idef["implementation-defined"]
-  L5["forward_progress"] P1["parallel"] P2["parallel"] P3["parallel"] P4["parallel"]</pre>
-<h3 id="custom-event-loop">Custom Event Loop</h3>
-<p><code>run_loop</code> is a minimal reference implementation for a manual event loop. It can be used to build dedicated execution contexts:</p>
+<h2 id="wrapping-run_loop-as-your-own-event-loop">Wrapping run_loop as Your Own Event Loop</h2>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> my_event_loop</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">  stdexec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::run_loop loop_;</span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">  std</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::thread worker_;</span></span>
@@ -310,17 +165,58 @@
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    worker_.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">join</span><span style="color:#24292E;--shiki-dark:#E1E4E8">();</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  }</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">};</span></span></code></pre></div>
+<p>Above, we wrap <code>run_loop</code> into an event loop object with its own worker thread — started in the constructor, gracefully shut down in the destructor. This is a common usage pattern.</p>
 <hr>
-<h2 id="key-takeaways">Key Takeaways</h2>
+<h2 id="run_loop-vs-other-execution-contexts">run_loop vs Other Execution Contexts</h2>
+<div class="table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Property</th><th>inline_scheduler</th><th>run_loop</th><th>static_thread_pool</th></tr></thead><tbody><tr><td>Drive mode</td><td>Caller thread directly</td><td>Manual <code>run()</code> call</td><td>Thread pool auto</td></tr><tr><td>Thread count</td><td>0 (caller-owned)</td><td>1</td><td>User-specified</td></tr><tr><td>Queue</td><td>None</td><td>MPSC lock-free</td><td>Per-worker MPSC</td></tr><tr><td>Use case</td><td>Tests, quick prototypes</td><td>Debugging, testing, event loops</td><td>Production async</td></tr><tr><td>Blocks caller</td><td>Yes</td><td>Yes (inside run())</td><td>No</td></tr></tbody></table></div>
+<hr>
+<h2 id="limitations">Limitations</h2>
 <ol>
-<li><strong>4-layer architecture</strong>: <code>__task</code> → <code>__opstate_t&#x3C;Rcvr></code> → <code>__sndr_t</code> → <code>__scheduler_t</code>, each with a single responsibility</li>
-<li><strong>Function pointer type-erasure</strong>: <code>__execute_fn_</code> replaces virtual functions, supporting GPU compilation</li>
-<li><strong>MPSC queue</strong>: Treiber stack + CAS + <code>atomic::wait</code>, reversed to FIFO during batch consumption</li>
-<li><strong><code>__task_count_</code> lifetime management</strong>: prevents <code>run()</code> from exiting before in-flight tasks complete</li>
-<li><strong><code>sync_wait</code> integration</strong>: internal <code>run_loop</code> drives execution, <code>get_scheduler</code> query points to it</li>
-<li><strong>Zero-overhead cancellation</strong>: <code>unstoppable_token</code> skips <code>set_stopped</code> check at compile time</li>
-</ol>
-<hr></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/29-structured-concurrency/" data-astro-cid-ykvenys5>← 29 · Structured Concurrency — async_scope / counting_scope</a><a href="/exec/tutorials/31-parallel-scheduler/" data-astro-cid-ykvenys5>31 · parallel_scheduler — Standard Parallel Scheduler →</a></nav></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
+<li><strong>Single consumer</strong> — multiple threads concurrently calling <code>run()</code> is undefined behavior. This is a single-threaded event loop model, not a thread pool.</li>
+<li><strong>Blocking drive</strong> — <code>run()</code> blocks the calling thread until <code>finish()</code> is called. You can’t execute other work on that thread unless you put <code>loop.run()</code> in a background thread.</li>
+<li><strong>Not recommended for direct production use</strong> — <code>run_loop</code> is designed for understanding the model, writing tests, and prototyping. Production environments should use <code>static_thread_pool</code> or <code>parallel_scheduler</code>.</li>
+</ol></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/29-structured-concurrency/" data-astro-cid-ykvenys5>← 29 · Structured Concurrency — Giving Every Async Operation a Home</a><a href="/exec/tutorials/31-parallel-scheduler/" data-astro-cid-ykvenys5>31 · parallel_scheduler — CPU Parallel Computing Scheduler →</a></nav></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
       (function() {
         const STORAGE_KEY = "exectutorial-theme";
 
