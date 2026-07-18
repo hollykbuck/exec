@@ -6,19 +6,25 @@
         document.documentElement.setAttribute("data-theme",theme);
       })();
     </script><link rel="stylesheet" href="/exec/_astro/01-why-stdexec.hXKgsPrw.css"></head><body data-astro-cid-ykvenys5><div class="container" data-astro-cid-ykvenys5><header data-astro-cid-ykvenys5><div class="title-area" data-astro-cid-ykvenys5><a href="/exec" style="color:var(--fg-muted);text-decoration:none;font-size:0.85rem;" data-astro-cid-ykvenys5>← Back to index</a><h1 data-astro-cid-ykvenys5>10 · Scheduler Concept</h1></div><button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" data-astro-cid-ykvenys5>🌙</button></header><article class="article-content" data-astro-cid-ykvenys5>
-<blockquote>
-<p><strong>Standard section</strong>: <code>[exec.sched]</code>
-<strong>stdexec reference</strong>: <code>include/stdexec/concepts.hpp</code>
-<strong>Related tests</strong>: <code>tests/test_thread_pool.cpp</code> · <code>tests/test_custom_scheduler.cpp</code>, <code>exec/inline_scheduler.hpp</code></p>
-</blockquote>
-<h2 id="definition">Definition</h2>
-<p>Standard definition (<code>exec.tex:310</code>):</p>
+<h2 id="overview">Overview</h2>
+<p>What is a Scheduler? In one sentence: it’s an <strong>abstraction of an execution resource</strong> — thread pool, GPU stream, event loop — all accessed through the same <code>schedule()</code> interface.</p>
+<p>In traditional async programming, every execution resource has a different API:</p>
+<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Three resources, three different interfaces</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">thread_pool.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">submit</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(work);</span><span style="color:#6A737D;--shiki-dark:#6A737D">       // thread pool</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">cuda_stream.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">launch</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(kernel);</span><span style="color:#6A737D;--shiki-dark:#6A737D">     // GPU</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">event_loop.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">post</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(callback);</span><span style="color:#6A737D;--shiki-dark:#6A737D">      // event loop</span></span></code></pre></div>
+<p>P2300 takes a different approach: regardless of the underlying resource, you always call <code>schedule(sch)</code>, which returns a Sender:</p>
+<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Unified interface: schedule(sch) returns a Sender</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">sender </span><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> s1 </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> schedule</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(thread_pool_scheduler);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">sender </span><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> s2 </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> schedule</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(gpu_scheduler);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">sender </span><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> s3 </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> schedule</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(event_loop_scheduler);</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// All three used identically — differences encapsulated inside the scheduler</span></span></code></pre></div>
+<p>In the code above, you can see the core value of Scheduler: <strong>unified abstraction</strong>. Upper-layer code doesn’t care whether the backend is CPU threads, GPU, or an IO event loop — just get a Scheduler, call <code>schedule(sch)</code> to get a Sender, then express your business logic as a Sender pipeline.</p>
+<p>The standard’s definition of Scheduler is in <code>[exec.sched]</code>:</p>
 <blockquote>
 <p>A <em>scheduler</em> is an abstraction of an execution resource with a uniform, generic interface for scheduling work onto that resource.</p>
 </blockquote>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">namespace</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> std</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">execution</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
-<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  struct</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> scheduler_tag</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {};</span></span>
-<span class="line"></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  template</span><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Sch</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  concept</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> scheduler </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">    std</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::destructible</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;</span><span style="color:#24292E;--shiki-dark:#E1E4E8">Sch</span><span style="color:#D73A49;--shiki-dark:#F97583">></span><span style="color:#D73A49;--shiki-dark:#F97583"> &#x26;&#x26;</span></span>
@@ -30,19 +36,34 @@
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">        -></span><span style="color:#24292E;--shiki-dark:#E1E4E8"> same_as</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;</span><span style="color:#24292E;--shiki-dark:#E1E4E8">forward_progress_guarantee</span><span style="color:#D73A49;--shiki-dark:#F97583">></span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    };</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span></code></pre></div>
-<p>A scheduler must satisfy:</p>
+<p>In the code above, the <code>scheduler</code> concept requires three things: <strong>value semantics</strong> (destructible, copyable, comparable), <strong><code>schedule(sch)</code> returns a Sender</strong>, and <strong>support for querying the concurrency guarantee</strong>.</p>
+<h2 id="what-schedule-does">What schedule() Does</h2>
+<p><code>schedule(sch)</code> returns a Sender that does three things:</p>
 <ol>
-<li><strong>Destructible, copy constructible, equality comparable</strong></li>
-<li><strong><code>schedule(sch)</code></strong> returns a sender (which executes on that execution resource)</li>
-<li><strong><code>query(get_forward_progress_guarantee)</code></strong> returns the concurrency guarantee</li>
+<li>Acquires an execution agent on the resource associated with the scheduler</li>
+<li>Calls <code>set_value(rcvr)</code> (no arguments) on that execution agent</li>
+<li>After completion, the value completion scheduler is <code>sch</code> itself</li>
 </ol>
-<h2 id="forward_progress_guarantee"><code>forward_progress_guarantee</code></h2>
+<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">scheduler </span><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> sch </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> pool.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">get_scheduler</span><span style="color:#24292E;--shiki-dark:#E1E4E8">();</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// "Do nothing" on the thread pool — just switch execution context</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">sender </span><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> s </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> schedule</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(sch);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Practical usage: execute business logic on a thread pool thread</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">sender </span><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> work </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> schedule</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(sch)</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">                 |</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> then</span><span style="color:#24292E;--shiki-dark:#E1E4E8">([] {</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">                     // This code runs on a thread pool thread</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">                     return</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> heavy_computation</span><span style="color:#24292E;--shiki-dark:#E1E4E8">();</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                   });</span></span></code></pre></div>
+<p>In the code above, <code>schedule(sch)</code> itself does no meaningful work — it only ensures the empty <code>set_value()</code> is sent on the correct execution resource. The actual business logic goes in the subsequent <code>then</code>.</p>
+<h2 id="three-concurrency-guarantees">Three Concurrency Guarantees</h2>
+<p>Every Scheduler must declare its concurrency characteristics:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">enum</span><span style="color:#D73A49;--shiki-dark:#F97583"> class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> forward_progress_guarantee</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
 <span class="line"><span style="color:#005CC5;--shiki-dark:#79B8FF">  concurrent</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span><span style="color:#6A737D;--shiki-dark:#6A737D">       // may execute concurrently, but may block each other</span></span>
 <span class="line"><span style="color:#005CC5;--shiki-dark:#79B8FF">  parallel</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span><span style="color:#6A737D;--shiki-dark:#6A737D">         // true parallel execution (multi-core)</span></span>
 <span class="line"><span style="color:#005CC5;--shiki-dark:#79B8FF">  weakly_parallel</span><span style="color:#6A737D;--shiki-dark:#6A737D">   // weak parallelism (e.g. GPU warp)</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">};</span></span></code></pre></div>
-<p>Guarantees for different schedulers:</p>
+<p>Concurrency guarantees for different schedulers:</p>
 <div class="table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch">
 
 
@@ -64,69 +85,87 @@
 
 
 
-<table><thead><tr><th>Scheduler</th><th>Guarantee</th></tr></thead><tbody><tr><td><code>inline_scheduler</code></td><td><code>concurrent</code> (on the current thread)</td></tr><tr><td><code>static_thread_pool</code></td><td><code>parallel</code> (multi-threaded)</td></tr><tr><td><code>nvexec::stream_scheduler</code></td><td><code>weakly_parallel</code> (GPU)</td></tr></tbody></table></div>
-<h2 id="behavior-of-schedule">Behavior of <code>schedule</code></h2>
-<p><code>schedule(sch)</code> returns a sender whose asynchronous operation will:</p>
-<ol>
-<li>Acquire an execution agent on the execution resource associated with <code>sch</code></li>
-<li>Execute <code>set_value(rcvr)</code> (no arguments) on that execution agent</li>
-<li>Upon completion, the value completion scheduler is <code>sch</code> itself</li>
-</ol>
-<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">scheduler </span><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> sch </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> pool.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">get_scheduler</span><span style="color:#24292E;--shiki-dark:#E1E4E8">();</span></span>
+
+
+
+
+<table><thead><tr><th>Scheduler</th><th>Guarantee</th><th>Notes</th></tr></thead><tbody><tr><td><code>inline_scheduler</code></td><td><code>concurrent</code></td><td>Executes synchronously on the current thread</td></tr><tr><td><code>static_thread_pool</code></td><td><code>parallel</code></td><td>Multiple threads running truly in parallel</td></tr><tr><td><code>nvexec::stream_scheduler</code></td><td><code>weakly_parallel</code></td><td>GPU stream execution</td></tr></tbody></table></div>
+<p>In the table above, <code>concurrent</code> is the most basic guarantee — multiple tasks may be executing at the same time, but tasks on the same thread must queue sequentially. <code>parallel</code> is a stronger guarantee — it means true parallel access through lock-free data structures is possible. <code>weakly_parallel</code> applies to highly constrained execution environments like GPUs.</p>
+<h2 id="built-in-schedulers">Built-in Schedulers</h2>
+<h3 id="inline_scheduler">inline_scheduler</h3>
+<p><code>inline_scheduler</code> is the simplest scheduler — its <code>start()</code> calls <code>set_value</code> directly on the current call stack:</p>
+<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">exec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::inline_scheduler sch;</span></span>
 <span class="line"></span>
-<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// equivalent to "do nothing on pool's thread"</span></span>
-<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">sender </span><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> s </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> schedule</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(sch);</span></span>
-<span class="line"></span>
-<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// practical form: execute work on the thread pool</span></span>
-<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">sender </span><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> work </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> schedule</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(sch)</span></span>
-<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">                 |</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> then</span><span style="color:#24292E;--shiki-dark:#E1E4E8">([] {</span><span style="color:#6A737D;--shiki-dark:#6A737D"> /* execute on thread pool thread */</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> });</span></span></code></pre></div>
-<h2 id="built-in-scheduler-comparison">Built-in Scheduler Comparison</h2>
-<h3 id="inline_scheduler"><code>inline_scheduler</code></h3>
-<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> inline_scheduler</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
-<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">  // the sender returned by schedule(sch) executes immediately on the current thread</span></span>
-<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">  // essentially completes synchronously on the start() call stack</span></span>
-<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">};</span></span></code></pre></div>
-<p>Implementation essence: <code>inline_scheduler::schedule()</code> returns a sender whose <code>start()</code> directly calls <code>set_value(rcvr)</code>.</p>
-<h3 id="static_thread_poolscheduler"><code>static_thread_pool::scheduler</code></h3>
-<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">exec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::static_thread_pool pool{</span><span style="color:#005CC5;--shiki-dark:#79B8FF">4</span><span style="color:#24292E;--shiki-dark:#E1E4E8">};</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// The Sender returned by schedule(sch) completes synchronously in start()</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> op </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> connect</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">schedule</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(sch), my_receiver{});</span></span>
+<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">start</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(op);</span><span style="color:#6A737D;--shiki-dark:#6A737D">  // set_value(rcvr) is called synchronously on this call stack</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">            // When start() returns, the Receiver has already received the result</span></span></code></pre></div>
+<p>In the code above, <code>inline_scheduler</code> is <strong>fully synchronous</strong>. It’s mainly used for testing, or as a “placeholder scheduler” in scenarios that don’t need asynchronous dispatch.</p>
+<h3 id="static_thread_pool">static_thread_pool</h3>
+<p><code>static_thread_pool</code> creates a fixed-size thread pool:</p>
+<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">exec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::static_thread_pool pool{</span><span style="color:#005CC5;--shiki-dark:#79B8FF">4</span><span style="color:#24292E;--shiki-dark:#E1E4E8">};</span><span style="color:#6A737D;--shiki-dark:#6A737D">  // 4 worker threads</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> sch </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> pool.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">get_scheduler</span><span style="color:#24292E;--shiki-dark:#E1E4E8">();</span></span>
 <span class="line"></span>
-<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// the sender returned by schedule(sch) will:</span></span>
-<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// 1. submit the work to the thread pool's queue</span></span>
-<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// 2. a thread in the pool picks up the work</span></span>
-<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// 3. calls set_value(rcvr) on that thread</span></span></code></pre></div>
-<h3 id="run_loopscheduler"><code>run_loop::scheduler</code></h3>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">sender </span><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> work </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> schedule</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(sch)</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">                 |</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> then</span><span style="color:#24292E;--shiki-dark:#E1E4E8">([] {</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">                     // Executes on one of the thread pool's threads</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">                     return</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> some_work</span><span style="color:#24292E;--shiki-dark:#E1E4E8">();</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                   });</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Flow of schedule(sch):</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// 1. start() submits the work to the thread pool queue, then returns immediately</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// 2. An idle thread in the pool picks up the work</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// 3. That thread calls set_value(rcvr)</span></span></code></pre></div>
+<p>In the code above, <code>start()</code> returns immediately and the actual work completes on a background thread. You don’t need to manually manage thread creation and destruction — <code>static_thread_pool</code> cleans up automatically in its destructor.</p>
+<h3 id="run_loop">run_loop</h3>
+<p><code>run_loop</code> is a <strong>single-threaded event loop</strong> — you must manually invoke <code>loop.run()</code> to drive it:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">stdexec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::run_loop loop;</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> sch </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> loop.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">get_scheduler</span><span style="color:#24292E;--shiki-dark:#E1E4E8">();</span></span>
 <span class="line"></span>
-<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// start a thread to process events</span></span>
-<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">std</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">thread</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> t</span><span style="color:#24292E;--shiki-dark:#E1E4E8">([</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x26;</span><span style="color:#E36209;--shiki-dark:#FFAB70">loop</span><span style="color:#24292E;--shiki-dark:#E1E4E8">] { loop.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">run</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(); });</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Submit work to the run_loop queue (doesn't execute immediately)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">sender </span><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> work </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> schedule</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(sch)</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">                 |</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> then</span><span style="color:#24292E;--shiki-dark:#E1E4E8">([] { </span><span style="color:#D73A49;--shiki-dark:#F97583">return</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> delayed_task</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(); });</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> op </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> connect</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(work, my_receiver{});</span></span>
+<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">start</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(op);</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Now the work is in the queue, but hasn't executed yet</span></span>
 <span class="line"></span>
-<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// schedule(sch) submits work to the run_loop's queue</span></span>
-<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// loop.run() consumes that work</span></span></code></pre></div>
-<h2 id="how-to-write-a-scheduler">How to Write a Scheduler</h2>
-<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Corresponding tests: test_custom_scheduler.cpp, test_cpo.cpp → "custom scheduler with member schedule() is callable"</span></span>
-<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">struct</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> my_scheduler</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
-<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">  // concurrency guarantee</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Run the event loop — processes queued work</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">loop.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">run</span><span style="color:#24292E;--shiki-dark:#E1E4E8">();</span><span style="color:#6A737D;--shiki-dark:#6A737D">  // returns after all work is done</span></span></code></pre></div>
+<p>In the code above, <code>run_loop</code> is suitable for scenarios requiring <strong>precise control over execution timing</strong> — for example, simulating a single-threaded environment in tests, or using a main loop to drive all async operations in an embedded system.</p>
+<h3 id="comparison">Comparison</h3>
+<p>The core difference between the three schedulers — when <code>set_value</code> gets called after <code>start()</code>:</p>
+<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// inline_scheduler:    set_value called before start() returns</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// static_thread_pool:  start() returns immediately, set_value called on another thread</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// run_loop:            start() returns immediately, set_value called inside loop.run()</span></span></code></pre></div>
+<p>The comments above summarize the timing differences. Understanding these differences is essential for using each scheduler correctly.</p>
+<h2 id="implementing-a-custom-scheduler">Implementing a Custom Scheduler</h2>
+<p>Implementing a custom scheduler requires two parts: the scheduler class itself, and the Sender returned by <code>schedule()</code>.</p>
+<h3 id="step-1-define-the-scheduler-class">Step 1: Define the Scheduler Class</h3>
+<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">struct</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> my_scheduler</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">  // Declare concurrency guarantee</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  friend</span><span style="color:#D73A49;--shiki-dark:#F97583"> auto</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> tag_invoke</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">    stdexec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#005CC5;--shiki-dark:#79B8FF">tag_t</span><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#6F42C1;--shiki-dark:#B392F0">stdexec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">get_forward_progress_guarantee</span><span style="color:#24292E;--shiki-dark:#E1E4E8">>,</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    const</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> my_scheduler</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x26;</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) noexcept -> stdexec::forward_progress_guarantee {</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    return</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> stdexec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">forward_progress_guarantee</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::concurrent;</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  }</span></span>
 <span class="line"></span>
-<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">  // equality comparison</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">  // Value semantics: support equality comparison</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  bool</span><span style="color:#D73A49;--shiki-dark:#F97583"> operator</span><span style="color:#6F42C1;--shiki-dark:#B392F0">==</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#D73A49;--shiki-dark:#F97583">const</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> my_scheduler</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x26;</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) </span><span style="color:#D73A49;--shiki-dark:#F97583">const</span><span style="color:#D73A49;--shiki-dark:#F97583"> =</span><span style="color:#D73A49;--shiki-dark:#F97583"> default</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
-<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">};</span></span>
-<span class="line"></span>
-<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// custom sender returned by schedule</span></span>
-<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">struct</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> my_schedule_sender</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">};</span></span></code></pre></div>
+<p>In the code above, <code>get_forward_progress_guarantee</code> is the scheduler’s “ID card” — the framework uses it to assess the scheduler’s concurrency abilities. We chose <code>concurrent</code> because our scheduler executes synchronously on the current thread.</p>
+<h3 id="step-2-implement-the-schedule-sender">Step 2: Implement the schedule Sender</h3>
+<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">struct</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> my_schedule_sender</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  using</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> sender_concept</span><span style="color:#D73A49;--shiki-dark:#F97583"> =</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> stdexec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">sender_tag</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">  // Declare completion signatures</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  using</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> completion_signatures</span><span style="color:#D73A49;--shiki-dark:#F97583"> =</span></span>
+<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">    stdexec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::completion_signatures</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;</span><span style="color:#6F42C1;--shiki-dark:#B392F0">stdexec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">set_value_t</span><span style="color:#24292E;--shiki-dark:#E1E4E8">()</span><span style="color:#D73A49;--shiki-dark:#F97583">></span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
 <span class="line"></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  template</span><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#6F42C1;--shiki-dark:#B392F0">stdexec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#D73A49;--shiki-dark:#F97583">receiver</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> R</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  struct</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> operation</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    R rcvr_;</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    void</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> start</span><span style="color:#24292E;--shiki-dark:#E1E4E8">() </span><span style="color:#D73A49;--shiki-dark:#F97583">&#x26;</span><span style="color:#D73A49;--shiki-dark:#F97583"> noexcept</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
-<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">      // execute on the actual execution resource</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">      // Call set_value on this execution resource</span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">      stdexec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">set_value</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#D73A49;--shiki-dark:#F97583">static_cast&#x3C;</span><span style="color:#24292E;--shiki-dark:#E1E4E8">R</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x26;&#x26;></span><span style="color:#24292E;--shiki-dark:#E1E4E8">(rcvr_));</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    }</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  };</span></span>
@@ -135,19 +174,68 @@
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  auto</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> connect</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">R</span><span style="color:#E36209;--shiki-dark:#FFAB70"> r</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) </span><span style="color:#D73A49;--shiki-dark:#F97583">&#x26;&#x26;</span><span style="color:#D73A49;--shiki-dark:#F97583"> -></span><span style="color:#24292E;--shiki-dark:#E1E4E8"> operation</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;</span><span style="color:#24292E;--shiki-dark:#E1E4E8">R</span><span style="color:#D73A49;--shiki-dark:#F97583">></span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    return</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span><span style="color:#6F42C1;--shiki-dark:#B392F0">std</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">move</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(r)};</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  }</span></span>
-<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">};</span></span>
-<span class="line"></span>
-<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// implement the schedule CPO via tag_invoke</span></span>
-<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">my_schedule_sender</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> tag_invoke</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">};</span></span></code></pre></div>
+<p>In the code above, the Sender returned by <code>schedule</code> has a completion signature of <code>set_value_t()</code> — an <strong>empty-argument</strong> success signal. This is the convention for all <code>schedule()</code> Senders: they only switch the execution context and carry no business data.</p>
+<h3 id="step-3-implement-schedule-via-tag_invoke">Step 3: Implement schedule via tag_invoke</h3>
+<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">my_schedule_sender</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> tag_invoke</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">  stdexec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#005CC5;--shiki-dark:#79B8FF">tag_t</span><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#6F42C1;--shiki-dark:#B392F0">stdexec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">schedule</span><span style="color:#24292E;--shiki-dark:#E1E4E8">>, </span><span style="color:#D73A49;--shiki-dark:#F97583">const</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> my_scheduler</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x26;</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) {</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  return</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {};</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span></code></pre></div>
+<p>In the code above, <code>schedule</code> is a CPO (Customization Point Object), invoked through the <code>tag_invoke</code> mechanism. As long as you define <code>tag_invoke(schedule_t, my_scheduler)</code>, <code>schedule(my_scheduler)</code> will work correctly.</p>
 <h2 id="scheduler-responsibility-boundaries">Scheduler Responsibility Boundaries</h2>
+<p>A scheduler <strong>does exactly one thing</strong>: provides the Sender returned by <code>schedule(sch)</code>, and guarantees that after <code>start()</code>, <code>set_value</code> will be called on the correct execution resource.</p>
 <p>A scheduler is <strong>not responsible for</strong>:</p>
 <ul>
-<li>Defining how to switch execution contexts (that is the responsibility of <code>starts_on</code>/<code>continues_on</code>)</li>
-<li>Managing the lifecycle of operation states (that is the responsibility of <code>operation_state</code>)</li>
-<li>Determining how completion signals propagate (that is the responsibility of sender adaptors)</li>
+<li><strong>Switching execution contexts</strong> — that’s the job of <code>starts_on</code> / <code>continues_on</code> adaptors</li>
+<li><strong>Managing operation_state lifecycle</strong> — that’s the job of the <code>connect</code> / <code>start</code> protocol</li>
+<li><strong>Deciding how completion signals propagate</strong> — that’s the job of Sender adaptors</li>
 </ul>
-<p>A scheduler does one thing: <strong>provides a schedule sender that guarantees calling set_value on its resource</strong>.</p>
-<hr></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/09-sender-concept/" data-astro-cid-ykvenys5>← 09 · Sender Concept</a><a href="/exec/tutorials/11-operation-state/" data-astro-cid-ykvenys5>11 · Operation State Lifecycle →</a></nav></div><script type="module" src="/exec/_astro/TutorialLayout.astro_astro_type_script_index_0_lang.CtUiiL97.js"></script><script type="module">(function(){function e(e){let t=function(){if(typeof mermaid>`u`){setTimeout(t,100);return}mermaid.initialize({startOnLoad:!1,theme:e}),document.querySelectorAll(`.mermaid`).forEach(function(e){e.removeAttribute(`data-processed`),e.textContent=e.textContent}),mermaid.run()};t()}function t(t){document.documentElement.setAttribute(`data-theme`,t);var n=document.getElementById(`themeToggle`);n&&(n.textContent=t===`dark`?`🌙`:`☀️`),e(t===`dark`?`dark`:`default`)}e((document.documentElement.getAttribute(`data-theme`)||`dark`)===`dark`?`dark`:`default`),document.getElementById(`themeToggle`)?.addEventListener(`click`,function(){var e=document.documentElement.getAttribute(`data-theme`)===`dark`?`light`:`dark`;try{localStorage.setItem(`exectutorial-theme`,e)}catch{}t(e)})})();</script></body></html>
+<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Wrong: Scheduler is responsible for context switching</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Right: continues_on uses the Scheduler to switch contexts</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// scheduler provides the execution resource</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// continues_on decides "at which point to switch to that resource"</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">sender </span><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> on_pool </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> continues_on</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(work, pool.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">get_scheduler</span><span style="color:#24292E;--shiki-dark:#E1E4E8">());</span></span></code></pre></div>
+<p>In the code above, scheduler and adaptor each have their own role — the scheduler <strong>provides the resource</strong>, and the adaptor <strong>decides when to use it</strong>.</p>
+<h2 id="important-notes">Important Notes</h2>
+<ol>
+<li><strong><code>forward_progress_guarantee</code> is a compile-time constant</strong> — it affects the framework’s optimization decisions and static checks, not runtime state</li>
+<li><strong>Schedulers should be lightweight value types</strong> — copying a Scheduler should be cheap, typically just a pointer to the execution resource</li>
+<li><strong><code>schedule(sch)</code> always sends <code>set_value()</code></strong> — this is a standard convention; don’t expect a schedule Sender to send other completion signals</li>
+<li><strong>Schedulers don’t handle cancellation</strong> — cancellation is handled by the stop token mechanism, covered in later chapters</li>
+</ol>
+<p>The next chapter introduces Operation State — to see what exactly gets produced when a Sender and Receiver are connected, and its strict lifecycle rules.</p></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/09-sender-concept/" data-astro-cid-ykvenys5>← 09 · Sender Concept</a><a href="/exec/tutorials/11-operation-state/" data-astro-cid-ykvenys5>11 · Operation State Lifecycle →</a></nav></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
+      (function() {
+        const STORAGE_KEY = "exectutorial-theme";
+
+        function renderMermaid(theme) {
+          const cb = function() {
+            if (typeof mermaid === "undefined") { setTimeout(cb, 100); return; }
+            mermaid.initialize({ startOnLoad: false, theme: theme });
+            document.querySelectorAll(".mermaid").forEach(function(el) {
+              el.removeAttribute("data-processed");
+              el.textContent = el.textContent;
+            });
+            mermaid.run();
+          };
+          cb();
+        }
+
+        function setTheme(theme) {
+          document.documentElement.setAttribute("data-theme", theme);
+          var btn = document.getElementById("themeToggle");
+          if (btn) btn.textContent = theme === "dark" ? "🌙" : "☀️";
+          renderMermaid(theme === "dark" ? "dark" : "default");
+        }
+
+        var current = document.documentElement.getAttribute("data-theme") || "dark";
+        renderMermaid(current === "dark" ? "dark" : "default");
+
+        document.getElementById("themeToggle")?.addEventListener("click", function() {
+          var cur = document.documentElement.getAttribute("data-theme");
+          var next = cur === "dark" ? "light" : "dark";
+          try { localStorage.setItem(STORAGE_KEY, next); } catch(e) {}
+          setTheme(next);
+        });
+      })();
+    </script></body></html>

@@ -6,63 +6,51 @@
         document.documentElement.setAttribute("data-theme",theme);
       })();
     </script><link rel="stylesheet" href="/exec/_astro/01-why-stdexec.hXKgsPrw.css"></head><body data-astro-cid-ykvenys5><div class="container" data-astro-cid-ykvenys5><header data-astro-cid-ykvenys5><div class="title-area" data-astro-cid-ykvenys5><a href="/exec" style="color:var(--fg-muted);text-decoration:none;font-size:0.85rem;" data-astro-cid-ykvenys5>← Back to index</a><h1 data-astro-cid-ykvenys5>15 · schedule — Creating a Sender from a Scheduler</h1></div><button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" data-astro-cid-ykvenys5>🌙</button></header><article class="article-content" data-astro-cid-ykvenys5>
-<blockquote>
-<p><strong>Standard section</strong>: <code>[exec.schedule]</code>
-<strong>stdexec reference</strong>: <code>examples/hello_world.cpp</code>
-<strong>Related tests</strong>: <code>tests/test_basics.cpp</code> · <code>tests/test_thread_pool.cpp</code></p>
-</blockquote>
-<h2 id="overview">Overview</h2>
-<p><code>schedule</code> is the most basic sender factory. It creates a sender from a scheduler, representing “begin execution on the resources associated with that scheduler”.</p>
+<h2 id="why-do-we-need-schedule">Why Do We Need schedule?</h2>
+<p>Every asynchronous operation must answer a fundamental question: “where do I run?”</p>
+<p>In a single-threaded world this question doesn’t exist. But modern programs run on thread pools, GPUs, and network IO threads. You need an explicit way to say “this sender pipeline starts on <em>that</em> scheduler’s resources.”</p>
+<p><code>schedule</code> is the answer. If schedulers are hotels, <code>schedule(sch)</code> is checking in at the front desk — once you’ve checked in, subsequent operations (<code>then</code>, etc.) know which room (thread) they’re supposed to be in.</p>
+<h2 id="basic-behavior">Basic Behavior</h2>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">namespace</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> std</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">execution</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  template</span><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">scheduler</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Sch</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    using</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> schedule_result_t</span><span style="color:#D73A49;--shiki-dark:#F97583"> =</span><span style="color:#D73A49;--shiki-dark:#F97583"> decltype</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">schedule</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">declval</span><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#6F42C1;--shiki-dark:#B392F0">Sch</span><span style="color:#24292E;--shiki-dark:#E1E4E8">>()));</span></span>
 <span class="line"></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  inline</span><span style="color:#D73A49;--shiki-dark:#F97583"> constexpr</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> schedule_t</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> schedule{};</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span></code></pre></div>
-<h2 id="behavior">Behavior</h2>
-<p>The standard specifies (<code>exec.tex:310-325</code>):</p>
-<p>The asynchronous operation of the sender returned by <code>schedule(sch)</code>:</p>
+<p>The standard specifies (<code>exec.tex:310-325</code>) that the sender returned by <code>schedule(sch)</code> does three things:</p>
 <ol>
-<li>Obtains an execution agent on the execution resource associated with <code>sch</code></li>
-<li>Executes <code>set_value(rcvr)</code> (no arguments)</li>
-<li>The value completion scheduler is <code>sch</code> itself</li>
+<li>Acquires an execution agent on the resource associated with <code>sch</code></li>
+<li>Calls <code>set_value(rcvr)</code> on that agent (with <strong>no arguments</strong>)</li>
+<li>Sets the value-completion scheduler to <code>sch</code> itself</li>
 </ol>
-<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Completion signatures</span></span>
+<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// schedule's completion signature carries no data</span></span>
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// completion_signatures_of_t&#x3C;schedule_result_t&#x3C;Sch>></span></span>
-<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// = completion_signatures&#x3C;set_value_t()></span></span>
-<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Note: no arguments! schedule just "starts execution", it doesn't produce data.</span></span></code></pre></div>
-<h2 id="typical-usage">Typical Usage</h2>
-<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">exec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::static_thread_pool pool{</span><span style="color:#005CC5;--shiki-dark:#79B8FF">4</span><span style="color:#24292E;--shiki-dark:#E1E4E8">};</span></span>
-<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> sch </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> pool.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">get_scheduler</span><span style="color:#24292E;--shiki-dark:#E1E4E8">();</span></span>
-<span class="line"></span>
-<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// "Check in" on the thread pool then do work</span></span>
-<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">schedule</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(sch) </span><span style="color:#D73A49;--shiki-dark:#F97583">|</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> then</span><span style="color:#24292E;--shiki-dark:#E1E4E8">([] {</span></span>
-<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  return</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 42</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span><span style="color:#6A737D;--shiki-dark:#6A737D">  // Now on this thread pool</span></span>
-<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">});</span></span></code></pre></div>
-<p><code>schedule</code> only conveys the semantics of “execute here”. To carry data, you need combinators like <code>then</code>, <code>let_value</code>, etc.:</p>
-<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Wrong: schedule doesn't produce data</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// = completion_signatures&#x3C;set_value_t()></span></span></code></pre></div>
+<p>The key thing to remember: <code>schedule</code> only expresses “begin execution here” — it delivers <strong>no data</strong>. To pass data, you need combinators like <code>then</code>, <code>let_value</code>, etc.:</p>
+<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Wrong: schedule produces no data</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> bad </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> schedule</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(sch) </span><span style="color:#D73A49;--shiki-dark:#F97583">|</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> then</span><span style="color:#24292E;--shiki-dark:#E1E4E8">([](</span><span style="color:#D73A49;--shiki-dark:#F97583">int</span><span style="color:#E36209;--shiki-dark:#FFAB70"> x</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) {</span><span style="color:#6A737D;--shiki-dark:#6A737D"> /* Compile error! schedule has no arguments */</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> });</span></span>
 <span class="line"></span>
-<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Correct: use just to provide data first, then starts_on to switch context</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Correct: use just for data, then starts_on to switch context</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> correct </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> starts_on</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(sch, </span><span style="color:#6F42C1;--shiki-dark:#B392F0">just</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">42</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)) </span><span style="color:#D73A49;--shiki-dark:#F97583">|</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> then</span><span style="color:#24292E;--shiki-dark:#E1E4E8">([](</span><span style="color:#D73A49;--shiki-dark:#F97583">int</span><span style="color:#E36209;--shiki-dark:#FFAB70"> x</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) {</span><span style="color:#6A737D;--shiki-dark:#6A737D"> /* OK */</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> });</span></span></code></pre></div>
-<h2 id="special-properties-of-the-schedule-sender">Special Properties of the schedule Sender</h2>
-<p>The schedule sender has a <strong>mandatory property</strong>: its value completion scheduler is the scheduler that produced it.</p>
+<h2 id="a-mandatory-property-of-the-schedule-sender">A Mandatory Property of the schedule Sender</h2>
+<p>The sender returned by <code>schedule</code> has an important guarantee: its value-completion scheduler is the very scheduler that created it:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">sender </span><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> s </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> schedule</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(sch);</span></span>
 <span class="line"></span>
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// get_completion_scheduler&#x3C;set_value_t>(get_env(s)) == sch</span></span>
-<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// This ensures that after schedule, adaptors like then know "where to execute"</span></span></code></pre></div>
-<p>The significance of this property: when you use <code>schedule(sch) | then(f)</code> in a pipeline, the <code>then</code> adaptor knows that <code>f</code> should execute on <code>sch</code>.</p>
-<h2 id="using-in-a-pipeline">Using in a Pipeline</h2>
-<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Simple: execute a function on the pool</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// This lets then and other adaptors know "where to run"</span></span></code></pre></div>
+<p>This is why <code>schedule(sch) | then(f)</code> works — the <code>then</code> adaptor queries the environment for <code>get_scheduler</code>, gets back <code>sch</code>, and schedules <code>f</code> on the right thread.</p>
+<h2 id="using-schedule-in-a-pipeline">Using schedule in a Pipeline</h2>
+<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Simple: run a function on a thread pool</span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">schedule</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(pool.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">get_scheduler</span><span style="color:#24292E;--shiki-dark:#E1E4E8">())</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  |</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> then</span><span style="color:#24292E;--shiki-dark:#E1E4E8">([] { </span><span style="color:#6F42C1;--shiki-dark:#B392F0">std</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::cout </span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;&#x3C;</span><span style="color:#032F62;--shiki-dark:#9ECBFF"> "in pool</span><span style="color:#005CC5;--shiki-dark:#79B8FF">\n</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">; })</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  |</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> sync_wait;</span></span>
 <span class="line"></span>
-<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Combined with when_all: execute on pool and inline simultaneously</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Combined with when_all: run on pool and inline simultaneously</span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">when_all</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">  schedule</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(pool.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">get_scheduler</span><span style="color:#24292E;--shiki-dark:#E1E4E8">()) </span><span style="color:#D73A49;--shiki-dark:#F97583">|</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> then</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(heavy_work),</span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">  schedule</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(inline_scheduler{}) </span><span style="color:#D73A49;--shiki-dark:#F97583">|</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> then</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(light_work)</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">) </span><span style="color:#D73A49;--shiki-dark:#F97583">|</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> sync_wait;</span></span></code></pre></div>
+<p>In the code above, <code>heavy_work</code> runs on the thread pool while <code>light_work</code> runs inline (synchronously, on the current thread). They execute concurrently, and <code>when_all</code> waits for both to finish.</p>
 <h2 id="schedule-vs-starts_on"><code>schedule</code> vs <code>starts_on</code></h2>
 <div class="table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch">
 
@@ -85,6 +73,42 @@
 
 
 
-<table><thead><tr><th>Expression</th><th>Effect</th></tr></thead><tbody><tr><td><code>schedule(sch) | then(f)</code></td><td>Execute <code>f</code> on <code>sch</code></td></tr><tr><td><code>starts_on(sch, just(42) | then(f))</code></td><td>Execute <code>42 | f</code> on <code>sch</code></td></tr><tr><td><code>starts_on(sch, sndr)</code></td><td><code>sndr</code> starts entirely on <code>sch</code></td></tr></tbody></table></div>
-<p><code>starts_on</code> is more flexible — it accepts any sender, while <code>schedule</code> can only create a no-argument start signal.</p>
-<hr></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/14-read-env/" data-astro-cid-ykvenys5>← 14 · read_env — Reading Properties from the Environment</a><a href="/exec/tutorials/16-then-upon/" data-astro-cid-ykvenys5>16 · then / upon_error / upon_stopped — Handling the Three Completion Signals →</a></nav></div><script type="module" src="/exec/_astro/TutorialLayout.astro_astro_type_script_index_0_lang.CtUiiL97.js"></script><script type="module">(function(){function e(e){let t=function(){if(typeof mermaid>`u`){setTimeout(t,100);return}mermaid.initialize({startOnLoad:!1,theme:e}),document.querySelectorAll(`.mermaid`).forEach(function(e){e.removeAttribute(`data-processed`),e.textContent=e.textContent}),mermaid.run()};t()}function t(t){document.documentElement.setAttribute(`data-theme`,t);var n=document.getElementById(`themeToggle`);n&&(n.textContent=t===`dark`?`🌙`:`☀️`),e(t===`dark`?`dark`:`default`)}e((document.documentElement.getAttribute(`data-theme`)||`dark`)===`dark`?`dark`:`default`),document.getElementById(`themeToggle`)?.addEventListener(`click`,function(){var e=document.documentElement.getAttribute(`data-theme`)===`dark`?`light`:`dark`;try{localStorage.setItem(`exectutorial-theme`,e)}catch{}t(e)})})();</script></body></html>
+<table><thead><tr><th>Expression</th><th>Effect</th></tr></thead><tbody><tr><td><code>schedule(sch) | then(f)</code></td><td>Execute <code>f</code> on <code>sch</code></td></tr><tr><td><code>starts_on(sch, just(42) | then(f))</code></td><td>The entire <code>42 | f</code> starts on <code>sch</code></td></tr><tr><td><code>starts_on(sch, sndr)</code></td><td><code>sndr</code> starts entirely on <code>sch</code></td></tr></tbody></table></div>
+<p><code>starts_on</code> is more flexible — it accepts any sender, while <code>schedule</code> only creates a no-argument start signal.</p>
+<h2 id="limitations">Limitations</h2>
+<p><code>schedule</code> itself carries no data, only an empty <code>set_value()</code> signal. If you need “execute and return data,” you must chain <code>then</code> or another adaptor after it. Also, <code>schedule</code> doesn’t guarantee immediate execution — it just enqueues work on the scheduler’s resource; actual timing is up to the scheduler.</p>
+<hr></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/14-read-env/" data-astro-cid-ykvenys5>← 14 · read_env — Reading Properties from the Environment</a><a href="/exec/tutorials/16-then-upon/" data-astro-cid-ykvenys5>16 · then / upon_error / upon_stopped — Handling the Three Completion Signals →</a></nav></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
+      (function() {
+        const STORAGE_KEY = "exectutorial-theme";
+
+        function renderMermaid(theme) {
+          const cb = function() {
+            if (typeof mermaid === "undefined") { setTimeout(cb, 100); return; }
+            mermaid.initialize({ startOnLoad: false, theme: theme });
+            document.querySelectorAll(".mermaid").forEach(function(el) {
+              el.removeAttribute("data-processed");
+              el.textContent = el.textContent;
+            });
+            mermaid.run();
+          };
+          cb();
+        }
+
+        function setTheme(theme) {
+          document.documentElement.setAttribute("data-theme", theme);
+          var btn = document.getElementById("themeToggle");
+          if (btn) btn.textContent = theme === "dark" ? "🌙" : "☀️";
+          renderMermaid(theme === "dark" ? "dark" : "default");
+        }
+
+        var current = document.documentElement.getAttribute("data-theme") || "dark";
+        renderMermaid(current === "dark" ? "dark" : "default");
+
+        document.getElementById("themeToggle")?.addEventListener("click", function() {
+          var cur = document.documentElement.getAttribute("data-theme");
+          var next = cur === "dark" ? "light" : "dark";
+          try { localStorage.setItem(STORAGE_KEY, next); } catch(e) {}
+          setTheme(next);
+        });
+      })();
+    </script></body></html>

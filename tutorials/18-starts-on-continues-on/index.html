@@ -6,13 +6,13 @@
         document.documentElement.setAttribute("data-theme",theme);
       })();
     </script><link rel="stylesheet" href="/exec/_astro/01-why-stdexec.hXKgsPrw.css"></head><body data-astro-cid-ykvenys5><div class="container" data-astro-cid-ykvenys5><header data-astro-cid-ykvenys5><div class="title-area" data-astro-cid-ykvenys5><a href="/exec" style="color:var(--fg-muted);text-decoration:none;font-size:0.85rem;" data-astro-cid-ykvenys5>← Back to index</a><h1 data-astro-cid-ykvenys5>18 · starts_on / continues_on / on — Switching Execution Contexts</h1></div><button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" data-astro-cid-ykvenys5>🌙</button></header><article class="article-content" data-astro-cid-ykvenys5>
-<blockquote>
-<p><strong>Standard sections</strong>: <code>[exec.starts.on]</code> <code>[exec.continues.on]</code> <code>[exec.on]</code>
-<strong>stdexec reference</strong>: <code>examples/server_theme/on_transfer.cpp</code>
-<strong>Related tests</strong>: <code>tests/test_starts_on.cpp</code></p>
-</blockquote>
+<h2 id="why-switch-execution-contexts">Why Switch Execution Contexts?</h2>
+<p>A modern network service follows a typical flow:</p>
+<p>(1) IO thread reads the request data
+(2) CPU thread pool processes the request
+(3) IO thread writes back the response</p>
+<p>Each stage runs on a different execution resource. <code>starts_on</code> and <code>continues_on</code> are the building blocks that make this “thread hopping” possible.</p>
 <h2 id="overview">Overview</h2>
-<p>These three adaptors handle <strong>execution context switching</strong>:</p>
 <div class="table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch">
 
 
@@ -35,68 +35,65 @@
 
 
 <table><thead><tr><th>Adaptor</th><th>Effect</th></tr></thead><tbody><tr><td><code>starts_on(sch, sndr)</code></td><td><strong>Starts</strong> <code>sndr</code> on <code>sch</code></td></tr><tr><td><code>continues_on(sndr, sch)</code></td><td><strong>Continues</strong> on <code>sch</code> after <code>sndr</code> completes</td></tr><tr><td><code>on(sch, sndr)</code></td><td>Equivalent to <code>starts_on(sch, continues_on(sch, sndr))</code></td></tr></tbody></table></div>
-<h2 id="starts_on--starting-on-a-specific-resource"><code>starts_on</code> — Starting on a Specific Resource</h2>
-<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Corresponding test: test_starts_on.cpp → "starts_on launches work on a specific scheduler"</span></span>
-<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">exec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::static_thread_pool io_pool{</span><span style="color:#005CC5;--shiki-dark:#79B8FF">2</span><span style="color:#24292E;--shiki-dark:#E1E4E8">};</span></span>
+<h2 id="starts_on--starting-on-a-specific-scheduler"><code>starts_on</code> —— Starting on a Specific Scheduler</h2>
+<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">exec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::static_thread_pool io_pool{</span><span style="color:#005CC5;--shiki-dark:#79B8FF">2</span><span style="color:#24292E;--shiki-dark:#E1E4E8">};</span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">exec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::static_thread_pool cpu_pool{</span><span style="color:#005CC5;--shiki-dark:#79B8FF">4</span><span style="color:#24292E;--shiki-dark:#E1E4E8">};</span></span>
 <span class="line"></span>
-<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Start the entire pipeline on io_pool</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// The entire pipeline starts on io_pool</span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">starts_on</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(io_pool.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">get_scheduler</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(),</span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">  just</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">42</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    |</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> then</span><span style="color:#24292E;--shiki-dark:#E1E4E8">([](</span><span style="color:#D73A49;--shiki-dark:#F97583">int</span><span style="color:#E36209;--shiki-dark:#FFAB70"> x</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) { </span><span style="color:#D73A49;--shiki-dark:#F97583">return</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> x </span><span style="color:#D73A49;--shiki-dark:#F97583">+</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">; })</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  |</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> sync_wait;</span></span></code></pre></div>
-<p>Note: <code>starts_on</code> is a <strong>sender adaptor</strong> that takes two arguments:</p>
-<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Function style</span></span>
+<p>In the code above, <code>just(42) | then(...)</code> — the entire sender — runs on <code>io_pool</code>’s threads from the moment <code>start()</code> is called.</p>
+<p><code>starts_on</code> is a sender adaptor with two calling forms:</p>
+<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Function form</span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">starts_on</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(sch, sndr)</span></span>
 <span class="line"></span>
-<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Pipeline style (sch as closure argument)</span></span>
-<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// starts_on(sch)(sndr) is equivalent to starts_on(sch, sndr)</span></span></code></pre></div>
-<h2 id="continues_on--switching-to-a-new-resource"><code>continues_on</code> — Switching to a New Resource</h2>
-<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Corresponding test: test_starts_on.cpp → "continues_on switches execution context"</span></span>
-<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// I/O completes on the thread pool → switch to CPU thread pool for computation</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Pipeline form</span></span>
+<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">starts_on</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(sch)(sndr)</span><span style="color:#6A737D;--shiki-dark:#6A737D">  // equivalent to starts_on(sch, sndr)</span></span></code></pre></div>
+<h2 id="continues_on--switching-to-a-new-resource-after-completion"><code>continues_on</code> —— Switching to a New Resource After Completion</h2>
+<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// After IO completes, switch to the CPU pool for computation</span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">schedule</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(io_pool.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">get_scheduler</span><span style="color:#24292E;--shiki-dark:#E1E4E8">())</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  |</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> then</span><span style="color:#24292E;--shiki-dark:#E1E4E8">([] { </span><span style="color:#D73A49;--shiki-dark:#F97583">return</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> read_data</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(); })</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  |</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> continues_on</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(cpu_pool.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">get_scheduler</span><span style="color:#24292E;--shiki-dark:#E1E4E8">())</span><span style="color:#6A737D;--shiki-dark:#6A737D">  // ← Switch point</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  |</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> then</span><span style="color:#24292E;--shiki-dark:#E1E4E8">([](</span><span style="color:#6F42C1;--shiki-dark:#B392F0">data</span><span style="color:#E36209;--shiki-dark:#FFAB70"> d</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) { </span><span style="color:#D73A49;--shiki-dark:#F97583">return</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> compute</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(d); })</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  |</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> sync_wait;</span></span></code></pre></div>
+<p>The code above shows the classic IO→CPU pattern: read data on an IO thread, then <code>continues_on</code> switches subsequent operations to the CPU thread pool. <code>read_data</code> runs on an IO thread, <code>compute</code> runs on a CPU thread.</p>
 <h3 id="switching-semantics">Switching Semantics</h3>
 <pre class="mermaid">graph LR
-  A["read_data()"] --> B["Executes on I/O thread"]
+  A["read_data()"] --> B["Runs on IO thread"]
   B --> C["continues_on(cpu)"]
-  C --> D["Schedule to CPU thread pool"]
+  C --> D["Scheduled onto CPU thread pool"]
   D --> E["compute(d)"]
-  E --> F["Executes on CPU thread"]</pre>
-<p><code>continues_on</code> schedules subsequent operations onto a new scheduler after the previous sender completes.</p>
-<h2 id="on--start-and-stay-on-the-same-resource"><code>on</code> — Start and Stay on the Same Resource</h2>
-<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Corresponding test: test_starts_on.cpp → "on starts and continues on the same scheduler"</span></span>
-<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Start on cpu_pool and always stay on cpu_pool</span></span>
+  E --> F["Runs on CPU thread"]</pre>
+<p><code>continues_on</code> schedules downstream operations onto the target scheduler after the upstream sender completes.</p>
+<h2 id="on--start-and-stay-on-the-same-resource"><code>on</code> —— Start and Stay on the Same Resource</h2>
+<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Start on cpu_pool, and everything downstream stays on cpu_pool</span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">on</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(cpu_pool.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">get_scheduler</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(),</span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">  just</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">42</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    |</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> then</span><span style="color:#24292E;--shiki-dark:#E1E4E8">([](</span><span style="color:#D73A49;--shiki-dark:#F97583">int</span><span style="color:#E36209;--shiki-dark:#FFAB70"> x</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) { </span><span style="color:#D73A49;--shiki-dark:#F97583">return</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> x </span><span style="color:#D73A49;--shiki-dark:#F97583">+</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">; })</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    |</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> then</span><span style="color:#24292E;--shiki-dark:#E1E4E8">([](</span><span style="color:#D73A49;--shiki-dark:#F97583">int</span><span style="color:#E36209;--shiki-dark:#FFAB70"> x</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) { </span><span style="color:#D73A49;--shiki-dark:#F97583">return</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> x </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 2</span><span style="color:#24292E;--shiki-dark:#E1E4E8">; })</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">);</span></span></code></pre></div>
-<p><code>on(sch, sndr)</code> is equivalent to <code>starts_on(sch, continues_on(sch, sndr))</code>.</p>
-<h2 id="complete-example-post-io-processing">Complete Example: Post-I/O Processing</h2>
-<p>From <code>examples/server_theme/on_transfer.cpp</code>:</p>
-<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Corresponding test: test_starts_on.cpp</span></span>
-<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// HTTP image processing server</span></span>
-<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">schedule</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(io_sched)</span></span>
+<p><code>on(sch, sndr)</code> is equivalent to <code>starts_on(sch, continues_on(sch, sndr))</code> — “use <code>sch</code> for everything.”</p>
+<h2 id="complete-example-post-io-processing">Complete Example: Post-IO Processing</h2>
+<p>From <code>examples/server_theme/on_transfer.cpp</code> — an HTTP image processing server:</p>
+<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">schedule</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(io_sched)</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  |</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> then</span><span style="color:#24292E;--shiki-dark:#E1E4E8">([] { </span><span style="color:#D73A49;--shiki-dark:#F97583">return</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> recv_http_request</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(); })</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  |</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> continues_on</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(cpu_sched)</span><span style="color:#6A737D;--shiki-dark:#6A737D">                      // Switch to CPU for request processing</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  |</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> let_value</span><span style="color:#24292E;--shiki-dark:#E1E4E8">([](</span><span style="color:#6F42C1;--shiki-dark:#B392F0">http_request</span><span style="color:#E36209;--shiki-dark:#FFAB70"> req</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) -> </span><span style="color:#D73A49;--shiki-dark:#F97583">sender</span><span style="color:#D73A49;--shiki-dark:#F97583"> auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
-<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">      return</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> starts_on</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(io_sched,</span><span style="color:#6A737D;--shiki-dark:#6A737D">                  // Switch back to I/O for reading image</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">      return</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> starts_on</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(io_sched,</span><span style="color:#6A737D;--shiki-dark:#6A737D">                  // Switch back to IO for reading image</span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">               then</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">just</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(req.path),</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                  [](</span><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#E36209;--shiki-dark:#FFAB70"> path</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) { </span><span style="color:#D73A49;--shiki-dark:#F97583">return</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> read_image</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(path); }));</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    })</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  |</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> continues_on</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(cpu_sched)</span><span style="color:#6A737D;--shiki-dark:#6A737D">                      // Switch back to CPU for image processing</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  |</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> then</span><span style="color:#24292E;--shiki-dark:#E1E4E8">([](</span><span style="color:#6F42C1;--shiki-dark:#B392F0">image</span><span style="color:#E36209;--shiki-dark:#FFAB70"> img</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) { </span><span style="color:#D73A49;--shiki-dark:#F97583">return</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> process_image</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(img); })</span></span>
-<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  |</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> continues_on</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(io_sched)</span><span style="color:#6A737D;--shiki-dark:#6A737D">                       // Switch back to I/O for sending response</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  |</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> continues_on</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(io_sched)</span><span style="color:#6A737D;--shiki-dark:#6A737D">                       // Switch back to IO for sending response</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  |</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> then</span><span style="color:#24292E;--shiki-dark:#E1E4E8">([](</span><span style="color:#6F42C1;--shiki-dark:#B392F0">response</span><span style="color:#E36209;--shiki-dark:#FFAB70"> resp</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) { </span><span style="color:#D73A49;--shiki-dark:#F97583">return</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> send_response</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(resp); });</span></span></code></pre></div>
-<h2 id="execution-context-and-the-receiver-environment">Execution Context and the Receiver Environment</h2>
-<p>When the execution context switches, the receiver’s environment also changes:</p>
-<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Corresponding test: test_starts_on.cpp → "continues_on with same scheduler"</span></span>
-<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">schedule</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(pool1.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">get_scheduler</span><span style="color:#24292E;--shiki-dark:#E1E4E8">())</span></span>
+<p>The code above shows a full IO↔CPU round-trip: receive request (IO) → process request (CPU) → read image (IO) → process image (CPU) → send response (IO). <code>continues_on</code> and <code>starts_on</code> explicitly mark the execution location at each step.</p>
+<h2 id="context-switching-and-the-receiver-environment">Context Switching and the Receiver Environment</h2>
+<p>When the execution context switches, the receiver’s environment changes too:</p>
+<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">schedule</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(pool1.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">get_scheduler</span><span style="color:#24292E;--shiki-dark:#E1E4E8">())</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  |</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> then</span><span style="color:#24292E;--shiki-dark:#E1E4E8">([] {</span></span>
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">      // get_scheduler(env) returns pool1's scheduler</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">      return</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
@@ -106,20 +103,56 @@
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">      // get_scheduler(env) returns pool2's scheduler</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">      return</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> x </span><span style="color:#D73A49;--shiki-dark:#F97583">+</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    });</span></span></code></pre></div>
-<p>This means <code>read_env(get_scheduler)</code> returns different schedulers at different stages of the pipeline.</p>
-<h2 id="brief-implementation-analysis">Brief Implementation Analysis</h2>
-<p>A simplified implementation approach for <code>continues_on</code>:</p>
-<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Corresponding test: test_impl_then.cpp</span></span>
-<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">template</span><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">sender</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Sndr</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#D73A49;--shiki-dark:#F97583">scheduler</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Sch</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<p>This means <code>read_env(get_scheduler)</code> returns different schedulers at different stages of the pipeline — the context switch truly changes the environment.</p>
+<h2 id="implementation-sketch">Implementation Sketch</h2>
+<p>A simplified implementation of <code>continues_on</code>:</p>
+<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">template</span><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">sender</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Sndr</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#D73A49;--shiki-dark:#F97583">scheduler</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Sch</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">struct</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> continues_on_sender</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  Sndr sndr_;</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  Sch sch_;</span></span>
 <span class="line"></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  template</span><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">receiver</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> R</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  struct</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> operation</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
-<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">    // Inner receiver: after receiving set_value from the previous sender,</span></span>
-<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">    // reschedule via sch_, then call the outer receiver's set_value</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">    // Inner receiver: upon receiving set_value from upstream,</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">    // reschedules via sch_, then calls the outer receiver's set_value</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  };</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">};</span></span></code></pre></div>
-<p>Key point: When the inner receiver receives <code>set_value</code>, it is on the current thread. Then <code>continues_on</code> schedules a “continue operation” via <code>sch_</code>, executing the downstream <code>set_value</code> on the target scheduler.</p>
-<hr></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/17-let-value/" data-astro-cid-ykvenys5>← 17 · let_value / let_error / let_stopped — Dynamically Generating New Senders Based on Results</a><a href="/exec/tutorials/19-when-all/" data-astro-cid-ykvenys5>19 · when_all — Waiting for Multiple Senders in Parallel →</a></nav></div><script type="module" src="/exec/_astro/TutorialLayout.astro_astro_type_script_index_0_lang.CtUiiL97.js"></script><script type="module">(function(){function e(e){let t=function(){if(typeof mermaid>`u`){setTimeout(t,100);return}mermaid.initialize({startOnLoad:!1,theme:e}),document.querySelectorAll(`.mermaid`).forEach(function(e){e.removeAttribute(`data-processed`),e.textContent=e.textContent}),mermaid.run()};t()}function t(t){document.documentElement.setAttribute(`data-theme`,t);var n=document.getElementById(`themeToggle`);n&&(n.textContent=t===`dark`?`🌙`:`☀️`),e(t===`dark`?`dark`:`default`)}e((document.documentElement.getAttribute(`data-theme`)||`dark`)===`dark`?`dark`:`default`),document.getElementById(`themeToggle`)?.addEventListener(`click`,function(){var e=document.documentElement.getAttribute(`data-theme`)===`dark`?`light`:`dark`;try{localStorage.setItem(`exectutorial-theme`,e)}catch{}t(e)})})();</script></body></html>
+<p>Key point: when the inner receiver receives <code>set_value</code>, it’s still on the current thread. Then <code>continues_on</code> schedules a “continue operation” via <code>sch_</code>, executing the downstream <code>set_value</code> on the target scheduler.</p>
+<h2 id="limitations">Limitations</h2>
+<p><code>continues_on</code> only affects operations <strong>after</strong> it, not before. If you use <code>let_value</code> for dynamic branching, each branch may need its own independent <code>continues_on</code>.</p>
+<p>Also, frequent <code>continues_on</code> calls (e.g., switching after every tiny operation) incur scheduling overhead — each switch may involve cross-thread task submission and synchronization.</p>
+<hr></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/17-let-value/" data-astro-cid-ykvenys5>← 17 · let_value / let_error / let_stopped — Dynamically Generating New Senders Based on Results</a><a href="/exec/tutorials/19-when-all/" data-astro-cid-ykvenys5>19 · when_all — Waiting for Multiple Senders in Parallel →</a></nav></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
+      (function() {
+        const STORAGE_KEY = "exectutorial-theme";
+
+        function renderMermaid(theme) {
+          const cb = function() {
+            if (typeof mermaid === "undefined") { setTimeout(cb, 100); return; }
+            mermaid.initialize({ startOnLoad: false, theme: theme });
+            document.querySelectorAll(".mermaid").forEach(function(el) {
+              el.removeAttribute("data-processed");
+              el.textContent = el.textContent;
+            });
+            mermaid.run();
+          };
+          cb();
+        }
+
+        function setTheme(theme) {
+          document.documentElement.setAttribute("data-theme", theme);
+          var btn = document.getElementById("themeToggle");
+          if (btn) btn.textContent = theme === "dark" ? "🌙" : "☀️";
+          renderMermaid(theme === "dark" ? "dark" : "default");
+        }
+
+        var current = document.documentElement.getAttribute("data-theme") || "dark";
+        renderMermaid(current === "dark" ? "dark" : "default");
+
+        document.getElementById("themeToggle")?.addEventListener("click", function() {
+          var cur = document.documentElement.getAttribute("data-theme");
+          var next = cur === "dark" ? "light" : "dark";
+          try { localStorage.setItem(STORAGE_KEY, next); } catch(e) {}
+          setTheme(next);
+        });
+      })();
+    </script></body></html>

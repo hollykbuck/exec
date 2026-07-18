@@ -11,8 +11,16 @@
 <strong>stdexec Reference</strong>: <code>include/stdexec/__detail/__senders.hpp</code> <br>
 <strong>Related Tests</strong>: <code>tests/test_basics.cpp</code></p>
 </blockquote>
-<h2 id="completion-signals">Completion Signals</h2>
-<p>Every asynchronous operation must eventually call <strong>exactly one</strong> completion function (<code>exec.tex:186-207</code>):</p>
+<p>How many ways can an async operation end?</p>
+<p>Think about real life. You order food delivery. Only three things can happen:</p>
+<ol>
+<li><strong>The food arrives</strong> — you eat (success)</li>
+<li><strong>The restaurant is out</strong> — you get a refund (failure)</li>
+<li><strong>You cancel the order</strong> — nothing happens (cancellation)</li>
+</ol>
+<p>Async operations are the same. No matter how complex, the outcome always falls into one of these three categories.</p>
+<h2 id="the-three-completion-signals">The Three Completion Signals</h2>
+<p><code>std::execution</code> defines three functions that correspond to these three outcomes:</p>
 <div class="table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch">
 
 
@@ -44,29 +52,26 @@
 
 <table><thead><tr><th>Completion Function</th><th>Meaning</th><th>Parameters</th><th>Example</th></tr></thead><tbody><tr><td><code>set_value(rcvr, args...)</code></td><td>Successful completion</td><td>Any number of result values</td><td>HTTP response, computation result</td></tr><tr><td><code>set_error(rcvr, err)</code></td><td>Failed completion</td><td>One error value</td><td>Network timeout, file not found</td></tr><tr><td><code>set_stopped(rcvr)</code></td><td>Cancelled completion</td><td>None</td><td>User cancellation, scope destruction</td></tr></tbody></table></div>
 <p>Each completion function takes a receiver as its first parameter:</p>
-<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// CPO declarations in the standard</span></span>
-<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">namespace</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> std</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">execution</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
+<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">namespace</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> std</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">execution</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  inline</span><span style="color:#D73A49;--shiki-dark:#F97583"> constexpr</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> unspecified set_value </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6A737D;--shiki-dark:#6A737D"> /* see [exec.set.value] */</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  inline</span><span style="color:#D73A49;--shiki-dark:#F97583"> constexpr</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> unspecified set_error </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6A737D;--shiki-dark:#6A737D"> /* see [exec.set.error] */</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  inline</span><span style="color:#D73A49;--shiki-dark:#F97583"> constexpr</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> unspecified set_stopped </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6A737D;--shiki-dark:#6A737D"> /* see [exec.set.stopped] */</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span></code></pre></div>
 <h2 id="why-exactly-three">Why Exactly Three?</h2>
-<p>The three completion signals correspond to the three possible outcomes of an async operation:</p>
+<p>You might ask: what’s the difference between an error and cancellation? Aren’t they both “didn’t get the result”?</p>
+<p>The difference is <strong>intent</strong>.</p>
+<ul>
+<li><code>set_error</code> means <strong>something went wrong</strong> — the network is down, the file doesn’t exist, parsing failed. It’s an意外 that the caller might want to retry or log</li>
+<li><code>set_stopped</code> means <strong>someone asked to stop</strong> — not a bug, but an intentional decision to halt. The caller typically does nothing</li>
+</ul>
 <pre class="mermaid">graph LR
   A["Operation starts"] --> B["Success (carries result values)"]
   A --> C["Failure (carries error)"]
   A --> D["Cancellation (empty)"]</pre>
-<p>This is a <strong>complete classification</strong> of async operation outcomes:</p>
-<ul>
-<li><strong>Success</strong>: The operation completes normally, producing results</li>
-<li><strong>Failure</strong>: The operation encounters an error that needs to be propagated</li>
-<li><strong>Cancellation</strong>: The operation is externally requested to stop, no need to handle results</li>
-</ul>
-<p>Note that <strong>cancellation is not an error</strong> — it is represented via <code>set_stopped</code> rather than <code>set_error</code>, allowing the caller to distinguish between “something went wrong” and “the operation was cancelled.”</p>
+<p>These three signals form a <strong>complete classification</strong> of async operation outcomes. Every async operation must end in one of them.</p>
 <h2 id="how-receivers-receive-signals">How Receivers Receive Signals</h2>
-<p>Every receiver must be able to handle these three signals. Here is <code>noop_receiver</code> from stdexec (<code>examples/scope.cpp</code>):</p>
-<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Corresponding test: test_receiver.cpp</span></span>
-<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">struct</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> noop_receiver</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
+<p>Every Receiver must be able to handle these three signals. Here’s <code>noop_receiver</code> from stdexec (<code>examples/scope.cpp</code>):</p>
+<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">struct</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> noop_receiver</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  using</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> receiver_concept</span><span style="color:#D73A49;--shiki-dark:#F97583"> =</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> receiver_tag</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
 <span class="line"></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  template</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> &#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#24292E;--shiki-dark:#E1E4E8">... </span><span style="color:#6F42C1;--shiki-dark:#B392F0">_As</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
@@ -80,11 +85,11 @@
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    return</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> stdexec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::prop{get_stop_token, </span><span style="color:#6F42C1;--shiki-dark:#B392F0">stdexec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::never_stop_token{}};</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  }</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">};</span></span></code></pre></div>
-<p>The function signature of each signal handler is determined by the sender’s <code>completion_signatures</code>.</p>
+<p>In the code above, all three signal handlers are empty — “noop” means “no operation.” In real code, you’d put actual logic here: pass the result to the next stage, log the error, or clean up on cancellation.</p>
+<p>The exact signature of each handler is determined by the sender’s <code>completion_signatures</code>, which we’ll cover in Chapter 12.</p>
 <h2 id="senders-that-send-signals">Senders That Send Signals</h2>
-<p>Some senders immediately send a completion signal:</p>
-<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Corresponding test: test_basics.cpp → "just creates an immediate-value sender"</span></span>
-<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Immediately sends set_value(42)</span></span>
+<p>Some senders fire a completion signal immediately:</p>
+<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Immediately sends set_value(42)</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">sender </span><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> s1 </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> stdexec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">just</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">42</span><span style="color:#24292E;--shiki-dark:#E1E4E8">);</span></span>
 <span class="line"></span>
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Immediately sends set_error()</span></span>
@@ -92,17 +97,17 @@
 <span class="line"></span>
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Immediately sends set_stopped()</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">sender </span><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> s3 </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> stdexec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">just_stopped</span><span style="color:#24292E;--shiki-dark:#E1E4E8">();</span></span></code></pre></div>
-<p>Other senders send signals after an async operation completes:</p>
-<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Corresponding test: test_basics.cpp → "schedule + then + sync_wait basic pipeline"</span></span>
-<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">exec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::static_thread_pool ctx{</span><span style="color:#005CC5;--shiki-dark:#79B8FF">8</span><span style="color:#24292E;--shiki-dark:#E1E4E8">};</span></span>
+<p>In the code above, <code>just</code>, <code>just_error</code>, and <code>just_stopped</code> are the simplest Sender Factories. They don’t wait for anything — they produce their completion signal right away.</p>
+<p>Other senders wait until an async operation completes:</p>
+<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">exec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::static_thread_pool ctx{</span><span style="color:#005CC5;--shiki-dark:#79B8FF">8</span><span style="color:#24292E;--shiki-dark:#E1E4E8">};</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> sch </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> ctx.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">get_scheduler</span><span style="color:#24292E;--shiki-dark:#E1E4E8">();</span></span>
 <span class="line"></span>
-<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Sends set_value() after executing on the thread pool</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Sends set_value(...) after executing on the thread pool</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">sender </span><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> s </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> schedule</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(sch) </span><span style="color:#D73A49;--shiki-dark:#F97583">|</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> then</span><span style="color:#24292E;--shiki-dark:#E1E4E8">([] { </span><span style="color:#D73A49;--shiki-dark:#F97583">return</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 42</span><span style="color:#24292E;--shiki-dark:#E1E4E8">; });</span></span></code></pre></div>
+<p>Here, <code>schedule(sch)</code> creates a Sender that runs on the thread pool. When execution finishes, it calls <code>set_value</code> with the result. <code>then</code> wraps the value 42 into a new <code>set_value</code> and passes it downstream.</p>
 <h2 id="signal-transformation-in-pipelines">Signal Transformation in Pipelines</h2>
-<p>Sender adaptors can transform signals as they arrive:</p>
-<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Corresponding test: test_then_upon.cpp → "chained then, upon_error, upon_stopped normalizes signals"</span></span>
-<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">sender </span><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> s </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> just</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">42</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span><span style="color:#6A737D;--shiki-dark:#6A737D">                               // set_value(42)</span></span>
+<p>Sender Adaptors can transform signals as they arrive:</p>
+<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">sender </span><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> s </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> just</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">42</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span><span style="color:#6A737D;--shiki-dark:#6A737D">                               // set_value(42)</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">              |</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> then</span><span style="color:#24292E;--shiki-dark:#E1E4E8">([](</span><span style="color:#D73A49;--shiki-dark:#F97583">int</span><span style="color:#E36209;--shiki-dark:#FFAB70"> x</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) { </span><span style="color:#D73A49;--shiki-dark:#F97583">return</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> x </span><span style="color:#D73A49;--shiki-dark:#F97583">+</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">; })</span><span style="color:#6A737D;--shiki-dark:#6A737D">      // set_value(43)</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">              |</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> upon_error</span><span style="color:#24292E;--shiki-dark:#E1E4E8">([](</span><span style="color:#6F42C1;--shiki-dark:#B392F0">std</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">exception_ptr</span><span style="color:#E36209;--shiki-dark:#FFAB70"> e</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) {</span><span style="color:#6A737D;--shiki-dark:#6A737D">   // catches set_error</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">                    return</span><span style="color:#D73A49;--shiki-dark:#F97583"> -</span><span style="color:#005CC5;--shiki-dark:#79B8FF">1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
@@ -110,5 +115,47 @@
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">              |</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> upon_stopped</span><span style="color:#24292E;--shiki-dark:#E1E4E8">([] {</span><span style="color:#6A737D;--shiki-dark:#6A737D">                       // catches set_stopped</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">                    return</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                });</span></span></code></pre></div>
-<p>The three completion signals form <strong>the only channel for all data flow</strong> in a sender pipeline. Any information — successful values, errors, cancellation — must be conveyed through one of these three signals.</p>
-<hr></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/02-core-abstractions/" data-astro-cid-ykvenys5>← 02 · Three Core Abstractions — receiver, sender, scheduler, operation_state Overview</a><a href="/exec/tutorials/04-hello-world-pipeline/" data-astro-cid-ykvenys5>04 · Hello World Pipeline — schedule | then | sync_wait →</a></nav></div><script type="module" src="/exec/_astro/TutorialLayout.astro_astro_type_script_index_0_lang.CtUiiL97.js"></script><script type="module">(function(){function e(e){let t=function(){if(typeof mermaid>`u`){setTimeout(t,100);return}mermaid.initialize({startOnLoad:!1,theme:e}),document.querySelectorAll(`.mermaid`).forEach(function(e){e.removeAttribute(`data-processed`),e.textContent=e.textContent}),mermaid.run()};t()}function t(t){document.documentElement.setAttribute(`data-theme`,t);var n=document.getElementById(`themeToggle`);n&&(n.textContent=t===`dark`?`🌙`:`☀️`),e(t===`dark`?`dark`:`default`)}e((document.documentElement.getAttribute(`data-theme`)||`dark`)===`dark`?`dark`:`default`),document.getElementById(`themeToggle`)?.addEventListener(`click`,function(){var e=document.documentElement.getAttribute(`data-theme`)===`dark`?`light`:`dark`;try{localStorage.setItem(`exectutorial-theme`,e)}catch{}t(e)})})();</script></body></html>
+<p>Let’s trace what happens in this pipeline:</p>
+<ol>
+<li><code>just(42)</code> fires <code>set_value(42)</code></li>
+<li><code>then(f)</code> receives <code>set_value(42)</code>, computes <code>42 + 1</code>, fires <code>set_value(43)</code></li>
+<li><code>upon_error(h)</code> — if a <code>set_error</code> arrives upstream, it catches it and converts it to <code>set_value(-1)</code></li>
+<li><code>upon_stopped(h)</code> — if a <code>set_stopped</code> arrives, it catches it and converts it to <code>set_value(0)</code></li>
+</ol>
+<p>You might ask: why convert errors and cancellation into normal values? Because downstream might only care about success. These adaptors let you <strong>normalize</strong> all completion signals into a single path.</p>
+<p>The three completion signals are the <strong>only data channel</strong> in a sender pipeline. Any information — successful values, errors, cancellation — must be conveyed through one of these three. Understanding this is the key to <code>std::execution</code>.</p>
+<hr></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/02-core-abstractions/" data-astro-cid-ykvenys5>← 02 · Three Core Abstractions — receiver, sender, scheduler, operation_state Overview</a><a href="/exec/tutorials/04-hello-world-pipeline/" data-astro-cid-ykvenys5>04 · Hello World Pipeline — schedule | then | sync_wait →</a></nav></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
+      (function() {
+        const STORAGE_KEY = "exectutorial-theme";
+
+        function renderMermaid(theme) {
+          const cb = function() {
+            if (typeof mermaid === "undefined") { setTimeout(cb, 100); return; }
+            mermaid.initialize({ startOnLoad: false, theme: theme });
+            document.querySelectorAll(".mermaid").forEach(function(el) {
+              el.removeAttribute("data-processed");
+              el.textContent = el.textContent;
+            });
+            mermaid.run();
+          };
+          cb();
+        }
+
+        function setTheme(theme) {
+          document.documentElement.setAttribute("data-theme", theme);
+          var btn = document.getElementById("themeToggle");
+          if (btn) btn.textContent = theme === "dark" ? "🌙" : "☀️";
+          renderMermaid(theme === "dark" ? "dark" : "default");
+        }
+
+        var current = document.documentElement.getAttribute("data-theme") || "dark";
+        renderMermaid(current === "dark" ? "dark" : "default");
+
+        document.getElementById("themeToggle")?.addEventListener("click", function() {
+          var cur = document.documentElement.getAttribute("data-theme");
+          var next = cur === "dark" ? "light" : "dark";
+          try { localStorage.setItem(STORAGE_KEY, next); } catch(e) {}
+          setTheme(next);
+        });
+      })();
+    </script></body></html>

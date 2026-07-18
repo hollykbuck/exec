@@ -11,45 +11,9 @@
 <strong>stdexec Reference</strong>: <code>include/stdexec/execution.hpp</code>, <code>include/stdexec/concepts.hpp</code> <br>
 <strong>Related Tests</strong>: <code>tests/test_basics.cpp</code> · <code>tests/test_receiver.cpp</code></p>
 </blockquote>
-<h2 id="overview">Overview</h2>
-<p><code>std::execution</code> is built on four core abstractions. This section provides their high-level definitions and relationships.</p>
-<h2 id="1-scheduler--abstraction-of-execution-resources">1. Scheduler — Abstraction of Execution Resources</h2>
-<p>Standard definition (<code>exec.tex:310</code>):</p>
-<blockquote>
-<p>A <em>scheduler</em> is an abstraction of an execution resource with a uniform, generic interface for scheduling work onto that resource.</p>
-</blockquote>
-<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Standard concept (simplified)</span></span>
-<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">template</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> &#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> S</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
-<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">concept</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> scheduler </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span></span>
-<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  requires</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(S s, receiver </span><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> r) {</span></span>
-<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    { </span><span style="color:#6F42C1;--shiki-dark:#B392F0">schedule</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(s) } </span><span style="color:#D73A49;--shiki-dark:#F97583">-></span><span style="color:#24292E;--shiki-dark:#E1E4E8"> sender;</span></span>
-<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    { </span><span style="color:#6F42C1;--shiki-dark:#B392F0">get_forward_progress_guarantee</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(s) } </span><span style="color:#D73A49;--shiki-dark:#F97583">-></span><span style="color:#24292E;--shiki-dark:#E1E4E8"> forward_progress_guarantee;</span></span>
-<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  };</span></span></code></pre></div>
-<p>The scheduler’s responsibilities are:</p>
-<ul>
-<li>Represent an execution resource (thread pool, GPU, io_uring, current thread…)</li>
-<li>Generate a sender via <code>schedule()</code> that will execute on that resource</li>
-<li>Provide <code>get_forward_progress_guarantee()</code> to query concurrency guarantees (concurrent/parallel/weakly parallel)</li>
-</ul>
-<p>Common schedulers in stdexec:</p>
-<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">exec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::static_thread_pool ctx{</span><span style="color:#005CC5;--shiki-dark:#79B8FF">8</span><span style="color:#24292E;--shiki-dark:#E1E4E8">};</span></span>
-<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">scheduler </span><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> sch </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> ctx.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">get_scheduler</span><span style="color:#24292E;--shiki-dark:#E1E4E8">();</span><span style="color:#6A737D;--shiki-dark:#6A737D">    // thread pool scheduler</span></span>
-<span class="line"></span>
-<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">exec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::inline_scheduler{}</span><span style="color:#6A737D;--shiki-dark:#6A737D">                      // executes immediately on the current thread</span></span>
-<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">nvexec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::stream_scheduler{}</span><span style="color:#6A737D;--shiki-dark:#6A737D">                    // GPU stream scheduler</span></span></code></pre></div>
-<h2 id="2-sender--factorydescription-of-async-operations">2. Sender — Factory/Description of Async Operations</h2>
-<p>Standard definition (<code>exec.tex:290</code>):</p>
-<blockquote>
-<p>A <em>sender</em> is a factory for one or more asynchronous operations.</p>
-</blockquote>
-<p>A sender is a <strong>lazy, composable description of asynchronous work</strong>. It does not represent an operation in progress, but describes “what will happen when connected and started.”</p>
-<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Standard concept (simplified)</span></span>
-<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">template</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> &#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> S</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
-<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">concept</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> sender </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6A737D;--shiki-dark:#6A737D"> /* ... */</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
-<span class="line"></span>
-<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">template</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> &#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> S</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> E</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
-<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">concept</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> sender_in </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6A737D;--shiki-dark:#6A737D"> /* sender can determine completion signatures in environment E */</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span></code></pre></div>
-<p>Three categories of senders:</p>
+<p>In the previous chapter, we saw how <code>std::execution</code> solves the async problem at a high level. Now let’s break down its four core abstractions.</p>
+<p>You might ask: why four? Couldn’t we get by with fewer?</p>
+<p>Each abstraction answers one fundamental question about an async operation:</p>
 <div class="table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch">
 
 
@@ -75,25 +39,96 @@
 
 
 
-<table><thead><tr><th>Category</th><th>Description</th><th>Example</th></tr></thead><tbody><tr><td><strong>Sender Factory</strong></td><td>Creates a sender from non-sender input</td><td><code>schedule(sch)</code>, <code>just(42)</code>, <code>read_env</code></td></tr><tr><td><strong>Sender Adaptor</strong></td><td>Takes sender(s) and returns a new sender</td><td><code>then(sndr, f)</code>, <code>when_all(s1, s2)</code>, <code>let_value</code></td></tr><tr><td><strong>Sender Consumer</strong></td><td>Consumes a sender, returns non-sender</td><td><code>sync_wait(sndr)</code>, <code>spawn(sndr)</code></td></tr></tbody></table></div>
+
+
+
+
+
+<table><thead><tr><th>Abstraction</th><th>Question it answers</th><th>Analogy</th></tr></thead><tbody><tr><td>Scheduler</td><td><strong>Where</strong> does it run?</td><td>Kitchen</td></tr><tr><td>Sender</td><td><strong>What</strong> runs?</td><td>Recipe</td></tr><tr><td>Receiver</td><td><strong>How</strong> is the result handled?</td><td>Diner</td></tr><tr><td>Operation State</td><td>The thing actually <strong>in progress</strong></td><td>Pot on the stove</td></tr></tbody></table></div>
+<p>Let’s go through them one by one.</p>
+<h2 id="1-scheduler--abstraction-of-execution-resources">1. Scheduler — Abstraction of Execution Resources</h2>
+<p>Standard definition (<code>exec.tex:310</code>):</p>
+<blockquote>
+<p>A <em>scheduler</em> is an abstraction of an execution resource with a uniform, generic interface for scheduling work onto that resource.</p>
+</blockquote>
+<p>In plain English: a Scheduler is a handle to an “execution resource” — a thread pool, a GPU, the current thread — with a standard way to put work on it.</p>
+<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Simplified standard concept</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">template</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> &#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> S</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">concept</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> scheduler </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  requires</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(S s, receiver </span><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> r) {</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    { </span><span style="color:#6F42C1;--shiki-dark:#B392F0">schedule</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(s) } </span><span style="color:#D73A49;--shiki-dark:#F97583">-></span><span style="color:#24292E;--shiki-dark:#E1E4E8"> sender;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    { </span><span style="color:#6F42C1;--shiki-dark:#B392F0">get_forward_progress_guarantee</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(s) } </span><span style="color:#D73A49;--shiki-dark:#F97583">-></span><span style="color:#24292E;--shiki-dark:#E1E4E8"> forward_progress_guarantee;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  };</span></span></code></pre></div>
+<p>A Scheduler does three things:</p>
+<ul>
+<li><strong>Represents an execution resource</strong> (thread pool, GPU, io_uring, current thread…)</li>
+<li><strong>Generates a Sender via <code>schedule()</code></strong> that will execute on that resource</li>
+<li><strong>Provides <code>get_forward_progress_guarantee()</code></strong> to query concurrency guarantees (concurrent / parallel / weakly parallel)</li>
+</ul>
+<p>stdexec includes several built-in Schedulers:</p>
+<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">exec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::static_thread_pool ctx{</span><span style="color:#005CC5;--shiki-dark:#79B8FF">8</span><span style="color:#24292E;--shiki-dark:#E1E4E8">};</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">scheduler </span><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> sch </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> ctx.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">get_scheduler</span><span style="color:#24292E;--shiki-dark:#E1E4E8">();</span><span style="color:#6A737D;--shiki-dark:#6A737D">    // thread pool scheduler</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">exec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::inline_scheduler{}</span><span style="color:#6A737D;--shiki-dark:#6A737D">                      // executes immediately on the current thread</span></span>
+<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">nvexec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::stream_scheduler{}</span><span style="color:#6A737D;--shiki-dark:#6A737D">                    // GPU stream scheduler</span></span></code></pre></div>
+<h2 id="2-sender--the-recipe-for-async-work">2. Sender — The “Recipe” for Async Work</h2>
+<p>Standard definition (<code>exec.tex:290</code>):</p>
+<blockquote>
+<p>A <em>sender</em> is a factory for one or more asynchronous operations.</p>
+</blockquote>
+<p>A Sender is a <strong>lazy description</strong> of async work. It’s not an operation in progress — it’s a “recipe” that describes what will happen when connected and started.</p>
+<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Simplified standard concept</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">template</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> &#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> S</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">concept</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> sender </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6A737D;--shiki-dark:#6A737D"> /* ... */</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">template</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> &#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> S</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> E</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">concept</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> sender_in </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6A737D;--shiki-dark:#6A737D"> /* sender can determine completion signatures in environment E */</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span></code></pre></div>
+<p>Senders come in three categories:</p>
+<div class="table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Category</th><th>Description</th><th>Example</th></tr></thead><tbody><tr><td><strong>Sender Factory</strong></td><td>Creates a Sender from non-Sender input</td><td><code>schedule(sch)</code>, <code>just(42)</code>, <code>read_env</code></td></tr><tr><td><strong>Sender Adaptor</strong></td><td>Takes Sender(s) and returns a new Sender</td><td><code>then(sndr, f)</code>, <code>when_all(s1, s2)</code>, <code>let_value</code></td></tr><tr><td><strong>Sender Consumer</strong></td><td>Consumes a Sender, returns non-Sender</td><td><code>sync_wait(sndr)</code>, <code>spawn(sndr)</code></td></tr></tbody></table></div>
 <h3 id="key-characteristics">Key Characteristics</h3>
 <ul>
-<li><strong>Lazy</strong>: Building a pipeline does no work</li>
+<li><strong>Lazy</strong>: building a pipeline does no actual work</li>
 <li><strong>Pipeable</strong>: <code>sndr | then(f) | upon_error(h)</code></li>
-<li><strong>Completion Signatures</strong>: Compile-time description of possible completion signal types</li>
-<li><strong>Each sender has an environment</strong>: queryable via <code>get_env(sndr)</code></li>
+<li><strong>Completion Signatures</strong>: compile-time description of possible completion signal types</li>
+<li><strong>Each Sender has an environment</strong>: queryable via <code>get_env(sndr)</code></li>
 </ul>
-<h2 id="3-receiver--consumer-of-completion-signals">3. Receiver — Consumer of Completion Signals</h2>
+<h2 id="3-receiver--handler-of-completion-signals">3. Receiver — Handler of Completion Signals</h2>
 <p>Standard definition (<code>exec.tex:241</code>):</p>
 <blockquote>
 <p>A <em>receiver</em> is an aggregation of three handlers for the three asynchronous completion dispositions.</p>
 </blockquote>
+<p>A Receiver is where the results (or errors, or cancellation) of an async operation end up. You can think of it as three callback slots, one for each possible outcome.</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">template</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> &#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> R</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">concept</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> receiver </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  requires</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(R r) {</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    { </span><span style="color:#6F42C1;--shiki-dark:#B392F0">get_env</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(r) } </span><span style="color:#D73A49;--shiki-dark:#F97583">-></span><span style="color:#24292E;--shiki-dark:#E1E4E8"> queryable;</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  }</span><span style="color:#6A737D;--shiki-dark:#6A737D"> /* + destructible */</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span></code></pre></div>
-<p>Each receiver must implement three completion functions:</p>
+<p>Every Receiver must implement three completion functions:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">struct</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> my_receiver</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  using</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> receiver_concept</span><span style="color:#D73A49;--shiki-dark:#F97583"> =</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> stdexec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">receiver_tag</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
 <span class="line"></span>
@@ -111,7 +146,7 @@
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    return</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> stdexec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::prop{</span><span style="color:#6F42C1;--shiki-dark:#B392F0">stdexec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::get_stop_token, </span><span style="color:#6F42C1;--shiki-dark:#B392F0">stdexec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::never_stop_token{}};</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  }</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">};</span></span></code></pre></div>
-<p>Three variants of receivers:</p>
+<p>There are three variants of Receivers:</p>
 <div class="table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch">
 
 
@@ -134,11 +169,13 @@
 
 
 <table><thead><tr><th>Concept</th><th>Requirement</th></tr></thead><tbody><tr><td><code>receiver</code></td><td>Only requires <code>get_env(r)</code></td></tr><tr><td><code>receiver_of&#x3C;R, Completions></code></td><td>Requires ability to handle a specified set of completion signatures</td></tr><tr><td><code>inlinable_receiver&#x3C;R></code></td><td>Allows inline completion on the <code>start()</code> call stack</td></tr></tbody></table></div>
-<h2 id="4-operation-state--running-async-operation">4. Operation State — Running Async Operation</h2>
+<p>You might ask: why does a Receiver need to provide <code>get_env()</code>? Because a Receiver carries context — like a stop token that tells upstream “the user cancelled, don’t bother continuing.”</p>
+<h2 id="4-operation-state--the-running-operation">4. Operation State — The Running Operation</h2>
 <p>Standard definition (<code>exec.tex:230</code>):</p>
 <blockquote>
 <p>An asynchronous operation has associated state known as its <em>operation state</em>.</p>
 </blockquote>
+<p>Connect a Sender (the recipe) with a Receiver (the diner), and you get an Operation State — the pot actually cooking on the stove.</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">template</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> &#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> O</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">concept</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> operation_state </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">  std</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::destructible</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;</span><span style="color:#24292E;--shiki-dark:#E1E4E8">O</span><span style="color:#D73A49;--shiki-dark:#F97583">></span><span style="color:#D73A49;--shiki-dark:#F97583"> &#x26;&#x26;</span></span>
@@ -158,7 +195,7 @@
   H --> I["operation_state invalidated"]</pre>
 <p><strong>Important lifecycle rules</strong> (<code>exec.tex:270-287</code>):</p>
 <ul>
-<li>The <strong>lifetime</strong> of an async operation begins with <code>start()</code> and ends when a completion function is called</li>
+<li>The lifetime of an async operation begins with <code>start()</code> and ends when a completion function is called</li>
 <li><code>start()</code> must be called after <code>connect()</code> and at most once</li>
 <li>During execution of a completion function, the operation_state may be destroyed</li>
 <li>Accessing operation_state after it has been destroyed is undefined behavior</li>
@@ -174,7 +211,7 @@
   F --> G["[async execution]"]
   G --> H["completion function"]
   H --> I["Receiver (result handling)"]</pre>
-<p><strong>Analogy</strong>:</p>
+<p>Using the kitchen analogy, here’s the full flow:</p>
 <div class="table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch">
 
 
@@ -208,6 +245,40 @@
 
 
 
-<table><thead><tr><th>Abstraction</th><th>Analogy</th></tr></thead><tbody><tr><td>Scheduler</td><td>Kitchen (execution resource)</td></tr><tr><td>schedule()</td><td>“Cook here” request</td></tr><tr><td>Sender</td><td>Recipe (lazy description)</td></tr><tr><td>connect(receiver)</td><td>Prepare ingredients and chef</td></tr><tr><td>start()</td><td>Turn on the stove</td></tr><tr><td>set_value/set_error/set_stopped</td><td>Dish served/burnt/fire off</td></tr></tbody></table></div>
-<p>The next chapter dives into the concrete usage of the three completion signals.</p>
-<hr></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/01-why-stdexec/" data-astro-cid-ykvenys5>← 01 · Why std::execution?</a><a href="/exec/tutorials/03-completion-signals/" data-astro-cid-ykvenys5>03 · Three Completion Signals — set_value / set_error / set_stopped →</a></nav></div><script type="module" src="/exec/_astro/TutorialLayout.astro_astro_type_script_index_0_lang.CtUiiL97.js"></script><script type="module">(function(){function e(e){let t=function(){if(typeof mermaid>`u`){setTimeout(t,100);return}mermaid.initialize({startOnLoad:!1,theme:e}),document.querySelectorAll(`.mermaid`).forEach(function(e){e.removeAttribute(`data-processed`),e.textContent=e.textContent}),mermaid.run()};t()}function t(t){document.documentElement.setAttribute(`data-theme`,t);var n=document.getElementById(`themeToggle`);n&&(n.textContent=t===`dark`?`🌙`:`☀️`),e(t===`dark`?`dark`:`default`)}e((document.documentElement.getAttribute(`data-theme`)||`dark`)===`dark`?`dark`:`default`),document.getElementById(`themeToggle`)?.addEventListener(`click`,function(){var e=document.documentElement.getAttribute(`data-theme`)===`dark`?`light`:`dark`;try{localStorage.setItem(`exectutorial-theme`,e)}catch{}t(e)})})();</script></body></html>
+<table><thead><tr><th>Abstraction</th><th>Analogy</th></tr></thead><tbody><tr><td>Scheduler</td><td><strong>Kitchen</strong> (execution resource)</td></tr><tr><td><code>schedule()</code></td><td>”Cook here” request</td></tr><tr><td>Sender</td><td><strong>Recipe</strong> (lazy description)</td></tr><tr><td><code>connect(receiver)</code></td><td>Prep ingredients and chef</td></tr><tr><td><code>start()</code></td><td><strong>Turn on the stove</strong></td></tr><tr><td><code>set_value/set_error/set_stopped</code></td><td>Dish served / burnt / fire off</td></tr></tbody></table></div>
+<p>The next chapter dives into the three completion signals themselves.</p>
+<hr></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/01-why-stdexec/" data-astro-cid-ykvenys5>← 01 · Why std::execution?</a><a href="/exec/tutorials/03-completion-signals/" data-astro-cid-ykvenys5>03 · Three Completion Signals — set_value / set_error / set_stopped →</a></nav></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
+      (function() {
+        const STORAGE_KEY = "exectutorial-theme";
+
+        function renderMermaid(theme) {
+          const cb = function() {
+            if (typeof mermaid === "undefined") { setTimeout(cb, 100); return; }
+            mermaid.initialize({ startOnLoad: false, theme: theme });
+            document.querySelectorAll(".mermaid").forEach(function(el) {
+              el.removeAttribute("data-processed");
+              el.textContent = el.textContent;
+            });
+            mermaid.run();
+          };
+          cb();
+        }
+
+        function setTheme(theme) {
+          document.documentElement.setAttribute("data-theme", theme);
+          var btn = document.getElementById("themeToggle");
+          if (btn) btn.textContent = theme === "dark" ? "🌙" : "☀️";
+          renderMermaid(theme === "dark" ? "dark" : "default");
+        }
+
+        var current = document.documentElement.getAttribute("data-theme") || "dark";
+        renderMermaid(current === "dark" ? "dark" : "default");
+
+        document.getElementById("themeToggle")?.addEventListener("click", function() {
+          var cur = document.documentElement.getAttribute("data-theme");
+          var next = cur === "dark" ? "light" : "dark";
+          try { localStorage.setItem(STORAGE_KEY, next); } catch(e) {}
+          setTheme(next);
+        });
+      })();
+    </script></body></html>

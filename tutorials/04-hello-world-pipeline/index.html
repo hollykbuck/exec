@@ -11,9 +11,9 @@
 <strong>stdexec Reference</strong>: <code>examples/hello_world.cpp</code>
 <strong>Related Tests</strong>: <code>tests/test_basics.cpp</code></p>
 </blockquote>
+<p>The previous chapters covered concepts. Now let’s write our first real <code>std::execution</code> program.</p>
 <h2 id="your-first-stdexec-program">Your First stdexec Program</h2>
-<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Corresponding test: test_basics.cpp → "schedule + then + sync_wait basic pipeline"</span></span>
-<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">#include</span><span style="color:#032F62;--shiki-dark:#9ECBFF"> &#x3C;iostream></span></span>
+<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">#include</span><span style="color:#032F62;--shiki-dark:#9ECBFF"> &#x3C;iostream></span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">#include</span><span style="color:#032F62;--shiki-dark:#9ECBFF"> &#x3C;stdexec/execution.hpp></span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">#include</span><span style="color:#032F62;--shiki-dark:#9ECBFF"> &#x3C;exec/static_thread_pool.hpp></span></span>
 <span class="line"></span>
@@ -32,22 +32,27 @@
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> [i] </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> sync_wait</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">std</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">move</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(add_42)).</span><span style="color:#6F42C1;--shiki-dark:#B392F0">value</span><span style="color:#24292E;--shiki-dark:#E1E4E8">();</span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">  std</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::cout </span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;&#x3C;</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> i </span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;&#x3C;</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> std</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::endl;</span><span style="color:#6A737D;--shiki-dark:#6A737D">  // 55</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span></code></pre></div>
-<h3 id="line-by-line-explanation">Line-by-Line Explanation</h3>
-<p><strong>① <code>static_thread_pool ctx{8}</code></strong>: Creates a thread pool managing 8 threads. This is an execution resource.</p>
-<p><strong>② <code>ctx.get_scheduler()</code></strong>: Gets a scheduler from the thread pool. A scheduler is a “handle” to the thread pool, used to schedule work on it.</p>
-<p><strong>③ Pipeline Construction</strong>:</p>
+<p>This program does four things. Let’s go through them one by one.</p>
+<p><strong>① <code>static_thread_pool ctx{8}</code></strong>: Creates a thread pool managing 8 threads. This is an “execution resource.”</p>
+<p><strong>② <code>ctx.get_scheduler()</code></strong>: Gets a Scheduler from the thread pool. The Scheduler is a handle to the pool — you use it to schedule work onto it.</p>
+<p><strong>③ Pipeline construction</strong>:</p>
 <pre class="mermaid">graph LR
-  A["schedule(sch)"] --> B["sender&#x26;lt;void&#x26;gt;&#x3C;br/>means 'do something on the thread pool'"]
+  A["schedule(sch)"] --> B["sender&#x26;lt;void&#x26;gt;&#x3C;br/>'do something on the thread pool'"]
   B --> C["then([] { return 13; })"]
-  C --> D["sender&#x26;lt;int&#x26;gt;&#x3C;br/>means 'then compute 13'"]
+  C --> D["sender&#x26;lt;int&#x26;gt;&#x3C;br/>'then compute 13'"]
   D --> E["then([](int a) { return a + 42; })"]
-  E --> F["sender&#x26;lt;int&#x26;gt;&#x3C;br/>means 'then add 42'"]</pre>
-<p>Note: <strong>No code is executing on the thread pool at this point</strong>. The pipeline is just a lazy description.</p>
-<p><strong>④ <code>sync_wait</code></strong>: A consumer. It internally creates a receiver → <code>connect(sender, receiver)</code> → <code>start()</code> → blocks until completion → returns the result.</p>
-<h2 id="pipe-operator-syntax">Pipe Operator Syntax</h2>
-<p>The above pipeline is equivalent to:</p>
-<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Corresponding test: test_pipe.cpp → "pipe syntax equals function call syntax"</span></span>
-<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Nested function call (not recommended)</span></span>
+  E --> F["sender&#x26;lt;int&#x26;gt;&#x3C;br/>'then add 42'"]</pre>
+<p>Note: <strong>No code is executing on the thread pool right now</strong>. The pipeline is just a lazy description, like a blueprint. The actual work happens in the next step.</p>
+<p><strong>④ <code>sync_wait</code></strong>: This is a Sender Consumer. It does three things internally:</p>
+<ol>
+<li>Creates a Receiver</li>
+<li>Calls <code>connect(sender, receiver)</code> to get an Operation State</li>
+<li>Calls <code>start()</code> to begin execution, then blocks until completion, and returns the result</li>
+</ol>
+<p>You might ask: how does <code>sync_wait</code> know which thread pool to use? Because the Scheduler was captured inside the Sender when <code>schedule(sch)</code> was called. It propagates through the pipeline, so when <code>sync_wait</code> kicks things off, the Sender knows exactly where to run.</p>
+<h2 id="pipe-syntax">Pipe Syntax</h2>
+<p>The pipeline above is equivalent to nested function calls:</p>
+<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Nested function call (not recommended)</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> result </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> sync_wait</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">  then</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">    then</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span></span>
@@ -64,9 +69,9 @@
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    |</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> then</span><span style="color:#24292E;--shiki-dark:#E1E4E8">([] { </span><span style="color:#D73A49;--shiki-dark:#F97583">return</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 13</span><span style="color:#24292E;--shiki-dark:#E1E4E8">; })</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    |</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> then</span><span style="color:#24292E;--shiki-dark:#E1E4E8">([](</span><span style="color:#D73A49;--shiki-dark:#F97583">int</span><span style="color:#E36209;--shiki-dark:#FFAB70"> a</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) { </span><span style="color:#D73A49;--shiki-dark:#F97583">return</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> a </span><span style="color:#D73A49;--shiki-dark:#F97583">+</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 42</span><span style="color:#24292E;--shiki-dark:#E1E4E8">; })</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">);</span></span></code></pre></div>
-<p><code>operator|</code> makes the code read naturally from left to right, similar to Unix pipes.</p>
-<h2 id="return-value-stdoptionalstdtuple">Return Value: <code>std::optional&#x3C;std::tuple&#x3C;...>></code></h2>
-<p><code>sync_wait</code> returns <code>std::optional&#x3C;std::tuple&#x3C;Ts...>></code>:</p>
+<p>Both forms are completely equivalent. Pipe syntax reads left to right, which is more intuitive — like Unix pipes. We’ll dig into how <code>operator|</code> works in a later chapter.</p>
+<h2 id="sync_wait-return-value">sync_wait Return Value</h2>
+<p><code>sync_wait</code> returns <code>std::optional&#x3C;std::tuple&#x3C;Ts...>></code>. The three completion signals map to three outcomes:</p>
 <div class="table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch">
 
 
@@ -88,26 +93,59 @@
 
 
 
-<table><thead><tr><th>Completion Signal</th><th>Return Value</th></tr></thead><tbody><tr><td><code>set_value(42)</code></td><td><code>std::optional{std::tuple{42}}</code></td></tr><tr><td><code>set_error(e)</code></td><td><code>std::nullopt</code> (throws exception)</td></tr><tr><td><code>set_stopped</code></td><td><code>std::nullopt</code></td></tr></tbody></table></div>
-<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Corresponding test: test_basics.cpp → "just creates an immediate-value sender"</span></span>
-<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> [i] </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> sync_wait</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">just</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">42</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)).</span><span style="color:#6F42C1;--shiki-dark:#B392F0">value</span><span style="color:#24292E;--shiki-dark:#E1E4E8">();</span><span style="color:#6A737D;--shiki-dark:#6A737D">                                 // i = 42</span></span>
-<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> [x, y] </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> sync_wait</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">when_all</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">just</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">), </span><span style="color:#6F42C1;--shiki-dark:#B392F0">just</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">2.0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">))).</span><span style="color:#6F42C1;--shiki-dark:#B392F0">value</span><span style="color:#24292E;--shiki-dark:#E1E4E8">();</span><span style="color:#6A737D;--shiki-dark:#6A737D">          // x=1, y=2.0</span></span>
+<table><thead><tr><th>Completion Signal</th><th>Return Value</th></tr></thead><tbody><tr><td><code>set_value(42)</code></td><td><code>std::optional{std::tuple{42}}</code></td></tr><tr><td><code>set_error(e)</code></td><td><code>std::nullopt</code> (rethrows exception)</td></tr><tr><td><code>set_stopped</code></td><td><code>std::nullopt</code></td></tr></tbody></table></div>
+<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> [i] </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> sync_wait</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">just</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">42</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)).</span><span style="color:#6F42C1;--shiki-dark:#B392F0">value</span><span style="color:#24292E;--shiki-dark:#E1E4E8">();</span><span style="color:#6A737D;--shiki-dark:#6A737D">                              // i = 42</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> [x, y] </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> sync_wait</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">when_all</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">just</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">), </span><span style="color:#6F42C1;--shiki-dark:#B392F0">just</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">2.0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">))).</span><span style="color:#6F42C1;--shiki-dark:#B392F0">value</span><span style="color:#24292E;--shiki-dark:#E1E4E8">();</span><span style="color:#6A737D;--shiki-dark:#6A737D">       // x=1, y=2.0</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> opt </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> sync_wait</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">just_error</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">std</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::exception_ptr{}));</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">if</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (</span><span style="color:#D73A49;--shiki-dark:#F97583">!</span><span style="color:#24292E;--shiki-dark:#E1E4E8">opt) {</span><span style="color:#6A737D;--shiki-dark:#6A737D"> /* error or cancellation occurred */</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> }</span></span></code></pre></div>
-<h2 id="more-examples">More Examples</h2>
-<p><code>hello_world.cpp</code> also demonstrates <code>get_scheduler()</code> queries and the combination of <code>let_value</code> with <code>starts_on</code>:</p>
-<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Corresponding test: test_env_query.cpp → "get_scheduler in pipeline via read_env"</span></span>
-<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Get the scheduler from the environment and execute on it</span></span>
-<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">sync_wait</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">when_all</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span></span>
+<p>In the code above, <code>when_all(just(1), just(2.0))</code> fires <code>set_value(1, 2.0)</code>, so <code>sync_wait</code> returns <code>std::optional{std::tuple{1, 2.0}}</code>. After unpacking, <code>x=1, y=2.0</code>.</p>
+<h2 id="querying-the-environment">Querying the Environment</h2>
+<p>Senders in a pipeline can also query the current execution environment:</p>
+<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">sync_wait</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">when_all</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">  just</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">42</span><span style="color:#24292E;--shiki-dark:#E1E4E8">),</span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">  get_scheduler</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(),</span><span style="color:#6A737D;--shiki-dark:#6A737D">       // query the scheduler from the receiver's environment</span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">  get_stop_token</span><span style="color:#24292E;--shiki-dark:#E1E4E8">()</span><span style="color:#6A737D;--shiki-dark:#6A737D">       // query the stop token</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">));</span></span></code></pre></div>
+<p>In the code above, <code>get_scheduler()</code> and <code>get_stop_token()</code> aren’t ordinary Sender Factories — they read information from the Receiver’s environment. This is especially useful when crossing execution contexts.</p>
 <h3 id="key-takeaways">Key Takeaways</h3>
 <ol>
 <li>Pipeline construction is an <strong>O(1) lazy operation</strong> that does no work</li>
 <li><code>sync_wait</code> is a <strong>synchronization boundary</strong> that pulls the async world back into the sync world</li>
 <li>All errors and cancellations are propagated through <code>std::optional</code></li>
-<li>Pipe syntax and nested function call syntax are equivalent; <code>operator|</code> is recommended</li>
+<li>Pipe syntax and nested function call syntax are equivalent; pipe syntax is recommended</li>
 </ol>
-<hr></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/03-completion-signals/" data-astro-cid-ykvenys5>← 03 · Three Completion Signals — set_value / set_error / set_stopped</a><a href="/exec/tutorials/05-thread-pools/" data-astro-cid-ykvenys5>05 · Thread Pools and Execution Contexts →</a></nav></div><script type="module" src="/exec/_astro/TutorialLayout.astro_astro_type_script_index_0_lang.CtUiiL97.js"></script><script type="module">(function(){function e(e){let t=function(){if(typeof mermaid>`u`){setTimeout(t,100);return}mermaid.initialize({startOnLoad:!1,theme:e}),document.querySelectorAll(`.mermaid`).forEach(function(e){e.removeAttribute(`data-processed`),e.textContent=e.textContent}),mermaid.run()};t()}function t(t){document.documentElement.setAttribute(`data-theme`,t);var n=document.getElementById(`themeToggle`);n&&(n.textContent=t===`dark`?`🌙`:`☀️`),e(t===`dark`?`dark`:`default`)}e((document.documentElement.getAttribute(`data-theme`)||`dark`)===`dark`?`dark`:`default`),document.getElementById(`themeToggle`)?.addEventListener(`click`,function(){var e=document.documentElement.getAttribute(`data-theme`)===`dark`?`light`:`dark`;try{localStorage.setItem(`exectutorial-theme`,e)}catch{}t(e)})})();</script></body></html>
+<hr></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/03-completion-signals/" data-astro-cid-ykvenys5>← 03 · Three Completion Signals — set_value / set_error / set_stopped</a><a href="/exec/tutorials/05-thread-pools/" data-astro-cid-ykvenys5>05 · Thread Pools and Execution Contexts →</a></nav></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
+      (function() {
+        const STORAGE_KEY = "exectutorial-theme";
+
+        function renderMermaid(theme) {
+          const cb = function() {
+            if (typeof mermaid === "undefined") { setTimeout(cb, 100); return; }
+            mermaid.initialize({ startOnLoad: false, theme: theme });
+            document.querySelectorAll(".mermaid").forEach(function(el) {
+              el.removeAttribute("data-processed");
+              el.textContent = el.textContent;
+            });
+            mermaid.run();
+          };
+          cb();
+        }
+
+        function setTheme(theme) {
+          document.documentElement.setAttribute("data-theme", theme);
+          var btn = document.getElementById("themeToggle");
+          if (btn) btn.textContent = theme === "dark" ? "🌙" : "☀️";
+          renderMermaid(theme === "dark" ? "dark" : "default");
+        }
+
+        var current = document.documentElement.getAttribute("data-theme") || "dark";
+        renderMermaid(current === "dark" ? "dark" : "default");
+
+        document.getElementById("themeToggle")?.addEventListener("click", function() {
+          var cur = document.documentElement.getAttribute("data-theme");
+          var next = cur === "dark" ? "light" : "dark";
+          try { localStorage.setItem(STORAGE_KEY, next); } catch(e) {}
+          setTheme(next);
+        });
+      })();
+    </script></body></html>

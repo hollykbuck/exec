@@ -11,22 +11,26 @@
 <strong>stdexec Reference</strong>: <code>examples/hello_coro.cpp</code> <br>
 <strong>Related Tests</strong>: <code>tests/test_coroutine.cpp</code></p>
 </blockquote>
-<h2 id="bidirectional-interop-between-senders-and-coroutines">Bidirectional Interop Between Senders and Coroutines</h2>
-<p><code>std::execution</code> provides <strong>bidirectional interop</strong> with C++20 coroutines:</p>
+<h2 id="two-async-styles">Two Async Styles</h2>
+<p><code>std::execution</code> gives you two styles of async programming:</p>
+<ol>
+<li><strong>Sender pipelines</strong> — composed with <code>operator|</code>, great for fixed, high-performance paths</li>
+<li><strong>Coroutines</strong> — use <code>co_await</code>, great for complex control flow (loops, branches, recursion)</li>
+</ol>
+<p>You might ask: do I have to pick one?</p>
+<p>The answer is: <strong>no</strong>. <code>std::execution</code> lets you seamlessly mix both.</p>
 <pre class="mermaid">graph LR
   A["Sender"] &#x3C;--> B["Awaitable"]</pre>
 <ul>
-<li><strong>Sender is awaitable</strong>: You can use <code>co_await sender</code> inside <code>stdexec::task&#x3C;T></code></li>
-<li><strong>Awaitable is sender</strong>: Any awaitable can be used as a sender in a pipeline</li>
+<li><strong>Sender is awaitable</strong>: you can <code>co_await sender</code> inside <code>stdexec::task&#x3C;T></code></li>
+<li><strong>Awaitable is sender</strong>: any awaitable can be used as a sender in a pipeline</li>
 </ul>
 <h2 id="co_await-sender-in-coroutines">co_await sender in Coroutines</h2>
-<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Corresponding test: test_coroutine.cpp → "task coroutine can await senders"</span></span>
-<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">#include</span><span style="color:#032F62;--shiki-dark:#9ECBFF"> &#x3C;stdexec/execution.hpp></span></span>
+<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">#include</span><span style="color:#032F62;--shiki-dark:#9ECBFF"> &#x3C;stdexec/execution.hpp></span></span>
 <span class="line"></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">using</span><span style="color:#D73A49;--shiki-dark:#F97583"> namespace</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> stdexec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
 <span class="line"></span>
-<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Both sender and task are lazy,</span></span>
-<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// so this takes sender parameters and co_awaits them</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// This coroutine takes two senders, co_awaits them, and adds the results</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">template</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> &#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">sender</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> S1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#D73A49;--shiki-dark:#F97583">sender</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> S2</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> async_add</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">S1</span><span style="color:#E36209;--shiki-dark:#FFAB70"> s1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#6F42C1;--shiki-dark:#B392F0">S2</span><span style="color:#E36209;--shiki-dark:#FFAB70"> s2</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) -> </span><span style="color:#6F42C1;--shiki-dark:#B392F0">stdexec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">task</span><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">int</span><span style="color:#24292E;--shiki-dark:#E1E4E8">> {</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  int</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> a </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#D73A49;--shiki-dark:#F97583"> co_await</span><span style="color:#D73A49;--shiki-dark:#F97583"> static_cast&#x3C;</span><span style="color:#24292E;--shiki-dark:#E1E4E8">S1</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x26;&#x26;></span><span style="color:#24292E;--shiki-dark:#E1E4E8">(s1);</span><span style="color:#6A737D;--shiki-dark:#6A737D">  // await the first sender</span></span>
@@ -35,20 +39,19 @@
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span>
 <span class="line"></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">int</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> main</span><span style="color:#24292E;--shiki-dark:#E1E4E8">() {</span></span>
-<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">  // task is itself a sender, so it can be used with sync_wait</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">  // task itself is a sender, so it can be consumed by sync_wait</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> [i] </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> sync_wait</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">async_add</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">just</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">40</span><span style="color:#24292E;--shiki-dark:#E1E4E8">), </span><span style="color:#6F42C1;--shiki-dark:#B392F0">just</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">2</span><span style="color:#24292E;--shiki-dark:#E1E4E8">))).</span><span style="color:#6F42C1;--shiki-dark:#B392F0">value</span><span style="color:#24292E;--shiki-dark:#E1E4E8">();</span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">  std</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::cout </span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;&#x3C;</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> i </span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;&#x3C;</span><span style="color:#032F62;--shiki-dark:#9ECBFF"> '</span><span style="color:#005CC5;--shiki-dark:#79B8FF">\n</span><span style="color:#032F62;--shiki-dark:#9ECBFF">'</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span><span style="color:#6A737D;--shiki-dark:#6A737D">  // 42</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span></code></pre></div>
-<h3 id="key-points">Key Points</h3>
+<p>There are three key points in the code above:</p>
 <ol>
-<li><code>task&#x3C;T></code> is a sender (models the <code>sender</code> concept)</li>
-<li><code>co_await sender</code> inside <code>task&#x3C;T></code> implicitly converts the sender to an awaitable</li>
-<li><code>task&#x3C;T></code> itself can be used anywhere a sender is expected (<code>sync_wait</code>, <code>then</code>, <code>when_all</code>…)</li>
+<li><code>task&#x3C;T></code> itself is a Sender (it models the <code>sender</code> concept)</li>
+<li>Inside <code>task&#x3C;T></code>, <code>co_await sender</code> implicitly converts the sender into an awaitable</li>
+<li><code>task&#x3C;T></code> can be used anywhere a sender is expected (<code>sync_wait</code>, <code>then</code>, <code>when_all</code>…)</li>
 </ol>
 <h2 id="handling-cancellation">Handling Cancellation</h2>
-<p>Use <code>stopped_as_optional</code> to convert cancellation into <code>std::nullopt</code>:</p>
-<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Corresponding test: test_coroutine.cpp → "stopped_as_optional in coroutine"</span></span>
-<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">template</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> &#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">sender</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> S1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#D73A49;--shiki-dark:#F97583">sender</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> S2</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<p>How do you handle cancellation in a coroutine? Use <code>stopped_as_optional</code>:</p>
+<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">template</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> &#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">sender</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> S1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#D73A49;--shiki-dark:#F97583">sender</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> S2</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> async_add_opt</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">S1</span><span style="color:#E36209;--shiki-dark:#FFAB70"> s1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#6F42C1;--shiki-dark:#B392F0">S2</span><span style="color:#E36209;--shiki-dark:#FFAB70"> s2</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) -> </span><span style="color:#6F42C1;--shiki-dark:#B392F0">stdexec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">task</span><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#6F42C1;--shiki-dark:#B392F0">std</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">optional</span><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">int</span><span style="color:#24292E;--shiki-dark:#E1E4E8">>> {</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  co_return</span><span style="color:#D73A49;--shiki-dark:#F97583"> co_await</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> stopped_as_optional</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">async_add</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(s1, s2));</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span>
@@ -58,13 +61,13 @@
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">if</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (opt) {</span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">  std</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::cout </span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;&#x3C;</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> opt.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">value</span><span style="color:#24292E;--shiki-dark:#E1E4E8">() </span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;&#x3C;</span><span style="color:#032F62;--shiki-dark:#9ECBFF"> '</span><span style="color:#005CC5;--shiki-dark:#79B8FF">\n</span><span style="color:#032F62;--shiki-dark:#9ECBFF">'</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span></code></pre></div>
+<p>In the code above, <code>stopped_as_optional</code> converts the <code>set_stopped</code> signal into <code>std::nullopt</code>. You <strong>don’t need to write separate error handling for cancellation</strong> — just check if the optional has a value.</p>
 <h2 id="querying-the-environment-in-coroutines">Querying the Environment in Coroutines</h2>
-<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Corresponding test: test_stop_token.cpp → "get_stop_token from sync_wait environment"</span></span>
-<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// tasks have an associated stop token</span></span>
+<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// tasks have an associated stop token</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> async_stop_token</span><span style="color:#24292E;--shiki-dark:#E1E4E8">() -> </span><span style="color:#6F42C1;--shiki-dark:#B392F0">stdexec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">task</span><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#6F42C1;--shiki-dark:#B392F0">std</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">optional</span><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#6F42C1;--shiki-dark:#B392F0">stdexec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">inplace_stop_token</span><span style="color:#24292E;--shiki-dark:#E1E4E8">>> {</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  co_return</span><span style="color:#D73A49;--shiki-dark:#F97583"> co_await</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> stopped_as_optional</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">get_stop_token</span><span style="color:#24292E;--shiki-dark:#E1E4E8">());</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span></code></pre></div>
-<h2 id="coroutines-vs-sender-pipelines">Coroutines vs Sender Pipelines</h2>
+<h2 id="when-to-use-which">When to Use Which?</h2>
 <div class="table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch">
 
 
@@ -103,12 +106,11 @@
 <table><thead><tr><th>Aspect</th><th>Sender Pipeline</th><th>Coroutines</th></tr></thead><tbody><tr><td>Composition</td><td>`operator</td><td>`</td></tr><tr><td>Control Flow</td><td>Linear (one adaptor per step)</td><td>Arbitrary (loops, branches, recursion)</td></tr><tr><td>Error Handling</td><td><code>upon_error</code> / <code>let_error</code></td><td><code>try</code>/<code>catch</code></td></tr><tr><td>Performance</td><td>Zero-overhead abstraction</td><td>Coroutine frame overhead</td></tr><tr><td>Use Case</td><td>Fixed pipelines, high performance</td><td>Complex control flow, state machines</td></tr></tbody></table></div>
 <h2 id="best-practices">Best Practices</h2>
 <ol>
-<li>Use sender pipelines to express <strong>static, performance-critical</strong> async workflows</li>
-<li>Use <code>task&#x3C;T></code> coroutines to express <strong>dynamic, control-flow-complex</strong> async workflows</li>
-<li>Mix both — <code>co_await sender</code> inside coroutines, use <code>task&#x3C;T></code> as a sender in pipelines</li>
+<li>Use sender pipelines for <strong>static, performance-critical</strong> async workflows</li>
+<li>Use <code>task&#x3C;T></code> coroutines for <strong>dynamic, control-flow-complex</strong> async workflows</li>
+<li><strong>Mix both</strong> — <code>co_await sender</code> inside coroutines, use <code>task&#x3C;T></code> as a sender in pipelines</li>
 </ol>
-<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Corresponding test: test_coroutine.cpp → "task is itself a sender usable with sync_wait"</span></span>
-<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Mixed example: embedding coroutine logic in a pipeline</span></span>
+<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Embed coroutine logic inside a pipeline</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> pipeline</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#D73A49;--shiki-dark:#F97583">int</span><span style="color:#E36209;--shiki-dark:#FFAB70"> x</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) -> </span><span style="color:#6F42C1;--shiki-dark:#B392F0">stdexec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">task</span><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">int</span><span style="color:#24292E;--shiki-dark:#E1E4E8">> {</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> y </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#D73A49;--shiki-dark:#F97583"> co_await</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> some_complex_logic</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(x);</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  co_return</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> y;</span></span>
@@ -119,4 +121,39 @@
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    |</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> then</span><span style="color:#24292E;--shiki-dark:#E1E4E8">([](</span><span style="color:#D73A49;--shiki-dark:#F97583">int</span><span style="color:#E36209;--shiki-dark:#FFAB70"> x</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) { </span><span style="color:#D73A49;--shiki-dark:#F97583">return</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> x </span><span style="color:#D73A49;--shiki-dark:#F97583">+</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">; })</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    |</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> let_value</span><span style="color:#24292E;--shiki-dark:#E1E4E8">([](</span><span style="color:#D73A49;--shiki-dark:#F97583">int</span><span style="color:#E36209;--shiki-dark:#FFAB70"> x</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) { </span><span style="color:#D73A49;--shiki-dark:#F97583">return</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> pipeline</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(x); })</span><span style="color:#6A737D;--shiki-dark:#6A737D">  // task is a sender</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">);</span></span></code></pre></div>
-<hr></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/06-pipe-operators/" data-astro-cid-ykvenys5>← 06 · Pipe Operators — How operator| Composes Senders</a><a href="/exec/tutorials/08-receiver-concept/" data-astro-cid-ykvenys5>08 · Receiver Concept →</a></nav></div><script type="module" src="/exec/_astro/TutorialLayout.astro_astro_type_script_index_0_lang.CtUiiL97.js"></script><script type="module">(function(){function e(e){let t=function(){if(typeof mermaid>`u`){setTimeout(t,100);return}mermaid.initialize({startOnLoad:!1,theme:e}),document.querySelectorAll(`.mermaid`).forEach(function(e){e.removeAttribute(`data-processed`),e.textContent=e.textContent}),mermaid.run()};t()}function t(t){document.documentElement.setAttribute(`data-theme`,t);var n=document.getElementById(`themeToggle`);n&&(n.textContent=t===`dark`?`🌙`:`☀️`),e(t===`dark`?`dark`:`default`)}e((document.documentElement.getAttribute(`data-theme`)||`dark`)===`dark`?`dark`:`default`),document.getElementById(`themeToggle`)?.addEventListener(`click`,function(){var e=document.documentElement.getAttribute(`data-theme`)===`dark`?`light`:`dark`;try{localStorage.setItem(`exectutorial-theme`,e)}catch{}t(e)})})();</script></body></html>
+<p>The code above shows a typical mixed scenario: simple computation uses <code>then</code>, complex logic uses the <code>pipeline</code> coroutine, and <code>let_value</code> bridges them seamlessly.</p>
+<hr></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/06-pipe-operators/" data-astro-cid-ykvenys5>← 06 · Pipe Operators — How operator| Composes Senders</a><a href="/exec/tutorials/08-receiver-concept/" data-astro-cid-ykvenys5>08 · Receiver Concept →</a></nav></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
+      (function() {
+        const STORAGE_KEY = "exectutorial-theme";
+
+        function renderMermaid(theme) {
+          const cb = function() {
+            if (typeof mermaid === "undefined") { setTimeout(cb, 100); return; }
+            mermaid.initialize({ startOnLoad: false, theme: theme });
+            document.querySelectorAll(".mermaid").forEach(function(el) {
+              el.removeAttribute("data-processed");
+              el.textContent = el.textContent;
+            });
+            mermaid.run();
+          };
+          cb();
+        }
+
+        function setTheme(theme) {
+          document.documentElement.setAttribute("data-theme", theme);
+          var btn = document.getElementById("themeToggle");
+          if (btn) btn.textContent = theme === "dark" ? "🌙" : "☀️";
+          renderMermaid(theme === "dark" ? "dark" : "default");
+        }
+
+        var current = document.documentElement.getAttribute("data-theme") || "dark";
+        renderMermaid(current === "dark" ? "dark" : "default");
+
+        document.getElementById("themeToggle")?.addEventListener("click", function() {
+          var cur = document.documentElement.getAttribute("data-theme");
+          var next = cur === "dark" ? "light" : "dark";
+          try { localStorage.setItem(STORAGE_KEY, next); } catch(e) {}
+          setTheme(next);
+        });
+      })();
+    </script></body></html>

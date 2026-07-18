@@ -140,10 +140,10 @@
     +try_query()
   }
   class __receiver_proxy_base~Rcvr~ {
-    +set_value() → Rcvr::set_value()
-    +set_error() → Rcvr::set_error()
-    +set_stopped() → Rcvr::set_stopped()
-    +try_query() → get_stop_token / get_allocator / get_start_scheduler
+    +set_value() Rcvr::set_value()
+    +set_error() Rcvr::set_error()
+    +set_stopped() Rcvr::set_stopped()
+    +try_query() get_stop_token / get_allocator / get_start_scheduler
   }
   receiver_proxy &#x3C;|-- __receiver_proxy_base~Rcvr~</pre>
 <p>Cancellation propagation is implemented via <code>__stop_callback_for</code>: when the backend requests a stop, the proxy notifies the frontend through <code>inplace_stop_source</code>.</p>
@@ -178,14 +178,14 @@
 <p>stdexec’s default parallel backend uses <code>std::thread</code> with a <strong>work-stealing</strong> implementation:</p>
 <pre class="mermaid">block
   columns 1
-  block["work_stealing_thread_pool"]
-    block["Worker 0: [ ][ ][ ][ ] ← Local queue (LIFO)"]
-    block["Worker 1: [ ][ ][ ][ ] ← Stealable"]
-    block["Worker 2: [ ][ ][ ][ ] ← Other workers"]
-    block["Worker 3: [ ][ ][ ][ ] ← Tail stealing"]
+  block:pool:1
+    columns 1
+    w0["Worker 0: [ ][ ][ ][ ] ← Local queue (LIFO)"]
+    w1["Worker 1: [ ][ ][ ][ ] ← Stealable"]
+    w2["Worker 2: [ ][ ][ ][ ] ← Other workers"]
+    w3["Worker 3: [ ][ ][ ][ ] ← Tail stealing"]
   end
-  block["Idle threads steal work from busy threads' tails"]
-  end</pre>
+  idle["Idle threads steal work from busy threads' tails"]</pre>
 <p>Benefits of work-stealing:</p>
 <ul>
 <li>Load balancing: idle threads steal work from busy threads</li>
@@ -264,4 +264,38 @@
 <li><strong>Cancellation forwarding</strong>: the backend indirectly notifies the frontend of stop requests via <code>inplace_stop_source</code></li>
 <li><strong><code>task_scheduler</code></strong>: a type-erased wrapper that adapts any scheduler to <code>parallel_scheduler_backend</code></li>
 </ol>
-<hr></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/30-run-loop/" data-astro-cid-ykvenys5>← 30 · run_loop — The Simplest Execution Context</a><a href="/exec/tutorials/32-implement-then/" data-astro-cid-ykvenys5>32 · Implementing then from Scratch — Custom Sender + Receiver + Operation State →</a></nav></div><script type="module" src="/exec/_astro/TutorialLayout.astro_astro_type_script_index_0_lang.CtUiiL97.js"></script><script type="module">(function(){function e(e){let t=function(){if(typeof mermaid>`u`){setTimeout(t,100);return}mermaid.initialize({startOnLoad:!1,theme:e}),document.querySelectorAll(`.mermaid`).forEach(function(e){e.removeAttribute(`data-processed`),e.textContent=e.textContent}),mermaid.run()};t()}function t(t){document.documentElement.setAttribute(`data-theme`,t);var n=document.getElementById(`themeToggle`);n&&(n.textContent=t===`dark`?`🌙`:`☀️`),e(t===`dark`?`dark`:`default`)}e((document.documentElement.getAttribute(`data-theme`)||`dark`)===`dark`?`dark`:`default`),document.getElementById(`themeToggle`)?.addEventListener(`click`,function(){var e=document.documentElement.getAttribute(`data-theme`)===`dark`?`light`:`dark`;try{localStorage.setItem(`exectutorial-theme`,e)}catch{}t(e)})})();</script></body></html>
+<hr></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/30-run-loop/" data-astro-cid-ykvenys5>← 30 · run_loop — The Simplest Execution Context</a><a href="/exec/tutorials/32-implement-then/" data-astro-cid-ykvenys5>32 · Implementing then from Scratch — Custom Sender + Receiver + Operation State →</a></nav></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
+      (function() {
+        const STORAGE_KEY = "exectutorial-theme";
+
+        function renderMermaid(theme) {
+          const cb = function() {
+            if (typeof mermaid === "undefined") { setTimeout(cb, 100); return; }
+            mermaid.initialize({ startOnLoad: false, theme: theme });
+            document.querySelectorAll(".mermaid").forEach(function(el) {
+              el.removeAttribute("data-processed");
+              el.textContent = el.textContent;
+            });
+            mermaid.run();
+          };
+          cb();
+        }
+
+        function setTheme(theme) {
+          document.documentElement.setAttribute("data-theme", theme);
+          var btn = document.getElementById("themeToggle");
+          if (btn) btn.textContent = theme === "dark" ? "🌙" : "☀️";
+          renderMermaid(theme === "dark" ? "dark" : "default");
+        }
+
+        var current = document.documentElement.getAttribute("data-theme") || "dark";
+        renderMermaid(current === "dark" ? "dark" : "default");
+
+        document.getElementById("themeToggle")?.addEventListener("click", function() {
+          var cur = document.documentElement.getAttribute("data-theme");
+          var next = cur === "dark" ? "light" : "dark";
+          try { localStorage.setItem(STORAGE_KEY, next); } catch(e) {}
+          setTheme(next);
+        });
+      })();
+    </script></body></html>
