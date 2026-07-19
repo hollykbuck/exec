@@ -11,7 +11,7 @@
 <p>(1) <strong>std::thread</strong> — you can only <code>.join()</code> (block until it finishes) or <code>.detach()</code> (walk away, leak resources). There’s no graceful “please stop.”</p>
 <p>(2) <strong>std::future</strong> — you can only <code>.get()</code> (block for the result) or <code>.wait_for()</code> (wait with timeout). There’s no <code>.cancel()</code> method.</p>
 <p>(3) <strong>OS signals</strong> — <code>pthread_cancel</code> exists, but it’s essentially a violent thread kill. Resources may not be properly released. It’s been labeled “not recommended.”</p>
-<p>P2300’s approach is <strong>cooperative cancellation</strong> — you notify a sender “please stop,” and the sender decides where and how to stop. The key distinction: cancellation is a <strong>request</strong>, not a <strong>command</strong>. The sender chooses an appropriate checkpoint to end itself, guaranteeing resources are properly released.</p>
+<p>C++26 std::execution’s approach is <strong>cooperative cancellation</strong> — you notify a sender “please stop,” and the sender decides where and how to stop. The key distinction: cancellation is a <strong>request</strong>, not a <strong>command</strong>. The sender chooses an appropriate checkpoint to end itself, guaranteeing resources are properly released.</p>
 <p>What is a <code>stop_token</code>, simply put? It’s the carrier of this “please stop” request — the sender reads the token’s state, and if a stop has been requested, it responds with <code>set_stopped</code>.</p>
 <h2 id="analogy-the-restaurant-call-button">Analogy: The Restaurant Call Button</h2>
 <p>Think of a <code>stop_token</code> as the “call server” button on a restaurant table:</p>

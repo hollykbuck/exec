@@ -169,7 +169,7 @@
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// ValueFn:  replace original value types with callback's return type</span></span>
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// ErrorFn:  pass through unchanged</span></span>
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Output:   completion_signatures&#x3C;set_value_t(string)></span></span></code></pre></div>
-<p>The comments above illustrate the basic logic of completion signature transformation — adaptors don’t alter error or cancellation paths, only the value path’s types. This compile-time type transformation is the core of P2300’s type-safe composition.</p>
+<p>The comments above illustrate the basic logic of completion signature transformation — adaptors don’t alter error or cancellation paths, only the value path’s types. This compile-time type transformation is the core of C++26 std::execution’s type-safe composition.</p>
 <h2 id="completion-signatures-four-roles">Completion Signatures’ Four Roles</h2>
 <div class="table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch">
 
@@ -205,7 +205,7 @@
 <li><strong><code>consteval</code> functions guarantee compile-time evaluation</strong> — <code>get_completion_signatures</code> will never generate runtime code</li>
 <li><strong>Custom Senders must declare correct completion signatures</strong> — if the signatures are incomplete, <code>sync_wait</code> will deduce wrong return types, and <code>connect</code> may compile with the wrong Receiver</li>
 </ol>
-<p>Completion Signatures are the foundation of P2300’s type system. In subsequent chapters, each time we learn a new Sender adaptor (<code>then</code>, <code>when_all</code>, <code>let_value</code>, etc.), we’ll see how it transforms the child Sender’s completion signatures.</p></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/11-operation-state/" data-astro-cid-ykvenys5>← 11 · Operation State Lifecycle</a><a href="/exec/tutorials/13-sender-factory-just/" data-astro-cid-ykvenys5>13 · Sender Factory: just / just_error / just_stopped →</a></nav></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
+<p>Completion Signatures are the foundation of C++26 std::execution’s type system. In subsequent chapters, each time we learn a new Sender adaptor (<code>then</code>, <code>when_all</code>, <code>let_value</code>, etc.), we’ll see how it transforms the child Sender’s completion signatures.</p></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/11-operation-state/" data-astro-cid-ykvenys5>← 11 · Operation State Lifecycle</a><a href="/exec/tutorials/12b-completion-sig-metaprog/" data-astro-cid-ykvenys5>12b · Completion Signature Metaprogramming — gather-signatures and Friends →</a></nav></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
       (function() {
         const STORAGE_KEY = "exectutorial-theme";
 

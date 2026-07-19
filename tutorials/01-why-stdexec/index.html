@@ -49,7 +49,7 @@
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">task</span><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">int</span><span style="color:#24292E;--shiki-dark:#E1E4E8">> </span><span style="color:#6F42C1;--shiki-dark:#B392F0">async_fn</span><span style="color:#24292E;--shiki-dark:#E1E4E8">() { </span><span style="color:#D73A49;--shiki-dark:#F97583">co_return</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 42</span><span style="color:#24292E;--shiki-dark:#E1E4E8">; }</span></span></code></pre></div>
 <p>Coroutines are just a language mechanism — they define how <code>co_await</code>, <code>co_yield</code>, <code>co_return</code> are translated, but they don’t provide a <strong>standard asynchronous runtime</strong>.</p>
 <p>This means every library (ASIO, libunifex, cppcoro) defines its own <code>task</code> type, and they’re incompatible. Pick one library and you’re locked into its ecosystem. What’s more, coroutines don’t address execution context scheduling — “which thread does this code run on?” Coroutines can’t answer that.</p>
-<h2 id="the-p2300-solution">The P2300 Solution</h2>
+<h2 id="the-c26-stdexecution-solution">The C++26 std::execution Solution</h2>
 <p>So is there a solution that lets you compose async operations, doesn’t block threads, supports cancellation, and provides standard execution context switching?</p>
 <p>That’s exactly what <a href="https://wg21.link/P2300">P2300</a> (<code>std::execution</code>) is for. It introduces a <strong>standardized asynchronous operation model</strong> built around the <strong>Sender / Receiver model</strong>.</p>
 <h3 id="the-big-picture">The Big Picture</h3>

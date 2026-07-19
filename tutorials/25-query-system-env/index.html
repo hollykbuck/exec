@@ -11,7 +11,7 @@
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">template</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> &#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Alloc</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">void</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> do_work</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">Alloc</span><span style="color:#E36209;--shiki-dark:#FFAB70"> alloc</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) {</span><span style="color:#6A737D;--shiki-dark:#6A737D"> /* ... */</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> }</span></span></code></pre></div>
 <p>Or use a global variable, or store it as a member. When an algorithm chain is 10 layers deep, every intermediate algorithm has to forward the allocator — even if it doesn’t use it.</p>
-<p>P2300 takes a different approach — it stuffs the allocator, scheduler, stop_token, and everything else into an <strong>environment</strong> — a “context bundle” carried by every receiver. A sender that needs something just reaches in and grabs it. No more layer-by-layer forwarding.</p>
+<p>C++26 std::execution takes a different approach — it stuffs the allocator, scheduler, stop_token, and everything else into an <strong>environment</strong> — a “context bundle” carried by every receiver. A sender that needs something just reaches in and grabs it. No more layer-by-layer forwarding.</p>
 <p>What is the query system, simply put? It’s the <strong>mechanism for reaching in and asking</strong>. Want to know the current scheduler? <code>get_scheduler(env)</code>. Want to know if cancellation has been requested? <code>get_stop_token(env)</code>. Want to know the allocator? <code>get_allocator(env)</code>.</p>
 <h2 id="analogy-environment-as-a-shipping-label">Analogy: Environment as a Shipping Label</h2>
 <p>Think of every receiver as a package. Taped to the package is a label sheet that says:</p>
@@ -64,7 +64,14 @@ Packaging (allocator): std::allocator</p>
 
 
 
-<table><thead><tr><th>Query Object</th><th>Return Type</th><th>Meaning</th></tr></thead><tbody><tr><td><code>get_allocator</code></td><td>allocator</td><td>Memory allocator of the current environment</td></tr><tr><td><code>get_stop_token</code></td><td>stop_token</td><td>Token that can signal cancellation</td></tr><tr><td><code>get_scheduler</code></td><td>scheduler</td><td>The scheduler where the receiver lives</td></tr><tr><td><code>get_domain</code></td><td>domain</td><td>Domain for algorithm customization</td></tr><tr><td><code>get_forward_progress_guarantee</code></td><td>enum</td><td>Forward progress guarantee level</td></tr><tr><td><code>get_completion_scheduler&#x3C;Tag></code></td><td>scheduler</td><td>Scheduler for a specific completion signal</td></tr></tbody></table></div>
+
+
+
+
+
+<table><thead><tr><th>Query Object</th><th>Return Type</th><th>Meaning</th></tr></thead><tbody><tr><td><code>get_allocator</code></td><td>allocator</td><td>Memory allocator of the current environment</td></tr><tr><td><code>get_stop_token</code></td><td>stop_token</td><td>Token that can signal cancellation</td></tr><tr><td><code>get_scheduler</code></td><td>scheduler</td><td>The scheduler where the receiver lives</td></tr><tr><td><code>get_domain</code></td><td>domain</td><td>Domain for algorithm customization</td></tr><tr><td><code>get_forward_progress_guarantee</code></td><td>enum</td><td>Forward progress guarantee level</td></tr><tr><td><code>get_completion_scheduler&#x3C;Tag></code></td><td>scheduler</td><td>Scheduler for a specific completion signal</td></tr><tr><td><code>get_delegation_scheduler</code></td><td>scheduler</td><td>Scheduler for forward progress delegation</td></tr></tbody></table></div>
+<p><code>get_delegation_scheduler</code> asks for a scheduler that can be used to delegate forward progress — useful for avoiding deadlocks when concurrent operations need to yield their execution agent. <code>sync_wait</code>’s internal environment provides one to ensure the blocked thread can be borrowed for other work.
+| <code>get_delegation_scheduler</code> | scheduler | Scheduler for forward progress delegation |</p>
 <p>These query objects are themselves CPOs (Customization Point Objects) — they can be customized via <code>tag_invoke</code>.</p>
 <hr>
 <h2 id="basic-usage-prop--single-key-environment">Basic Usage: <code>prop</code> — Single-Key Environment</h2>
@@ -162,7 +169,7 @@ Packaging (allocator): std::allocator</p>
 <li><strong>forwarding_query defaults to false for custom queries</strong> — a custom query won’t automatically penetrate <code>write_env</code> wrappers unless you explicitly specialize <code>forwarding_query</code>.</li>
 <li><strong>The query system is read-only</strong> — it only provides the ability to read environment information. To modify values in the environment, use <code>write_env</code> (Chapter 24).</li>
 <li><strong>Compile-time exact matching means a wrong query key produces a compiler error, not a silent fallback</strong> — this is usually a good thing, but in generic code where you want “return if available, ignore if not” semantics, you need <code>if constexpr</code> + <code>TRY-QUERY</code>.</li>
-</ol></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/24-write-env-unstoppable/" data-astro-cid-ykvenys5>← 24 · write_env / unstoppable —— Modifying Environment Properties</a><a href="/exec/tutorials/26-domain-mechanism/" data-astro-cid-ykvenys5>26 · Domain — Letting Schedulers Take Over Algorithm Implementation →</a></nav></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
+</ol></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/24-write-env-unstoppable/" data-astro-cid-ykvenys5>← 24 · write_env / unstoppable —— Modifying Environment Properties</a><a href="/exec/tutorials/25b-env-composition/" data-astro-cid-ykvenys5>25b · Environment Composition and Query Forwarding →</a></nav></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
       (function() {
         const STORAGE_KEY = "exectutorial-theme";
 

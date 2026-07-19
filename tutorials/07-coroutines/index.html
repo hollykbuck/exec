@@ -122,7 +122,12 @@
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    |</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> let_value</span><span style="color:#24292E;--shiki-dark:#E1E4E8">([](</span><span style="color:#D73A49;--shiki-dark:#F97583">int</span><span style="color:#E36209;--shiki-dark:#FFAB70"> x</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) { </span><span style="color:#D73A49;--shiki-dark:#F97583">return</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> pipeline</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(x); })</span><span style="color:#6A737D;--shiki-dark:#6A737D">  // task is a sender</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">);</span></span></code></pre></div>
 <p>The code above shows a typical mixed scenario: simple computation uses <code>then</code>, complex logic uses the <code>pipeline</code> coroutine, and <code>let_value</code> bridges them seamlessly.</p>
-<hr></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/06-pipe-operators/" data-astro-cid-ykvenys5>← 06 · Pipe Operators — How operator| Composes Senders</a><a href="/exec/tutorials/08-receiver-concept/" data-astro-cid-ykvenys5>08 · Receiver Concept →</a></nav></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
+<hr>
+<blockquote>
+<p><strong>Deep dive</strong>: See <a href="07b-as-awaitable">Chapter 07b</a> for how <code>as_awaitable</code>, <code>with_awaitable_senders</code>, and <code>sender-awaitable</code> implement this bridge internally.
+See <a href="07c-task-internals">Chapter 07c</a> for the full <code>task&#x3C;T></code> type design, <code>task_scheduler</code>, and allocator customization.
+See <a href="07d-affine">Chapter 07d</a> for <code>affine</code> — the adaptor that keeps coroutine execution on the right scheduler.</p>
+</blockquote></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/06-pipe-operators/" data-astro-cid-ykvenys5>← 06 · Pipe Operators — How operator| Composes Senders</a><a href="/exec/tutorials/07b-as-awaitable/" data-astro-cid-ykvenys5>07b · as_awaitable and with_awaitable_senders — How co_await Sender Works Inside →</a></nav></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
       (function() {
         const STORAGE_KEY = "exectutorial-theme";
 

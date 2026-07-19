@@ -1,0 +1,188 @@
+<!DOCTYPE html><html lang="en" data-astro-cid-ykvenys5><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>18b · schedule_from and Scheduler Transition Internals — std::execution Tutorial</title><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" crossorigin="anonymous"><script>
+      (function(){
+        var theme="dark";
+        try{var s=localStorage.getItem("exectutorial-theme");if(s)theme=s}catch(e){}
+        if(!s&&matchMedia("(prefers-color-scheme:light)").matches)theme="light";
+        document.documentElement.setAttribute("data-theme",theme);
+      })();
+    </script><link rel="stylesheet" href="/exec/_astro/01-why-stdexec.hXKgsPrw.css"></head><body data-astro-cid-ykvenys5><div class="container" data-astro-cid-ykvenys5><header data-astro-cid-ykvenys5><div class="title-area" data-astro-cid-ykvenys5><a href="/exec/tutorials/" style="color:var(--fg-muted);text-decoration:none;font-size:0.85rem;" data-astro-cid-ykvenys5>← Back to index</a><h1 data-astro-cid-ykvenys5>18b · schedule_from and Scheduler Transition Internals</h1></div><button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" data-astro-cid-ykvenys5>🌙</button></header><article class="article-content" data-astro-cid-ykvenys5><blockquote>
+<p><strong>Standard Section</strong>: <code>[exec.continues_on]</code> <code>[exec.schedule_from]</code> <code>[exec.on]</code> <br>
+<strong>Draft Reference</strong>: <code>exec.tex</code> lines 3659–4004</p>
+</blockquote>
+<h2 id="the-hidden-adaptor">The Hidden Adaptor</h2>
+<p>Chapter 18 showed you <code>continues_on</code>, <code>starts_on</code>, and <code>on</code>. But there is a fourth adaptor that makes them work — <code>schedule_from</code>.</p>
+<p><code>schedule_from</code> is not meant for user code. It is a <strong>customization hook</strong> that lets scheduler implementations control how execution leaves their resource.</p>
+<h2 id="schedule_from">schedule_from</h2>
+<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">execution</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">schedule_from</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(sndr)</span></span></code></pre></div>
+<p>It takes a sender and returns a parent sender that:</p>
+<ol>
+<li>Runs <code>sndr</code> to completion on the <strong>current</strong> execution agent</li>
+<li>Captures the child’s completion result (value, error, or stopped)</li>
+<li>Stores it in a <code>variant</code> inside the operation state</li>
+<li>On completion of <code>sndr</code>, schedules a continuation onto the <strong>destination scheduler</strong> (obtained from the receiver’s environment)</li>
+<li>The continuation replays the captured completion to the downstream receiver on the new resource</li>
+</ol>
+<p>The note in the standard is explicit:</p>
+<blockquote>
+<p><code>schedule_from</code> is used by schedulers to control how to transition off of their schedulers’ associated execution contexts.</p>
+</blockquote>
+<p>This is the <strong>off-ramp</strong> — the transition from the source scheduler’s resource.</p>
+<h2 id="how-continues_on-is-built">How continues_on is Built</h2>
+<p>The default implementation of <code>continues_on(sndr, sch)</code> is:</p>
+<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">make</span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#6F42C1;--shiki-dark:#B392F0">sender</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(continues_on, sch, </span><span style="color:#6F42C1;--shiki-dark:#B392F0">schedule_from</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(sndr))</span></span></code></pre></div>
+<p>The internal structure is:</p>
+<pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="plaintext"><code><span class="line"><span>continues_on (sndr, sch)</span></span>
+<span class="line"><span>  └── schedule_from(sndr)     -- the child</span></span>
+<span class="line"><span>       └── sndr               -- the original sender</span></span></code></pre>
+<p>When connected:</p>
+<ol>
+<li><code>schedule_from(sndr)</code> connects and starts <code>sndr</code></li>
+<li><code>sndr</code> runs on whatever resource it was on</li>
+<li>On completion, <code>schedule_from</code> captures the result in a <code>variant</code> and schedules <code>sch</code> via <code>connect(schedule(sch), schedule_receiver)</code></li>
+<li>The <code>schedule_receiver</code> reads the captured result from the variant and forwards it to the downstream receiver</li>
+</ol>
+<p>The internal state type stores:</p>
+<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">struct</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> state</span><span style="color:#24292E;--shiki-dark:#E1E4E8">-type {</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  Rcvr</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x26;</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> rcvr;</span><span style="color:#6A737D;--shiki-dark:#6A737D">                           // downstream receiver (on destination)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  variant</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;</span><span style="color:#24292E;--shiki-dark:#E1E4E8">monostate,</span><span style="color:#6A737D;--shiki-dark:#6A737D">                     // captured results from sndr</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">          decayed</span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#24292E;--shiki-dark:#E1E4E8">tuple</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;</span><span style="color:#005CC5;--shiki-dark:#79B8FF">set_value_t</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, Args...</span><span style="color:#D73A49;--shiki-dark:#F97583">></span><span style="color:#24292E;--shiki-dark:#E1E4E8">...,</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">          decayed</span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#24292E;--shiki-dark:#E1E4E8">tuple</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;</span><span style="color:#005CC5;--shiki-dark:#79B8FF">set_error_t</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, exception_ptr</span><span style="color:#D73A49;--shiki-dark:#F97583">>></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    async</span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#24292E;--shiki-dark:#E1E4E8">result;</span></span>
+<span class="line"><span style="color:#005CC5;--shiki-dark:#79B8FF">  operation_t</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> op</span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#24292E;--shiki-dark:#E1E4E8">state;</span><span style="color:#6A737D;--shiki-dark:#6A737D">                  // connect(schedule(sch), receiver-type{this})</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">};</span></span></code></pre></div>
+<h3 id="the-receiver-type">The receiver-type</h3>
+<p>The receiver connected to <code>schedule(sch)</code> is exposition-only:</p>
+<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">struct</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> receiver</span><span style="color:#24292E;--shiki-dark:#E1E4E8">-type {</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  state</span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#24292E;--shiki-dark:#E1E4E8">type</span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> state;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  void</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> set_value</span><span style="color:#24292E;--shiki-dark:#E1E4E8">() </span><span style="color:#D73A49;--shiki-dark:#F97583">&#x26;&#x26;</span><span style="color:#D73A49;--shiki-dark:#F97583"> noexcept</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
+<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">    visit</span><span style="color:#24292E;--shiki-dark:#E1E4E8">([</span><span style="color:#005CC5;--shiki-dark:#79B8FF">this</span><span style="color:#24292E;--shiki-dark:#E1E4E8">]&#x3C;class Tuple>(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">Tuple</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x26;</span><span style="color:#E36209;--shiki-dark:#FFAB70"> result</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) noexcept {</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">      if</span><span style="color:#D73A49;--shiki-dark:#F97583"> constexpr</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (</span><span style="color:#D73A49;--shiki-dark:#F97583">!</span><span style="color:#24292E;--shiki-dark:#E1E4E8">same_as</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;</span><span style="color:#24292E;--shiki-dark:#E1E4E8">monostate, Tuple</span><span style="color:#D73A49;--shiki-dark:#F97583">></span><span style="color:#24292E;--shiki-dark:#E1E4E8">) {</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">        auto&#x26;</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> [tag, ...args] </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> result;</span></span>
+<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">        tag</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">move</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(state->rcvr), </span><span style="color:#6F42C1;--shiki-dark:#B392F0">move</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(args)...);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">      }</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    }, state->async</span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#24292E;--shiki-dark:#E1E4E8">result);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  template</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> &#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Error</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  void</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> set_error</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">Error</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x26;&#x26;</span><span style="color:#E36209;--shiki-dark:#FFAB70"> err</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) </span><span style="color:#D73A49;--shiki-dark:#F97583">&#x26;&#x26;</span><span style="color:#D73A49;--shiki-dark:#F97583"> noexcept</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
+<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">    set_error</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">move</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(state->rcvr), </span><span style="color:#6F42C1;--shiki-dark:#B392F0">forward</span><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#6F42C1;--shiki-dark:#B392F0">Error</span><span style="color:#24292E;--shiki-dark:#E1E4E8">>(err));</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  void</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> set_stopped</span><span style="color:#24292E;--shiki-dark:#E1E4E8">() </span><span style="color:#D73A49;--shiki-dark:#F97583">&#x26;&#x26;</span><span style="color:#D73A49;--shiki-dark:#F97583"> noexcept</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
+<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">    set_stopped</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">move</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(state->rcvr));</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">  decltype</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) </span><span style="color:#6F42C1;--shiki-dark:#B392F0">get_env</span><span style="color:#24292E;--shiki-dark:#E1E4E8">() </span><span style="color:#D73A49;--shiki-dark:#F97583">const</span><span style="color:#D73A49;--shiki-dark:#F97583"> noexcept</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    return</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> FWD</span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#6F42C1;--shiki-dark:#B392F0">ENV</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">get_env</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(state->rcvr));</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  }</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">};</span></span></code></pre></div>
+<p>When the scheduled work fires on <code>sch</code>:</p>
+<ol>
+<li><code>set_value()</code> is called (the schedule operation succeeded)</li>
+<li>It visits the <code>async-result</code> variant</li>
+<li>It extracts the stored <code>tag</code> and <code>args</code> from the child’s completion</li>
+<li>It replays the completion on the downstream receiver — now executing on <code>sch</code>’s resource</li>
+</ol>
+<h2 id="the-two-step-transition-model">The Two-Step Transition Model</h2>
+<p>The transition between execution resources is a two-step process:</p>
+<pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="plaintext"><code><span class="line"><span>Source Resource                    Destination Resource</span></span>
+<span class="line"><span>  ┌──────────┐                     ┌──────────────┐</span></span>
+<span class="line"><span>  │ sndr     │                     │ downstream   │</span></span>
+<span class="line"><span>  │ runs     │                     │ runs here    │</span></span>
+<span class="line"><span>  │ here     │                     │              │</span></span>
+<span class="line"><span>  └────┬─────┘                     └──────┬───────┘</span></span>
+<span class="line"><span>       │                                  ▲</span></span>
+<span class="line"><span>       │  Step 1: continues_on            │</span></span>
+<span class="line"><span>       │  (customized by source)          │ Step 2: schedule_from</span></span>
+<span class="line"><span>       │                                  │ (customized by destination)</span></span>
+<span class="line"><span>       └──────────────────────────────────┘</span></span></code></pre>
+<p><strong>Step 1 (continues_on)</strong>: The source scheduler can customize how it off-ramps. The default captures results in a variant and schedules a work item on the destination scheduler.</p>
+<p><strong>Step 2 (schedule_from)</strong>: The destination scheduler controls the on-ramp. The default implementation of <code>continues_on</code> calls <code>schedule(sch)</code> which returns a sender that runs on <code>sch</code>. The destination scheduler can override what happens in the <code>receiver-type</code> above — for example, it might inject allocator information or set up thread-local state.</p>
+<p>A custom scheduler that wants to control both off-ramp and on-ramp would specialize for both <code>continues_on</code> and <code>schedule_from</code>.</p>
+<h2 id="the-three-argument-form-of-on">The Three-Argument form of on</h2>
+<p>The standard defines a three-argument form of <code>on</code>:</p>
+<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">on</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(sndr, sch, closure)</span></span></code></pre></div>
+<p>This executes <code>sndr</code> on the current resource, transfers to <code>sch</code>, executes <code>closure</code> there, then transfers back:</p>
+<pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="plaintext"><code><span class="line"><span>on(sndr, sch, [](auto result) { return process(result); })</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>  Effect:</span></span>
+<span class="line"><span>    1. sndr runs on current resource</span></span>
+<span class="line"><span>    2. Result is transferred to sch</span></span>
+<span class="line"><span>    3. closure(result) executes on sch</span></span>
+<span class="line"><span>    4. closure's result is transferred back to the original resource</span></span></code></pre>
+<p>The default implementation expands to:</p>
+<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">continues_on</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span></span>
+<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">  write_env</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span></span>
+<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">    let_value</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(sndr, closure),</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    get_scheduler, </span><span style="color:#6F42C1;--shiki-dark:#B392F0">get_completion_scheduler</span><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#005CC5;--shiki-dark:#79B8FF">set_value_t</span><span style="color:#24292E;--shiki-dark:#E1E4E8">>(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">get_env</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(sndr))</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  ),</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  sch</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span></code></pre></div>
+<p>The <code>write_env</code> call ensures the completion is routed back to the right scheduler.</p>
+<h2 id="summary">Summary</h2>
+<div class="table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Component</th><th>Role</th></tr></thead><tbody><tr><td><code>schedule_from(sndr)</code></td><td>Captures child’s result, schedules replay on destination</td></tr><tr><td><code>continues_on(sndr, sch)</code></td><td><code>make-sender(continues_on, sch, schedule_from(sndr))</code></td></tr><tr><td><code>on(sndr, sch)</code></td><td><code>starts_on(sch, continues_on(sch, sndr))</code></td></tr><tr><td><code>on(sndr, sch, closure)</code></td><td>Transfer to <code>sch</code>, execute <code>closure</code>, transfer back</td></tr><tr><td><code>receiver-type</code></td><td>Exposition-only; reads captured result and replays on destination</td></tr></tbody></table></div>
+<p>The key insight: <code>schedule_from</code> is the <strong>transition primitive</strong>. Every context switch goes through it.</p></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/18-starts-on-continues-on/" data-astro-cid-ykvenys5>← 18 · starts_on / continues_on / on — Switching Execution Contexts</a><a href="/exec/tutorials/19-when-all/" data-astro-cid-ykvenys5>19 · when_all — Waiting for Multiple Senders in Parallel →</a></nav></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
+      (function() {
+        const STORAGE_KEY = "exectutorial-theme";
+
+        function renderMermaid(theme) {
+          const cb = function() {
+            if (typeof mermaid === "undefined") { setTimeout(cb, 100); return; }
+            mermaid.initialize({ startOnLoad: false, theme: theme });
+            document.querySelectorAll(".mermaid").forEach(function(el) {
+              el.removeAttribute("data-processed");
+              el.textContent = el.textContent;
+            });
+            mermaid.run();
+          };
+          cb();
+        }
+
+        function setTheme(theme) {
+          document.documentElement.setAttribute("data-theme", theme);
+          var btn = document.getElementById("themeToggle");
+          if (btn) btn.textContent = theme === "dark" ? "🌙" : "☀️";
+          renderMermaid(theme === "dark" ? "dark" : "default");
+        }
+
+        var current = document.documentElement.getAttribute("data-theme") || "dark";
+        renderMermaid(current === "dark" ? "dark" : "default");
+
+        document.getElementById("themeToggle")?.addEventListener("click", function() {
+          var cur = document.documentElement.getAttribute("data-theme");
+          var next = cur === "dark" ? "light" : "dark";
+          try { localStorage.setItem(STORAGE_KEY, next); } catch(e) {}
+          setTheme(next);
+        });
+      })();
+    </script></body></html>

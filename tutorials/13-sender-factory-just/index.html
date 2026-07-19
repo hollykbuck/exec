@@ -7,7 +7,7 @@
       })();
     </script><link rel="stylesheet" href="/exec/_astro/01-why-stdexec.hXKgsPrw.css"></head><body data-astro-cid-ykvenys5><div class="container" data-astro-cid-ykvenys5><header data-astro-cid-ykvenys5><div class="title-area" data-astro-cid-ykvenys5><a href="/exec/tutorials/" style="color:var(--fg-muted);text-decoration:none;font-size:0.85rem;" data-astro-cid-ykvenys5>← Back to index</a><h1 data-astro-cid-ykvenys5>13 · Sender Factory: just / just_error / just_stopped</h1></div><button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" data-astro-cid-ykvenys5>🌙</button></header><article class="article-content" data-astro-cid-ykvenys5>
 <h2 id="why-do-we-need-just">Why Do We Need just?</h2>
-<p>In P2300’s async model, everything that flows through a pipeline must be a sender.
+<p>In C++26 std::execution’s async model, everything that flows through a pipeline must be a sender.
 But not all data in your program begins its life asynchronously.
 You might need to feed a config value, a cached integer, or a hardcoded constant into an async pipeline.</p>
 <p>You shouldn’t have to spin up a thread pool just to pass a <code>42</code> downstream. That’s where <code>just</code> comes in.</p>
@@ -122,10 +122,7 @@ You might need to feed a config value, a cached integer, or a hardcoded constant
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">      })</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">);</span></span></code></pre></div>
 <p>The code above shows <code>let_value</code> dynamically picking between <code>just(42)</code> and <code>just_error(...)</code> at runtime. This kind of branching is the core use case of <code>let_value</code>, covered in depth in chapter 17.</p>
-<h2 id="limitations">Limitations</h2>
-<p><code>just</code>-created senders complete <strong>immediately and synchronously</strong> — they run on the same thread that calls <code>start()</code>, with no background dispatch. If you need true async execution, combine <code>just</code> with <code>schedule</code> and <code>starts_on</code> (see chapters 15 and 18).</p>
-<p>Also, the values passed to <code>just</code> are <strong>copied or moved</strong> into the sender’s internal storage. You cannot pass a bare reference (though <code>std::ref</code> works), and non-copyable objects must be movable (like <code>std::unique_ptr</code>).</p>
-<hr></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/12-Completion-Signatures/" data-astro-cid-ykvenys5>← 12 · Completion Signatures</a><a href="/exec/tutorials/14-read-env/" data-astro-cid-ykvenys5>14 · read_env — Reading Properties from the Environment →</a></nav></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
+<hr></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/12b-completion-sig-metaprog/" data-astro-cid-ykvenys5>← 12b · Completion Signature Metaprogramming — gather-signatures and Friends</a><a href="/exec/tutorials/14-read-env/" data-astro-cid-ykvenys5>14 · read_env — Reading Properties from the Environment →</a></nav></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
       (function() {
         const STORAGE_KEY = "exectutorial-theme";
 

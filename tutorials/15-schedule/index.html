@@ -75,8 +75,6 @@
 
 <table><thead><tr><th>Expression</th><th>Effect</th></tr></thead><tbody><tr><td><code>schedule(sch) | then(f)</code></td><td>Execute <code>f</code> on <code>sch</code></td></tr><tr><td><code>starts_on(sch, just(42) | then(f))</code></td><td>The entire <code>42 | f</code> starts on <code>sch</code></td></tr><tr><td><code>starts_on(sch, sndr)</code></td><td><code>sndr</code> starts entirely on <code>sch</code></td></tr></tbody></table></div>
 <p><code>starts_on</code> is more flexible — it accepts any sender, while <code>schedule</code> only creates a no-argument start signal.</p>
-<h2 id="limitations">Limitations</h2>
-<p><code>schedule</code> itself carries no data, only an empty <code>set_value()</code> signal. If you need “execute and return data,” you must chain <code>then</code> or another adaptor after it. Also, <code>schedule</code> doesn’t guarantee immediate execution — it just enqueues work on the scheduler’s resource; actual timing is up to the scheduler.</p>
 <hr></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/14-read-env/" data-astro-cid-ykvenys5>← 14 · read_env — Reading Properties from the Environment</a><a href="/exec/tutorials/16-then-upon/" data-astro-cid-ykvenys5>16 · then / upon_error / upon_stopped — Handling the Three Completion Signals →</a></nav></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
       (function() {
         const STORAGE_KEY = "exectutorial-theme";

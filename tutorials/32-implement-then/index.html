@@ -164,7 +164,7 @@
 <ul>
 <li><strong>Move-semantics optimization</strong> — extensive use of <code>std::move</code> to avoid accidental copies of large objects</li>
 <li><strong>SBO (Small Buffer Optimization)</strong> — local buffering of small function objects to avoid heap allocation</li>
-<li><strong><code>connect</code> noexcept guarantee</strong> — ensuring <code>connect</code> doesn’t throw (required by the standard)</li>
+<li><strong><code>connect</code> noexcept consistency</strong> — the standard requires that if <code>connect</code> is noexcept for one receiver with a given environment, it must be noexcept for all receivers with that environment. The educational implementation doesn’t track this.</li>
 <li><strong>Compile-time zero overhead</strong> — using <code>[[no_unique_address]]</code> and EBO to eliminate space wasted by empty function objects</li>
 </ul></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/31-parallel-scheduler/" data-astro-cid-ykvenys5>← 31 · parallel_scheduler — CPU Parallel Computing Scheduler</a><a href="/exec/tutorials/33-implement-retry/" data-astro-cid-ykvenys5>33 · Implementing retry from Scratch — Error Recovery Pattern →</a></nav></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
       (function() {

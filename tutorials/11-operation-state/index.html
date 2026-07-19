@@ -16,7 +16,7 @@
 <span class="line"></span>
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// start launches the async operation</span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">stdexec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">start</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(op);</span></span></code></pre></div>
-<p>In the code above, <code>connect</code> is the resource allocation point and <code>start</code> is the logic launch point. Separating the two is a key P2300 design decision — all potentially-failing work (like memory allocation) happens during <code>connect</code>, and <code>start</code> must be <code>noexcept</code>.</p>
+<p>In the code above, <code>connect</code> is the resource allocation point and <code>start</code> is the logic launch point. Separating the two is a key C++26 std::execution design decision — all potentially-failing work (like memory allocation) happens during <code>connect</code>, and <code>start</code> must be <code>noexcept</code>.</p>
 <p>The standard’s definition of Operation State is in <code>[exec.opstate]</code>:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">namespace</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> std</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">execution</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  template</span><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> O</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
@@ -61,7 +61,7 @@
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  }</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">};</span></span></code></pre></div>
 <p>In the code above, <code>set_value</code> may internally trigger the Receiver’s destruction logic (e.g. <code>sync_wait</code> releases the operation_state upon receiving the result). This means after <code>set_value</code> returns, <code>this</code> may already be invalid — you must not access any member variables.</p>
-<p>This is one of the most important safety rules in P2300: <strong>the completion function is a firebreak — once you cross it, there’s no turning back</strong>.</p>
+<p>This is one of the most important safety rules in C++26 std::execution: <strong>the completion function is a firebreak — once you cross it, there’s no turning back</strong>.</p>
 <h3 id="rule-3-op-is-immediately-invalid-after-completion">Rule 3: op is immediately invalid after completion</h3>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> op </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> connect</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(snd, rcvr);</span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">start</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(op);</span></span>
@@ -179,7 +179,7 @@
 
 
 <table><thead><tr><th>Decision</th><th>Reason</th></tr></thead><tbody><tr><td><code>start()</code> is <code>noexcept</code></td><td>Resource allocation done in <code>connect()</code>; <code>start()</code> only launches</td></tr><tr><td><code>start()</code> may only be called once</td><td>Enforces a one-shot lifecycle; prevents reuse of a completed op</td></tr><tr><td>op may be destroyed during completion</td><td>Allows the Receiver to release resources immediately upon receiving the result</td></tr><tr><td><code>connect()</code> may throw</td><td>The connection phase may involve memory allocation and other fallible work</td></tr></tbody></table></div>
-<p>The table above summarizes the four core design decisions of Operation State. Understanding these rules means understanding P2300’s resource management philosophy — <strong>separate allocation from launch, one-shot usage, firebreak pattern</strong>.</p>
+<p>The table above summarizes the four core design decisions of Operation State. Understanding these rules means understanding C++26 std::execution’s resource management philosophy — <strong>separate allocation from launch, one-shot usage, firebreak pattern</strong>.</p>
 <h2 id="important-notes">Important Notes</h2>
 <ol>
 <li><strong>Don’t use <code>op</code> after <code>start()</code></strong> — even if <code>start()</code> returns, it may have synchronously completed, leaving <code>op</code> invalid</li>
@@ -187,7 +187,7 @@
 <li><strong><code>std::optional</code> is the standard tool for reconstructing operation_state</strong> — use <code>reset</code> + <code>emplace</code> for retry or looping</li>
 <li><strong>For type-erased operation_state, use <code>any_sender</code></strong> — if you need runtime polymorphism, use stdexec’s type erasure utilities</li>
 </ol>
-<p>The next chapter introduces Completion Signatures — to see how P2300 creates “type identity cards” for Senders at compile time.</p></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/10-scheduler-concept/" data-astro-cid-ykvenys5>← 10 · Scheduler Concept</a><a href="/exec/tutorials/12-Completion-Signatures/" data-astro-cid-ykvenys5>12 · Completion Signatures →</a></nav></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
+<p>The next chapter introduces Completion Signatures — to see how C++26 std::execution creates “type identity cards” for Senders at compile time.</p></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/10-scheduler-concept/" data-astro-cid-ykvenys5>← 10 · Scheduler Concept</a><a href="/exec/tutorials/12-Completion-Signatures/" data-astro-cid-ykvenys5>12 · Completion Signatures →</a></nav></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
       (function() {
         const STORAGE_KEY = "exectutorial-theme";
 

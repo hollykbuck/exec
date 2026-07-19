@@ -96,7 +96,7 @@
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">sync_wait</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">just</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">42</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) </span><span style="color:#D73A49;--shiki-dark:#F97583">|</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> then</span><span style="color:#24292E;--shiki-dark:#E1E4E8">([](</span><span style="color:#D73A49;--shiki-dark:#F97583">int</span><span style="color:#E36209;--shiki-dark:#FFAB70"> x</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) { </span><span style="color:#D73A49;--shiki-dark:#F97583">return</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> x </span><span style="color:#D73A49;--shiki-dark:#F97583">+</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">; }));</span></span></code></pre></div>
 <p>In the code above, <code>sync_wait</code> sits at the end of the pipeline, consuming the final sender and returning the result.</p>
 <h2 id="why-pipe-operators">Why Pipe Operators?</h2>
-<p>The Ranges library was the first to introduce <code>operator|</code> for range adaptors in C++20. P2300 follows the same design:</p>
+<p>The Ranges library was the first to introduce <code>operator|</code> for range adaptors in C++20. C++26 std::execution follows the same design:</p>
 <ol>
 <li><strong>Readability</strong>: linear left-to-right reading, matches how we think</li>
 <li><strong>Composability</strong>: closure objects can be stored, passed around, and pre-composed</li>

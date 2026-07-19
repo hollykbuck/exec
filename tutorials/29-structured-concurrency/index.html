@@ -149,9 +149,8 @@
 <hr>
 <h2 id="limitations">Limitations</h2>
 <ol>
-<li><strong>A scope cannot be passed between threads</strong> — the destructor assumes clear ownership (RAII). You can’t move a scope object to another thread and expect the original thread to correctly wait for all child operations.</li>
-<li><strong><code>spawn</code> discards errors</strong> — if a spawned operation ends with <code>set_error</code>, the default receiver does nothing, silently swallowing the error. If error handling is required, use <code>spawn_future</code> or do <code>upon_error</code> recovery inside the work.</li>
-<li><strong>The scope destructor blocks</strong> — it isn’t as “elegantly async” as you might wish. In production request-handling loops, scope destruction shouldn’t be on the hot path. It’s best suited for well-bounded scopes like the complete lifecycle of a single HTTP request.</li>
+<li><strong>A scope cannot be passed between threads</strong> — <code>simple_counting_scope</code> is immovable (move constructor is deleted). Its destructor calls <code>terminate()</code> if any operation associations remain, so you must ensure all spawned work completes before the scope goes out of scope.</li>
+<li><strong><code>spawn</code> discards errors</strong> — the standard draft’s <code>spawn_receiver</code> has no <code>set_error</code> handler; if the sender declares error completion signatures, <code>connect</code> fails at compile time. Ensure errors are handled upstream via <code>upon_error</code> before <code>spawn</code>.</li>
 </ol></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/28-stop-token-cancellation/" data-astro-cid-ykvenys5>← 28 · Stop Token — Cooperative Cancellation</a><a href="/exec/tutorials/30-run-loop/" data-astro-cid-ykvenys5>30 · run_loop — The Simplest Execution Context →</a></nav></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
       (function() {
         const STORAGE_KEY = "exectutorial-theme";

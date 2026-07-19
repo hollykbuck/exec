@@ -121,7 +121,10 @@
 <h2 id="limitations">Limitations</h2>
 <p><code>continues_on</code> only affects operations <strong>after</strong> it, not before. If you use <code>let_value</code> for dynamic branching, each branch may need its own independent <code>continues_on</code>.</p>
 <p>Also, frequent <code>continues_on</code> calls (e.g., switching after every tiny operation) incur scheduling overhead — each switch may involve cross-thread task submission and synchronization.</p>
-<hr></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/17-let-value/" data-astro-cid-ykvenys5>← 17 · let_value / let_error / let_stopped — Dynamically Generating New Senders Based on Results</a><a href="/exec/tutorials/19-when-all/" data-astro-cid-ykvenys5>19 · when_all — Waiting for Multiple Senders in Parallel →</a></nav></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
+<hr>
+<blockquote>
+<p><strong>Deep dive</strong>: See <a href="18b-schedule-from">Chapter 18b</a> for <code>schedule_from</code> — the internal adaptor that <code>continues_on</code> uses to capture and replay completion results across execution contexts.</p>
+</blockquote></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/17-let-value/" data-astro-cid-ykvenys5>← 17 · let_value / let_error / let_stopped — Dynamically Generating New Senders Based on Results</a><a href="/exec/tutorials/18b-schedule-from/" data-astro-cid-ykvenys5>18b · schedule_from and Scheduler Transition Internals →</a></nav></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
       (function() {
         const STORAGE_KEY = "exectutorial-theme";
 

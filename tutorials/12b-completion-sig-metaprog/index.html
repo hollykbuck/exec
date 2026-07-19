@@ -1,0 +1,266 @@
+<!DOCTYPE html><html lang="en" data-astro-cid-ykvenys5><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>12b · Completion Signature Metaprogramming — gather-signatures and Friends — std::execution Tutorial</title><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" crossorigin="anonymous"><script>
+      (function(){
+        var theme="dark";
+        try{var s=localStorage.getItem("exectutorial-theme");if(s)theme=s}catch(e){}
+        if(!s&&matchMedia("(prefers-color-scheme:light)").matches)theme="light";
+        document.documentElement.setAttribute("data-theme",theme);
+      })();
+    </script><link rel="stylesheet" href="/exec/_astro/01-why-stdexec.hXKgsPrw.css"></head><body data-astro-cid-ykvenys5><div class="container" data-astro-cid-ykvenys5><header data-astro-cid-ykvenys5><div class="title-area" data-astro-cid-ykvenys5><a href="/exec/tutorials/" style="color:var(--fg-muted);text-decoration:none;font-size:0.85rem;" data-astro-cid-ykvenys5>← Back to index</a><h1 data-astro-cid-ykvenys5>12b · Completion Signature Metaprogramming — gather-signatures and Friends</h1></div><button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" data-astro-cid-ykvenys5>🌙</button></header><article class="article-content" data-astro-cid-ykvenys5><blockquote>
+<p><strong>Standard Section</strong>: <code>[exec.cmplsig]</code> <br>
+<strong>Draft Reference</strong>: <code>exec.tex</code> lines 6423–6569</p>
+</blockquote>
+<h2 id="beyond-the-basics">Beyond the Basics</h2>
+<p>Chapter 12 covered what completion signatures are and how to declare them. This chapter covers the metaprogramming machinery the standard itself uses to manipulate them.</p>
+<h2 id="the-completion-signature-concept">The completion-signature Concept</h2>
+<p>Every entry in a <code>completion_signatures</code> list must satisfy <code>completion-signature</code>:</p>
+<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">template</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> &#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Fn</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">concept</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> completion</span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#24292E;--shiki-dark:#E1E4E8">signature </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> see</span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#24292E;--shiki-dark:#E1E4E8">below;</span></span></code></pre></div>
+<p>A type <code>Fn</code> satisfies it iff it is a function type with one of three forms:</p>
+<div class="table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Form</th><th>Meaning</th></tr></thead><tbody><tr><td><code>set_value_t(Vs...)</code></td><td>Value completion, <code>Vs</code> are object or reference types</td></tr><tr><td><code>set_error_t(Err)</code></td><td>Error completion, <code>Err</code> is an object or reference type</td></tr><tr><td><code>set_stopped_t()</code></td><td>Stopped completion, no arguments</td></tr></tbody></table></div>
+<p>This is checked at compile time. You cannot put random function types into <code>completion_signatures</code>.</p>
+<h2 id="valid-completion-signatures">valid-completion-signatures</h2>
+<p>A concept that checks whether a type is a proper specialization of <code>completion_signatures</code> — the standard uses it to constrain template arguments:</p>
+<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">template</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> &#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> T</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">concept</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> valid</span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#24292E;--shiki-dark:#E1E4E8">completion</span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#24292E;--shiki-dark:#E1E4E8">signatures </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6A737D;--shiki-dark:#6A737D"> /* ... */</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span></code></pre></div>
+<h2 id="gather-signatures--the-workhorse">gather-signatures — The Workhorse</h2>
+<p>This is the exposition-only utility that every type computation in the standard depends on:</p>
+<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">template</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> &#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Tag</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">          valid</span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#24292E;--shiki-dark:#E1E4E8">completion</span><span style="color:#D73A49;--shiki-dark:#F97583">-signatures</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Completions</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">          template&#x3C;class...> </span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Tuple</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">          template&#x3C;class...> </span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Variant</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">using</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> gather</span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#24292E;--shiki-dark:#E1E4E8">signatures </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> see</span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#24292E;--shiki-dark:#E1E4E8">below;</span></span></code></pre></div>
+<p>It extracts all completion signatures matching <code>Tag</code> from <code>Completions</code>, wraps each set of arguments in <code>Tuple</code>, and then wraps all of those in <code>Variant</code>:</p>
+<pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="plaintext"><code><span class="line"><span>gather-signatures&#x3C;set_value_t,</span></span>
+<span class="line"><span>                  completion_signatures&#x3C;set_value_t(int),</span></span>
+<span class="line"><span>                                        set_value_t(float, double),</span></span>
+<span class="line"><span>                                        set_error_t(exception_ptr)>,</span></span>
+<span class="line"><span>                  tuple, variant></span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>// Step 1: filter by Tag -> [set_value_t(int), set_value_t(float, double)]</span></span>
+<span class="line"><span>// Step 2: wrap args in tuple -> [tuple&#x3C;int>, tuple&#x3C;float, double>]</span></span>
+<span class="line"><span>// Step 3: wrap in variant -> variant&#x3C;tuple&#x3C;int>, tuple&#x3C;float, double>></span></span></code></pre>
+<h3 id="the-meta-apply-puzzle">The META-APPLY Puzzle</h3>
+<p>The standard uses a wrapper called <code>META-APPLY</code> to make <code>gather-signatures</code> work with non-variadic templates:</p>
+<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">template</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> &#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">bool</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">struct</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> indirect</span><span style="color:#24292E;--shiki-dark:#E1E4E8">-meta-apply {</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  template</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> &#x3C;template&#x3C;class...> </span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> T</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#24292E;--shiki-dark:#E1E4E8">... </span><span style="color:#6F42C1;--shiki-dark:#B392F0">As</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  using</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> meta</span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#24292E;--shiki-dark:#E1E4E8">apply </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> T</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;</span><span style="color:#24292E;--shiki-dark:#E1E4E8">As...</span><span style="color:#D73A49;--shiki-dark:#F97583">></span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">};</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">template</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> &#x3C;class...></span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">concept</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> always</span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#005CC5;--shiki-dark:#79B8FF">true</span><span style="color:#D73A49;--shiki-dark:#F97583"> =</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> true</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// META-APPLY(T, As...) =</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">//   typename indirect-meta-apply&#x3C;always-true&#x3C;As...>>::template meta-apply&#x3C;T, As...></span></span></code></pre></div>
+<p>If <code>T</code> is a variadic template like <code>tuple</code>, <code>META-APPLY(tuple, int, float)</code> gives <code>tuple&#x3C;int, float></code> — straightforward. But if <code>T</code> is non-variadic like <code>pair</code>, <code>META-APPLY(pair, int, float)</code> also works, while a direct <code>pair&#x3C;int, float></code> would need all template parameters accounted for. The <code>indirect-meta-apply</code> indirection lets this compile.</p>
+<h2 id="value_types_of_t">value_types_of_t</h2>
+<p>The standard public alias that uses <code>gather-signatures</code> internally:</p>
+<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">template</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> &#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Sndr</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Env</span><span style="color:#D73A49;--shiki-dark:#F97583"> =</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> env&#x3C;>,</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">          template&#x3C;class...> class Tuple </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> decayed</span><span style="color:#D73A49;--shiki-dark:#F97583">-tuple</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">          template&#x3C;class...> class Variant </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> variant</span><span style="color:#D73A49;--shiki-dark:#F97583">-or-empty</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  requires</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> sender_in</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;</span><span style="color:#24292E;--shiki-dark:#E1E4E8">Sndr, Env</span><span style="color:#D73A49;--shiki-dark:#F97583">></span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">using</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> value_types_of_t</span><span style="color:#D73A49;--shiki-dark:#F97583"> =</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  gather</span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#24292E;--shiki-dark:#E1E4E8">signatures</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;</span><span style="color:#005CC5;--shiki-dark:#79B8FF">set_value_t</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#005CC5;--shiki-dark:#79B8FF">                    completion_signatures_of_t</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;</span><span style="color:#24292E;--shiki-dark:#E1E4E8">Sndr, Env</span><span style="color:#D73A49;--shiki-dark:#F97583">></span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                    Tuple, Variant</span><span style="color:#D73A49;--shiki-dark:#F97583">></span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span></code></pre></div>
+<p>The default <code>decayed-tuple</code> is like <code>tuple</code> but applies <code>decay_t</code> to each element. The default <code>variant-or-empty</code> produces <code>variant&#x3C;tuple&#x3C;Ts...>></code> if there is exactly one signature, or an empty <code>variant&#x3C;></code> if there are none.</p>
+<p>This is what <code>sync_wait</code> uses to deduce its return type:</p>
+<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// sync_wait internal:</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// value_types_of_t&#x3C;Sndr> == variant&#x3C;tuple&#x3C;int>></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// return type: optional&#x3C;tuple&#x3C;int>></span></span></code></pre></div>
+<h2 id="error_types_of_t">error_types_of_t</h2>
+<p>Same pattern, but for error signatures:</p>
+<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">template</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> &#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Sndr</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Env</span><span style="color:#D73A49;--shiki-dark:#F97583"> =</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> env&#x3C;>,</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">          template&#x3C;class...> class Variant </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> variant</span><span style="color:#D73A49;--shiki-dark:#F97583">-or-empty</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  requires</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> sender_in</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;</span><span style="color:#24292E;--shiki-dark:#E1E4E8">Sndr, Env</span><span style="color:#D73A49;--shiki-dark:#F97583">></span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">using</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> error_types_of_t</span><span style="color:#D73A49;--shiki-dark:#F97583"> =</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  gather</span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#24292E;--shiki-dark:#E1E4E8">signatures</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;</span><span style="color:#005CC5;--shiki-dark:#79B8FF">set_error_t</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#005CC5;--shiki-dark:#79B8FF">                    completion_signatures_of_t</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;</span><span style="color:#24292E;--shiki-dark:#E1E4E8">Sndr, Env</span><span style="color:#D73A49;--shiki-dark:#F97583">></span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#005CC5;--shiki-dark:#79B8FF">                    type_identity_t</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, Variant</span><span style="color:#D73A49;--shiki-dark:#F97583">></span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span></code></pre></div>
+<p>Note the <code>Tuple</code> parameter is <code>type_identity_t</code> — error completions always have exactly one argument, so no tuple wrapper is needed.</p>
+<h2 id="sends_stopped">sends_stopped</h2>
+<p>A compile-time boolean:</p>
+<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">template</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> &#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Sndr</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Env</span><span style="color:#D73A49;--shiki-dark:#F97583"> =</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> env&#x3C;>></span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  requires</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> sender_in</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;</span><span style="color:#24292E;--shiki-dark:#E1E4E8">Sndr, Env</span><span style="color:#D73A49;--shiki-dark:#F97583">></span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">constexpr</span><span style="color:#D73A49;--shiki-dark:#F97583"> bool</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> sends_stopped </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  !</span><span style="color:#24292E;--shiki-dark:#E1E4E8">same_as</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;</span><span style="color:#24292E;--shiki-dark:#E1E4E8">type</span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#24292E;--shiki-dark:#E1E4E8">list</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;></span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">           gather</span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#24292E;--shiki-dark:#E1E4E8">signatures</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;</span><span style="color:#005CC5;--shiki-dark:#79B8FF">set_stopped_t</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#005CC5;--shiki-dark:#79B8FF">                             completion_signatures_of_t</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;</span><span style="color:#24292E;--shiki-dark:#E1E4E8">Sndr, Env</span><span style="color:#D73A49;--shiki-dark:#F97583">></span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                             type</span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#24292E;--shiki-dark:#E1E4E8">list, type</span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#24292E;--shiki-dark:#E1E4E8">list</span><span style="color:#D73A49;--shiki-dark:#F97583">>></span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span></code></pre></div>
+<p>If <code>gather-signatures</code> returns an empty <code>type-list&#x3C;></code>, there are no stopped signatures — <code>sends_stopped</code> is <code>false</code>.</p>
+<h2 id="completion_signatures-member-utilities">completion_signatures Member Utilities</h2>
+<p>The <code>completion_signatures</code> class template itself provides two exposition-only helpers:</p>
+<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">template</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> &#x3C;completion</span><span style="color:#D73A49;--shiki-dark:#F97583">-signature</span><span style="color:#24292E;--shiki-dark:#E1E4E8">... </span><span style="color:#6F42C1;--shiki-dark:#B392F0">Fns</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">struct</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> completion_signatures</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  template</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> &#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Tag</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  static</span><span style="color:#D73A49;--shiki-dark:#F97583"> constexpr</span><span style="color:#D73A49;--shiki-dark:#F97583"> size_t</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> count</span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#6F42C1;--shiki-dark:#B392F0">of</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(Tag) {</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    return</span><span style="color:#6A737D;--shiki-dark:#6A737D"> /* count of Fns whose return type is Tag */</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  template</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> &#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Fn</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  static</span><span style="color:#D73A49;--shiki-dark:#F97583"> constexpr</span><span style="color:#D73A49;--shiki-dark:#F97583"> void</span><span style="color:#D73A49;--shiki-dark:#F97583"> for-</span><span style="color:#6F42C1;--shiki-dark:#B392F0">each</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(Fn</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x26;&#x26;</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> fn) {</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    (</span><span style="color:#6F42C1;--shiki-dark:#B392F0">fn</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#D73A49;--shiki-dark:#F97583">static_cast&#x3C;</span><span style="color:#24292E;--shiki-dark:#E1E4E8">Fns</span><span style="color:#D73A49;--shiki-dark:#F97583">*></span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">nullptr</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)), ...);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  }</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">};</span></span></code></pre></div>
+<p><code>count-of</code> counts how many signatures match a tag:</p>
+<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">using</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Sigs</span><span style="color:#D73A49;--shiki-dark:#F97583"> =</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> completion_signatures</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;</span></span>
+<span class="line"><span style="color:#005CC5;--shiki-dark:#79B8FF">  set_value_t</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#D73A49;--shiki-dark:#F97583">int</span><span style="color:#24292E;--shiki-dark:#E1E4E8">),</span></span>
+<span class="line"><span style="color:#005CC5;--shiki-dark:#79B8FF">  set_value_t</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#D73A49;--shiki-dark:#F97583">float</span><span style="color:#24292E;--shiki-dark:#E1E4E8">),</span></span>
+<span class="line"><span style="color:#005CC5;--shiki-dark:#79B8FF">  set_error_t</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(exception_ptr)</span><span style="color:#D73A49;--shiki-dark:#F97583">></span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Sigs::count-of(set_value) == 2</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Sigs::count-of(set_error) == 1</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Sigs::count-of(set_stopped) == 0</span></span></code></pre></div>
+<p><code>for-each</code> invokes a callable for each signature, passing a null pointer of the corresponding function type. It uses fold expressions over the parameter pack.</p>
+<h2 id="putting-gather-signatures-to-work">Putting gather-signatures to Work</h2>
+<p>Here is a concrete trace through <code>sync_wait</code>’s return type deduction:</p>
+<pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="plaintext"><code><span class="line"><span>Sender: just(42) | then([](int x) { return std::to_string(x); })</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>Step 1: completion_signatures_of_t&#x3C;Sender></span></span>
+<span class="line"><span>  -> completion_signatures&#x3C;set_value_t(std::string)></span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>Step 2: value_types_of_t&#x3C;Sender></span></span>
+<span class="line"><span>  -> gather-signatures&#x3C;set_value_t,</span></span>
+<span class="line"><span>                        completion_signatures&#x3C;set_value_t(string)>,</span></span>
+<span class="line"><span>                        decayed-tuple, variant-or-empty></span></span>
+<span class="line"><span>  -> filter by set_value_t -> [set_value_t(string)]</span></span>
+<span class="line"><span>  -> wrap args: decayed-tuple&#x3C;string> -> tuple&#x3C;string></span></span>
+<span class="line"><span>  -> wrap in variant-or-empty: variant&#x3C;tuple&#x3C;string>></span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>Step 3: error_types_of_t&#x3C;Sender></span></span>
+<span class="line"><span>  -> gather-signatures&#x3C;set_error_t,</span></span>
+<span class="line"><span>                        completion_signatures&#x3C;set_value_t(string)>,</span></span>
+<span class="line"><span>                        type_identity_t, variant-or-empty></span></span>
+<span class="line"><span>  -> no signatures match set_error_t</span></span>
+<span class="line"><span>  -> empty: variant&#x3C;></span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>Step 4: sends_stopped&#x3C;Sender></span></span>
+<span class="line"><span>  -> gather-signatures&#x3C;set_stopped_t, ..., type-list, type-list></span></span>
+<span class="line"><span>  -> no signatures match set_stopped_t</span></span>
+<span class="line"><span>  -> type-list&#x3C;>  (empty)</span></span>
+<span class="line"><span>  -> !same_as&#x3C;type-list&#x3C;>, type-list&#x3C;>>  ->  false</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>Result: sync_wait returns optional&#x3C;tuple&#x3C;string>></span></span></code></pre>
+<h2 id="transform_completion_signatures">transform_completion_signatures</h2>
+<p>While <code>gather-signatures</code> is for querying, <code>transform_completion_signatures</code> is for rewriting. The standard doesn’t mandate a specific implementation, but both stdexec and the exposition follow this pattern:</p>
+<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">template</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> &#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Sigs</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span><span style="color:#6A737D;--shiki-dark:#6A737D">                     // input</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">          class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> DefaultSigs</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span><span style="color:#6A737D;--shiki-dark:#6A737D">              // fallback</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">          template&#x3C;class...> </span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> ValueFn</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span><span style="color:#6A737D;--shiki-dark:#6A737D">   // per-value transform</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">          template&#x3C;class...> </span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> ErrorFn</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span><span style="color:#6A737D;--shiki-dark:#6A737D">   // per-error transform</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">          bool</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> PassStopped</span><span style="color:#D73A49;--shiki-dark:#F97583"> =</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> true></span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">using</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> transform_completion_signatures</span><span style="color:#D73A49;--shiki-dark:#F97583"> =</span><span style="color:#6A737D;--shiki-dark:#6A737D"> /* ... */</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span></code></pre></div>
+<p>For each <code>set_value_t(Ts...)</code> in <code>Sigs</code>, it produces <code>ValueFn&#x3C;Ts...></code>.
+For each <code>set_error_t(E)</code> in <code>Sigs</code>, it produces <code>ErrorFn&#x3C;E></code>.
+If no signatures match a category, it inserts <code>DefaultSigs</code>.
+If <code>PassStopped</code> is true, it adds <code>set_stopped_t()</code> to the output.</p>
+<p>The <code>then</code> adaptor uses it like this:</p>
+<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Input:  completion_signatures&#x3C;set_value_t(int), set_error_t(exception_ptr)></span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// ValueFn: __value -> set_value_t(call_result_t&#x3C;F, __value>)  [callback applied]</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// ErrorFn: __error -> set_error_t(__error)                     [passthrough]</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Output: completion_signatures&#x3C;set_value_t(string), set_error_t(exception_ptr)></span></span></code></pre></div>
+<h2 id="summary">Summary</h2>
+<div class="table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Utility</th><th>Purpose</th></tr></thead><tbody><tr><td><code>completion-signature</code> concept</td><td>Validates function type forms</td></tr><tr><td><code>valid-completion-signatures</code> concept</td><td>Validates completion_signatures specializations</td></tr><tr><td><code>gather-signatures</code></td><td>Extracts signatures by tag, wraps in Tuple+Variant</td></tr><tr><td><code>META-APPLY</code></td><td>Makes non-variadic templates usable as Tuple/Variant</td></tr><tr><td><code>value_types_of_t</code></td><td>Public alias: value types as <code>Variant&#x3C;Tuple&#x3C;...>></code></td></tr><tr><td><code>error_types_of_t</code></td><td>Public alias: error types as <code>Variant&#x3C;E></code></td></tr><tr><td><code>sends_stopped</code></td><td>Public boolean: whether stopped is possible</td></tr><tr><td><code>completion_signatures::count-of</code></td><td>Counts signatures matching a tag</td></tr><tr><td><code>completion_signatures::for-each</code></td><td>Iterates over signatures at compile time</td></tr><tr><td><code>transform_completion_signatures</code></td><td>Rewrites signature sets for adaptors</td></tr></tbody></table></div></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/12-Completion-Signatures/" data-astro-cid-ykvenys5>← 12 · Completion Signatures</a><a href="/exec/tutorials/13-sender-factory-just/" data-astro-cid-ykvenys5>13 · Sender Factory: just / just_error / just_stopped →</a></nav></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
+      (function() {
+        const STORAGE_KEY = "exectutorial-theme";
+
+        function renderMermaid(theme) {
+          const cb = function() {
+            if (typeof mermaid === "undefined") { setTimeout(cb, 100); return; }
+            mermaid.initialize({ startOnLoad: false, theme: theme });
+            document.querySelectorAll(".mermaid").forEach(function(el) {
+              el.removeAttribute("data-processed");
+              el.textContent = el.textContent;
+            });
+            mermaid.run();
+          };
+          cb();
+        }
+
+        function setTheme(theme) {
+          document.documentElement.setAttribute("data-theme", theme);
+          var btn = document.getElementById("themeToggle");
+          if (btn) btn.textContent = theme === "dark" ? "🌙" : "☀️";
+          renderMermaid(theme === "dark" ? "dark" : "default");
+        }
+
+        var current = document.documentElement.getAttribute("data-theme") || "dark";
+        renderMermaid(current === "dark" ? "dark" : "default");
+
+        document.getElementById("themeToggle")?.addEventListener("click", function() {
+          var cur = document.documentElement.getAttribute("data-theme");
+          var next = cur === "dark" ? "light" : "dark";
+          try { localStorage.setItem(STORAGE_KEY, next); } catch(e) {}
+          setTheme(next);
+        });
+      })();
+    </script></body></html>

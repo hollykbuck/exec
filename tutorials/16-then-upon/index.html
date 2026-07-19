@@ -12,7 +12,7 @@
 (2) <strong>Failure</strong> — something went wrong. Delivered via <code>set_error</code>.
 (3) <strong>Cancellation</strong> — it was stopped midway. Delivered via <code>set_stopped</code>.</p>
 <p>Traditional C++ async approaches — exceptions, error codes, callbacks — tend to mix these three outcomes together. Exceptions can be forgotten, error codes ignored, and cancellation simply doesn’t exist in the standard at all.</p>
-<p>P2300 cleanly separates all three, forcing you to have a plan for each outcome. <code>then</code>, <code>upon_error</code>, and <code>upon_stopped</code> are the adaptors that handle each one.</p>
+<p>C++26 std::execution cleanly separates all three, forcing you to have a plan for each outcome. <code>then</code>, <code>upon_error</code>, and <code>upon_stopped</code> are the adaptors that handle each one.</p>
 <h2 id="overview">Overview</h2>
 <div class="table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch">
 

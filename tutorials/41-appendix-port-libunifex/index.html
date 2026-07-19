@@ -15,7 +15,7 @@
 <code>include/unifex/async_pass.hpp</code></p>
 </blockquote>
 <h2 id="overview">Overview</h2>
-<p>libunifex (Facebook/Meta) is the early reference implementation of P2300, containing several useful synchronization primitives. This appendix demonstrates how to port these primitives to stdexec, focusing on:</p>
+<p>libunifex (Facebook/Meta) is the early reference implementation of C++26 std::execution, containing several useful synchronization primitives. This appendix demonstrates how to port these primitives to stdexec, focusing on:</p>
 <ul>
 <li><strong><code>async_mutex</code></strong> — Asynchronous mutex, supports <code>try_lock()</code> / <code>async_lock()</code> / <code>unlock()</code></li>
 <li><strong><code>async_mutex (v2)</code></strong> — v2 adds cancellation support (stop token) and Dekker synchronization pattern</li>

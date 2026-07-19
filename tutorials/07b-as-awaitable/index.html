@@ -1,0 +1,223 @@
+<!DOCTYPE html><html lang="en" data-astro-cid-ykvenys5><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>07b · as_awaitable and with_awaitable_senders — How co_await Sender Works Inside — std::execution Tutorial</title><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" crossorigin="anonymous"><script>
+      (function(){
+        var theme="dark";
+        try{var s=localStorage.getItem("exectutorial-theme");if(s)theme=s}catch(e){}
+        if(!s&&matchMedia("(prefers-color-scheme:light)").matches)theme="light";
+        document.documentElement.setAttribute("data-theme",theme);
+      })();
+    </script><link rel="stylesheet" href="/exec/_astro/01-why-stdexec.hXKgsPrw.css"></head><body data-astro-cid-ykvenys5><div class="container" data-astro-cid-ykvenys5><header data-astro-cid-ykvenys5><div class="title-area" data-astro-cid-ykvenys5><a href="/exec/tutorials/" style="color:var(--fg-muted);text-decoration:none;font-size:0.85rem;" data-astro-cid-ykvenys5>← Back to index</a><h1 data-astro-cid-ykvenys5>07b · as_awaitable and with_awaitable_senders — How co_await Sender Works Inside</h1></div><button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" data-astro-cid-ykvenys5>🌙</button></header><article class="article-content" data-astro-cid-ykvenys5><blockquote>
+<p><strong>Standard Section</strong>: <code>[exec.as.awaitable]</code> <code>[exec.with.awaitable.senders]</code> <br>
+<strong>Draft Reference</strong>: <code>exec.tex</code> lines 7011–7298</p>
+</blockquote>
+<h2 id="the-missing-piece">The Missing Piece</h2>
+<p>Chapter 07 showed you <em>that</em> you can <code>co_await</code> a sender inside <code>task&#x3C;T></code>. But how does it actually work?</p>
+<p>The answer is two exposition classes and one CPO:</p>
+<ol>
+<li><strong><code>with_awaitable_senders&#x3C;Promise></code></strong> — a CRTP base class for promise types that makes any sender awaitable</li>
+<li><strong><code>sender-awaitable&#x3C;Sndr, Promise></code></strong> — the bridge that connects sender/receiver to the coroutine machinery</li>
+<li><strong><code>as_awaitable</code></strong> — the CPO that dispatches: “is this thing a sender, an awaitable, or something else?“</li>
+</ol>
+<h2 id="with_awaitable_senders--the-promise-base">with_awaitable_senders — The Promise Base</h2>
+<p><code>task&#x3C;T></code>’s promise type inherits from <code>with_awaitable_senders&#x3C;task::promise_type></code>:</p>
+<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">namespace</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> std</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">execution</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  template</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> &#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Promise</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  struct</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> with_awaitable_senders</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    template</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> &#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> OtherPromise</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    void</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> set_continuation</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">coroutine_handle</span><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#6F42C1;--shiki-dark:#B392F0">OtherPromise</span><span style="color:#24292E;--shiki-dark:#E1E4E8">> </span><span style="color:#E36209;--shiki-dark:#FFAB70">h</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) </span><span style="color:#D73A49;--shiki-dark:#F97583">noexcept</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">    coroutine_handle</span><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;> </span><span style="color:#6F42C1;--shiki-dark:#B392F0">continuation</span><span style="color:#24292E;--shiki-dark:#E1E4E8">() </span><span style="color:#D73A49;--shiki-dark:#F97583">const</span><span style="color:#D73A49;--shiki-dark:#F97583"> noexcept</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">    coroutine_handle</span><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;> </span><span style="color:#6F42C1;--shiki-dark:#B392F0">unhandled_stopped</span><span style="color:#24292E;--shiki-dark:#E1E4E8">() </span><span style="color:#D73A49;--shiki-dark:#F97583">noexcept</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">      return</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> stopped</span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#6F42C1;--shiki-dark:#B392F0">handler</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(continuation.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">address</span><span style="color:#24292E;--shiki-dark:#E1E4E8">());</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    template</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> &#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Value</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    auto</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> await_transform</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">Value</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x26;&#x26;</span><span style="color:#E36209;--shiki-dark:#FFAB70"> value</span><span style="color:#24292E;--shiki-dark:#E1E4E8">);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  };</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span></code></pre></div>
+<p>Three key members:</p>
+<p><strong><code>set_continuation</code></strong> — called when this coroutine is <code>co_await</code>-ed by another coroutine. It saves the caller’s coroutine handle and propagates the caller’s <code>unhandled_stopped</code> handler.</p>
+<p><strong><code>unhandled_stopped</code></strong> — invoked when a <code>co_await sender</code> completes with <code>set_stopped</code>. By default it calls <code>terminate()</code>. If a parent coroutine has a handler, it chains upward. This is how cancellation propagates through coroutine frames.</p>
+<p><strong><code>await_transform</code></strong> — the hook that C++ coroutines call for every <code>co_await expr</code>. It delegates to <code>as_awaitable(expr, *this)</code>:</p>
+<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">template</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> &#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Value</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> await_transform</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">Value</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x26;&#x26;</span><span style="color:#E36209;--shiki-dark:#FFAB70"> value</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) {</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  return</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> as_awaitable</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">std</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">forward</span><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#6F42C1;--shiki-dark:#B392F0">Value</span><span style="color:#24292E;--shiki-dark:#E1E4E8">>(value), </span><span style="color:#D73A49;--shiki-dark:#F97583">static_cast&#x3C;</span><span style="color:#24292E;--shiki-dark:#E1E4E8">Promise</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x26;></span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#005CC5;--shiki-dark:#79B8FF">this</span><span style="color:#24292E;--shiki-dark:#E1E4E8">));</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span></code></pre></div>
+<h2 id="as_awaitable--the-dispatcher">as_awaitable — The Dispatcher</h2>
+<p><code>as_awaitable(expr, promise)</code> follows a priority chain:</p>
+<ol>
+<li><strong>If <code>expr.as_awaitable(promise)</code> is well-formed</strong> — use the object’s own custom awaitable conversion</li>
+<li><strong>If <code>expr</code> is a sender_in with single value</strong> — apply <code>transform_sender</code>, then use <code>adapt-for-await-completion</code>, then wrap in <code>sender-awaitable</code></li>
+<li><strong>If <code>expr</code> is already an awaitable</strong> — return it as-is (the coroutine handles it natively)</li>
+<li><strong>As a fallback for single-value senders</strong> — <code>sender-awaitable{adapt-for-await-completion(transform_sender(expr)), promise}</code></li>
+</ol>
+<p>The <code>adapt-for-await-completion</code> step calls <code>get_await_completion_adaptor(get_env(s))</code> if available — a customization hook that lets schedulers inject adapter logic at the boundary between sender and coroutine.</p>
+<h2 id="sender-awaitable--the-bridge">sender-awaitable — The Bridge</h2>
+<p>This is the workhorse. It is the <code>awaiter</code> type that <code>co_await expr</code> interacts with:</p>
+<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">template</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> &#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Sndr</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Promise</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> sender</span><span style="color:#24292E;--shiki-dark:#E1E4E8">-awaitable {</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  using</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> value</span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#24292E;--shiki-dark:#E1E4E8">type </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> single</span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#24292E;--shiki-dark:#E1E4E8">sender</span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#24292E;--shiki-dark:#E1E4E8">value</span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#24292E;--shiki-dark:#E1E4E8">type</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;</span><span style="color:#24292E;--shiki-dark:#E1E4E8">Sndr, </span><span style="color:#005CC5;--shiki-dark:#79B8FF">env_of_t</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;</span><span style="color:#24292E;--shiki-dark:#E1E4E8">Promise</span><span style="color:#D73A49;--shiki-dark:#F97583">>></span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  using</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> result</span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#24292E;--shiki-dark:#E1E4E8">type </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> conditional_t</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;</span><span style="color:#24292E;--shiki-dark:#E1E4E8">is_void_v</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;</span><span style="color:#24292E;--shiki-dark:#E1E4E8">value</span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#24292E;--shiki-dark:#E1E4E8">type</span><span style="color:#D73A49;--shiki-dark:#F97583">></span><span style="color:#24292E;--shiki-dark:#E1E4E8">, unit, value</span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#24292E;--shiki-dark:#E1E4E8">type</span><span style="color:#D73A49;--shiki-dark:#F97583">></span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  struct</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> awaitable</span><span style="color:#24292E;--shiki-dark:#E1E4E8">-receiver;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  variant</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;</span><span style="color:#24292E;--shiki-dark:#E1E4E8">monostate, result</span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#24292E;--shiki-dark:#E1E4E8">type, exception_ptr</span><span style="color:#D73A49;--shiki-dark:#F97583">></span><span style="color:#24292E;--shiki-dark:#E1E4E8"> result;</span></span>
+<span class="line"><span style="color:#005CC5;--shiki-dark:#79B8FF">  connect_result_t</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;</span><span style="color:#24292E;--shiki-dark:#E1E4E8">Sndr, awaitable</span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#24292E;--shiki-dark:#E1E4E8">receiver</span><span style="color:#D73A49;--shiki-dark:#F97583">></span><span style="color:#24292E;--shiki-dark:#E1E4E8"> state;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">public:</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  sender</span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#6F42C1;--shiki-dark:#B392F0">awaitable</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(Sndr</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x26;&#x26;</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> sndr, Promise</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x26;</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> p);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  static</span><span style="color:#D73A49;--shiki-dark:#F97583"> constexpr</span><span style="color:#D73A49;--shiki-dark:#F97583"> bool</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> await_ready</span><span style="color:#24292E;--shiki-dark:#E1E4E8">() </span><span style="color:#D73A49;--shiki-dark:#F97583">noexcept</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> { </span><span style="color:#D73A49;--shiki-dark:#F97583">return</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> false</span><span style="color:#24292E;--shiki-dark:#E1E4E8">; }</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  void</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> await_suspend</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">coroutine_handle</span><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#6F42C1;--shiki-dark:#B392F0">Promise</span><span style="color:#24292E;--shiki-dark:#E1E4E8">>) </span><span style="color:#D73A49;--shiki-dark:#F97583">noexcept</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> { </span><span style="color:#6F42C1;--shiki-dark:#B392F0">start</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(state); }</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  value</span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#24292E;--shiki-dark:#E1E4E8">type </span><span style="color:#6F42C1;--shiki-dark:#B392F0">await_resume</span><span style="color:#24292E;--shiki-dark:#E1E4E8">();</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">};</span></span></code></pre></div>
+<p>The three awaiter methods:</p>
+<p><strong><code>await_ready()</code></strong> — always <code>false</code>. The coroutine always suspends.</p>
+<p><strong><code>await_suspend(h)</code></strong> — calls <code>start(state)</code>. This fires the sender. The coroutine frame is suspended until the sender completes.</p>
+<p><strong><code>await_resume()</code></strong> — called when the coroutine resumes. Checks the <code>result</code> variant:</p>
+<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">if</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (result.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">index</span><span style="color:#24292E;--shiki-dark:#E1E4E8">() </span><span style="color:#D73A49;--shiki-dark:#F97583">==</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 2</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">  rethrow_exception</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">get</span><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#005CC5;--shiki-dark:#79B8FF">2</span><span style="color:#24292E;--shiki-dark:#E1E4E8">>(result));</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">if</span><span style="color:#D73A49;--shiki-dark:#F97583"> constexpr</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (</span><span style="color:#D73A49;--shiki-dark:#F97583">!</span><span style="color:#24292E;--shiki-dark:#E1E4E8">is_void_v</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;</span><span style="color:#24292E;--shiki-dark:#E1E4E8">value</span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#24292E;--shiki-dark:#E1E4E8">type</span><span style="color:#D73A49;--shiki-dark:#F97583">></span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  return</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> forward</span><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#6F42C1;--shiki-dark:#B392F0">value</span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#6F42C1;--shiki-dark:#B392F0">type</span><span style="color:#24292E;--shiki-dark:#E1E4E8">>(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">get</span><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#005CC5;--shiki-dark:#79B8FF">1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">>(result));</span></span></code></pre></div>
+<h3 id="the-awaitable-receiver">The awaitable-receiver</h3>
+<p>This is the receiver type inside <code>sender-awaitable</code>. It stores:</p>
+<ul>
+<li>A pointer to the <code>result</code> variant (where completion data goes)</li>
+<li>The <code>continuation</code> coroutine handle (what to resume on completion)</li>
+</ul>
+<p>Its three completion handlers:</p>
+<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">void</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> set_value</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">awaitable</span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#6F42C1;--shiki-dark:#B392F0">receiver</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x26;</span><span style="color:#E36209;--shiki-dark:#FFAB70"> rcvr</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#D73A49;--shiki-dark:#F97583">auto&#x26;&#x26;</span><span style="color:#24292E;--shiki-dark:#E1E4E8">... </span><span style="color:#E36209;--shiki-dark:#FFAB70">vs</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) </span><span style="color:#D73A49;--shiki-dark:#F97583">noexcept</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  try</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    rcvr.result</span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#24292E;--shiki-dark:#E1E4E8">ptr->template </span><span style="color:#6F42C1;--shiki-dark:#B392F0">emplace</span><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#005CC5;--shiki-dark:#79B8FF">1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">>(vs...);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  } </span><span style="color:#D73A49;--shiki-dark:#F97583">catch</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(...) {</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    rcvr.result</span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#24292E;--shiki-dark:#E1E4E8">ptr->template </span><span style="color:#6F42C1;--shiki-dark:#B392F0">emplace</span><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#005CC5;--shiki-dark:#79B8FF">2</span><span style="color:#24292E;--shiki-dark:#E1E4E8">>(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">current_exception</span><span style="color:#24292E;--shiki-dark:#E1E4E8">());</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  }</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  MAKE</span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#6F42C1;--shiki-dark:#B392F0">NOEXCEPT</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(rcvr.continuation.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">resume</span><span style="color:#24292E;--shiki-dark:#E1E4E8">());</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">void</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> set_error</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">awaitable</span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#6F42C1;--shiki-dark:#B392F0">receiver</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x26;</span><span style="color:#E36209;--shiki-dark:#FFAB70"> rcvr</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#E36209;--shiki-dark:#FFAB70"> err</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) </span><span style="color:#D73A49;--shiki-dark:#F97583">noexcept</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  try</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    rcvr.result</span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#24292E;--shiki-dark:#E1E4E8">ptr->template </span><span style="color:#6F42C1;--shiki-dark:#B392F0">emplace</span><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#005CC5;--shiki-dark:#79B8FF">2</span><span style="color:#24292E;--shiki-dark:#E1E4E8">>(AS</span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#24292E;--shiki-dark:#E1E4E8">EXCEPT</span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#6F42C1;--shiki-dark:#B392F0">PTR</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(err));</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  } </span><span style="color:#D73A49;--shiki-dark:#F97583">catch</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(...) {</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    rcvr.result</span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#24292E;--shiki-dark:#E1E4E8">ptr->template </span><span style="color:#6F42C1;--shiki-dark:#B392F0">emplace</span><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#005CC5;--shiki-dark:#79B8FF">2</span><span style="color:#24292E;--shiki-dark:#E1E4E8">>(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">current_exception</span><span style="color:#24292E;--shiki-dark:#E1E4E8">());</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  }</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  MAKE</span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#6F42C1;--shiki-dark:#B392F0">NOEXCEPT</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(rcvr.continuation.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">resume</span><span style="color:#24292E;--shiki-dark:#E1E4E8">());</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">void</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> set_stopped</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">awaitable</span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#6F42C1;--shiki-dark:#B392F0">receiver</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x26;</span><span style="color:#E36209;--shiki-dark:#FFAB70"> rcvr</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) </span><span style="color:#D73A49;--shiki-dark:#F97583">noexcept</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  MAKE</span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#6F42C1;--shiki-dark:#B392F0">NOEXCEPT</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    static_cast&#x3C;</span><span style="color:#24292E;--shiki-dark:#E1E4E8">coroutine_handle</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;>></span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">      rcvr.continuation.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">promise</span><span style="color:#24292E;--shiki-dark:#E1E4E8">().</span><span style="color:#6F42C1;--shiki-dark:#B392F0">unhandled_stopped</span><span style="color:#24292E;--shiki-dark:#E1E4E8">()).</span><span style="color:#6F42C1;--shiki-dark:#B392F0">resume</span><span style="color:#24292E;--shiki-dark:#E1E4E8">());</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span></code></pre></div>
+<p>The pattern is:</p>
+<ul>
+<li><strong><code>set_value</code></strong> — store the result in the variant (index 1), resume the coroutine</li>
+<li><strong><code>set_error</code></strong> — store the exception_ptr in the variant (index 2), resume the coroutine</li>
+<li><strong><code>set_stopped</code></strong> — don’t resume the coroutine at all; instead call the promise’s <code>unhandled_stopped()</code> to propagate cancellation upward</li>
+</ul>
+<p>Importantly, the environment of <code>awaitable-receiver</code> forwards all forwarding queries to the coroutine’s promise. This means <code>get_scheduler()</code>, <code>get_stop_token()</code>, etc. work transparently inside <code>co_await</code>.</p>
+<h2 id="the-awaitable-sender-concept">The awaitable-sender Concept</h2>
+<p>A sender S is awaitable in a coroutine with promise P if:</p>
+<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">template</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> &#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Sndr</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Promise</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">concept</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> awaitable</span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#24292E;--shiki-dark:#E1E4E8">sender </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  single</span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#24292E;--shiki-dark:#E1E4E8">sender</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;</span><span style="color:#24292E;--shiki-dark:#E1E4E8">Sndr, </span><span style="color:#005CC5;--shiki-dark:#79B8FF">env_of_t</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;</span><span style="color:#24292E;--shiki-dark:#E1E4E8">Promise</span><span style="color:#D73A49;--shiki-dark:#F97583">>></span><span style="color:#D73A49;--shiki-dark:#F97583"> &#x26;&#x26;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  sender</span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#24292E;--shiki-dark:#E1E4E8">to</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;</span><span style="color:#24292E;--shiki-dark:#E1E4E8">Sndr, sender</span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#6F42C1;--shiki-dark:#B392F0">awaitable</span><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#6F42C1;--shiki-dark:#B392F0">Sndr</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#6F42C1;--shiki-dark:#B392F0">Promise</span><span style="color:#24292E;--shiki-dark:#E1E4E8">>::awaitable</span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#24292E;--shiki-dark:#E1E4E8">receiver</span><span style="color:#D73A49;--shiki-dark:#F97583">></span><span style="color:#D73A49;--shiki-dark:#F97583"> &#x26;&#x26;</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  requires</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (Promise</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x26;</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> p) {</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    { p.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">unhandled_stopped</span><span style="color:#24292E;--shiki-dark:#E1E4E8">() } </span><span style="color:#D73A49;--shiki-dark:#F97583">-></span><span style="color:#24292E;--shiki-dark:#E1E4E8"> convertible_to</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;</span><span style="color:#24292E;--shiki-dark:#E1E4E8">coroutine_handle</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;>></span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  };</span></span></code></pre></div>
+<p>Three requirements:</p>
+<ol>
+<li>The sender must have exactly one value completion signature (<code>single-sender</code>)</li>
+<li>The sender must be connectable to the internal <code>awaitable-receiver</code></li>
+<li>The promise type must expose <code>unhandled_stopped()</code> returning a <code>coroutine_handle&#x3C;></code></li>
+</ol>
+<p>This is why <code>task&#x3C;T></code> can only <code>co_await</code> senders with exactly one value type. If a sender can complete with multiple value types, wrap it in <code>into_variant</code> or <code>stopped_as_optional</code> first.</p>
+<h2 id="cancellation-propagation-chain">Cancellation Propagation Chain</h2>
+<pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="plaintext"><code><span class="line"><span>co_await sender inside task&#x3C;A></span></span>
+<span class="line"><span>  -> sender completes with set_stopped</span></span>
+<span class="line"><span>  -> awaitable-receiver::set_stopped calls</span></span>
+<span class="line"><span>  -> promise.unhandled_stopped() returns a handle</span></span>
+<span class="line"><span>  -> resumes that handle (the parent coroutine)</span></span>
+<span class="line"><span>  -> parent's unhandled_stopped chains upward</span></span>
+<span class="line"><span>  -> ...</span></span>
+<span class="line"><span>  -> if no handler exists, terminate()</span></span></code></pre>
+<p>The <code>set_continuation()</code> method is what builds this chain:</p>
+<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">template</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> &#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> OtherPromise</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">void</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> set_continuation</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">coroutine_handle</span><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#6F42C1;--shiki-dark:#B392F0">OtherPromise</span><span style="color:#24292E;--shiki-dark:#E1E4E8">> </span><span style="color:#E36209;--shiki-dark:#FFAB70">h</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) </span><span style="color:#D73A49;--shiki-dark:#F97583">noexcept</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  continuation </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> h;</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  if</span><span style="color:#D73A49;--shiki-dark:#F97583"> constexpr</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (requires(OtherPromise</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x26;</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> other) { other.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">unhandled_stopped</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(); }) {</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    stopped</span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#24292E;--shiki-dark:#E1E4E8">handler </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> [](</span><span style="color:#D73A49;--shiki-dark:#F97583">void*</span><span style="color:#E36209;--shiki-dark:#FFAB70"> p</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) noexcept -> </span><span style="color:#D73A49;--shiki-dark:#F97583">coroutine_handle&#x3C;></span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">      return</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> coroutine_handle</span><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#6F42C1;--shiki-dark:#B392F0">OtherPromise</span><span style="color:#24292E;--shiki-dark:#E1E4E8">>::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">from_address</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(p)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        .</span><span style="color:#6F42C1;--shiki-dark:#B392F0">promise</span><span style="color:#24292E;--shiki-dark:#E1E4E8">().</span><span style="color:#6F42C1;--shiki-dark:#B392F0">unhandled_stopped</span><span style="color:#24292E;--shiki-dark:#E1E4E8">();</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    };</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  } </span><span style="color:#D73A49;--shiki-dark:#F97583">else</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    stopped</span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#24292E;--shiki-dark:#E1E4E8">handler </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#D73A49;--shiki-dark:#F97583"> &#x26;default-</span><span style="color:#24292E;--shiki-dark:#E1E4E8">unhandled</span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#24292E;--shiki-dark:#E1E4E8">stopped;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  }</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span></code></pre></div>
+<p>When coroutine B <code>co_await</code>s coroutine A’s task, B’s <code>set_continuation</code> is called with A’s promise handle. If A completes with <code>set_stopped</code>, the chain walks up to B’s <code>unhandled_stopped</code>, and so on.</p>
+<h2 id="summary">Summary</h2>
+<div class="table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Component</th><th>Role</th></tr></thead><tbody><tr><td><code>with_awaitable_senders&#x3C;P></code></td><td>Promise base class; provides <code>await_transform</code> and <code>unhandled_stopped</code></td></tr><tr><td><code>as_awaitable(expr, p)</code></td><td>CPO that routes <code>expr</code> to the right awaitable wrapper</td></tr><tr><td><code>sender-awaitable&#x3C;S, P></code></td><td>Awaiter that connects a sender, suspends, and resumes on completion</td></tr><tr><td><code>awaitable-receiver</code></td><td>Stores result + continuation handle; three handler forms</td></tr><tr><td><code>awaitable-sender</code> concept</td><td>Constrains which senders can be <code>co_await</code>-ed</td></tr></tbody></table></div>
+<p>Every <code>co_await sender</code> inside <code>task&#x3C;T></code> goes through this exact path. The elegance is that it uses the sender model’s own <code>connect</code> + <code>start</code> + completion signals — no special coroutine-specific dispatch layer needed.</p></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/07-coroutines/" data-astro-cid-ykvenys5>← 07 · Coroutine Integration — co_await sender in task&lt;T&gt;</a><a href="/exec/tutorials/07c-task-internals/" data-astro-cid-ykvenys5>07c · task\&lt;T\&gt; Internals and task_scheduler →</a></nav></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
+      (function() {
+        const STORAGE_KEY = "exectutorial-theme";
+
+        function renderMermaid(theme) {
+          const cb = function() {
+            if (typeof mermaid === "undefined") { setTimeout(cb, 100); return; }
+            mermaid.initialize({ startOnLoad: false, theme: theme });
+            document.querySelectorAll(".mermaid").forEach(function(el) {
+              el.removeAttribute("data-processed");
+              el.textContent = el.textContent;
+            });
+            mermaid.run();
+          };
+          cb();
+        }
+
+        function setTheme(theme) {
+          document.documentElement.setAttribute("data-theme", theme);
+          var btn = document.getElementById("themeToggle");
+          if (btn) btn.textContent = theme === "dark" ? "🌙" : "☀️";
+          renderMermaid(theme === "dark" ? "dark" : "default");
+        }
+
+        var current = document.documentElement.getAttribute("data-theme") || "dark";
+        renderMermaid(current === "dark" ? "dark" : "default");
+
+        document.getElementById("themeToggle")?.addEventListener("click", function() {
+          var cur = document.documentElement.getAttribute("data-theme");
+          var next = cur === "dark" ? "light" : "dark";
+          try { localStorage.setItem(STORAGE_KEY, next); } catch(e) {}
+          setTheme(next);
+        });
+      })();
+    </script></body></html>
