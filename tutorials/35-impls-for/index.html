@@ -157,58 +157,46 @@ This chapter is for library authors contributing new algorithms to the C++26 std
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">};</span></span></code></pre></div>
 <p><code>connect-all</code> recursively connects child senders to <code>basic-receiver</code> instances. The <code>start</code> method delegates to <code>impls-for&#x3C;Tag>::start</code>, which is the only part the algorithm author customizes.</p>
 <h3 id="the-flow">The Flow</h3>
-<pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="plaintext"><code><span class="line"><span>basic-sender&#x3C;Tag, Data, Children...></span></span>
-<span class="line"><span>  │</span></span>
-<span class="line"><span>  │  sndr.connect(rcvr)</span></span>
-<span class="line"><span>  ▼</span></span>
-<span class="line"><span>basic-operation&#x3C;Sndr, Rcvr></span></span>
-<span class="line"><span>  │  [inherits basic-state → stores rcvr + algorithm state]</span></span>
-<span class="line"><span>  │  [connect-all → connects children to basic-receiver instances]</span></span>
-<span class="line"><span>  │</span></span>
-<span class="line"><span>  │  op.start()</span></span>
-<span class="line"><span>  ▼</span></span>
-<span class="line"><span>impls-for&#x3C;Tag>::start(state, rcvr, ops...)</span></span>
-<span class="line"><span>  │  [algorithm-specific: start children, set up timers, etc.]</span></span>
-<span class="line"><span>  ▼</span></span>
-<span class="line"><span>basic-receiver::set_value / set_error / set_stopped</span></span>
-<span class="line"><span>  │  [dispatches to impls-for&#x3C;Tag>::complete]</span></span>
-<span class="line"><span>  ▼</span></span>
-<span class="line"><span>impls-for&#x3C;Tag>::complete(Index, state, rcvr, tag, args...)</span></span>
-<span class="line"><span>  │  [algorithm-specific: combine results, forward to rcvr]</span></span>
-<span class="line"><span>  ▼</span></span>
-<span class="line"><span>Downstream receiver notified</span></span>
-<span class="line"><span></span></span>
-<span class="line"><span>---</span></span>
-<span class="line"><span></span></span>
-<span class="line"><span>## Basic Usage</span></span>
-<span class="line"><span></span></span>
-<span class="line"><span>Rewriting `then` with `impls-for`:</span></span>
-<span class="line"><span></span></span>
-<span class="line"><span>```cpp</span></span>
-<span class="line"><span>// 1. Define the data part (the function object)</span></span>
-<span class="line"><span>template &#x3C;class Fn></span></span>
-<span class="line"><span>struct then_data {</span></span>
-<span class="line"><span>  Fn fn_;</span></span>
-<span class="line"><span>};</span></span>
-<span class="line"><span></span></span>
-<span class="line"><span>// 2. Specialize impls-for (only write then's unique logic)</span></span>
-<span class="line"><span>template &#x3C;></span></span>
-<span class="line"><span>struct impls_for&#x3C;then_t> : default_impls {</span></span>
-<span class="line"><span>  // Compile-time completion signature transformation</span></span>
-<span class="line"><span>  template &#x3C;class Self, class... Env></span></span>
-<span class="line"><span>  static constexpr auto get_completion_signatures() {</span></span>
-<span class="line"><span>    return __transform_completion_signatures(</span></span>
-<span class="line"><span>      completion_signatures_of_t&#x3C;child_of&#x3C;Self, 0>, Env...>,</span></span>
-<span class="line"><span>      _then_value_transform&#x3C;data_of&#x3C;Self>>   // Only write how you change the value</span></span>
-<span class="line"><span>    );</span></span>
-<span class="line"><span>  }</span></span>
-<span class="line"><span></span></span>
-<span class="line"><span>  // start(): create internal receiver and start child operation</span></span>
-<span class="line"><span>  template &#x3C;class Op></span></span>
-<span class="line"><span>  static void start(Op&#x26; op) noexcept {</span></span>
-<span class="line"><span>    start_child(op.child_ops_[0], then_receiver{&#x26;op});</span></span>
-<span class="line"><span>  }</span></span>
-<span class="line"><span>};</span></span></code></pre>
+<pre class="mermaid">flowchart TD
+    BS["basic-sender&#x26;lt;Tag, Data, Children...&#x26;gt;"]
+    BO["basic-operation&#x26;lt;Sndr, Rcvr&#x26;gt;&#x3C;br/>[inherits basic-state → stores rcvr + algorithm state]&#x3C;br/>[connect-all → connects children to basic-receiver instances]"]
+    IS["impls-for&#x26;lt;Tag&#x26;gt;::start(state, rcvr, ops...)&#x3C;br/>[algorithm-specific: start children, set up timers, etc.]"]
+    BR["basic-receiver::set_value / set_error / set_stopped&#x3C;br/>[dispatches to impls-for&#x26;lt;Tag&#x26;gt;::complete]"]
+    IC["impls-for&#x26;lt;Tag&#x26;gt;::complete(Index, state, rcvr, tag, args...)&#x3C;br/>[algorithm-specific: combine results, forward to rcvr]"]
+    DN["Downstream receiver notified"]
+
+    BS -->|"sndr.connect(rcvr)"| BO
+    BO -->|"op.start()"| IS
+    IS --> BR
+    BR --> IC
+    IC --> DN</pre>
+<hr>
+<h2 id="basic-usage">Basic Usage</h2>
+<p>Rewriting <code>then</code> with <code>impls-for</code>:</p>
+<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// 1. Define the data part (the function object)</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">template</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> &#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Fn</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">struct</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> then_data</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  Fn fn_;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">};</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// 2. Specialize impls-for (only write then's unique logic)</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">template</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> &#x3C;></span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">struct</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> impls_for</span><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#005CC5;--shiki-dark:#79B8FF">then_t</span><span style="color:#24292E;--shiki-dark:#E1E4E8">> : </span><span style="color:#6F42C1;--shiki-dark:#B392F0">default_impls</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">  // Compile-time completion signature transformation</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  template</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> &#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Self</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#24292E;--shiki-dark:#E1E4E8">... </span><span style="color:#6F42C1;--shiki-dark:#B392F0">Env</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  static</span><span style="color:#D73A49;--shiki-dark:#F97583"> constexpr</span><span style="color:#D73A49;--shiki-dark:#F97583"> auto</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> get_completion_signatures</span><span style="color:#24292E;--shiki-dark:#E1E4E8">() {</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    return</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> __transform_completion_signatures</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span></span>
+<span class="line"><span style="color:#005CC5;--shiki-dark:#79B8FF">      completion_signatures_of_t</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;</span><span style="color:#24292E;--shiki-dark:#E1E4E8">child_of</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;</span><span style="color:#24292E;--shiki-dark:#E1E4E8">Self, </span><span style="color:#005CC5;--shiki-dark:#79B8FF">0</span><span style="color:#D73A49;--shiki-dark:#F97583">></span><span style="color:#24292E;--shiki-dark:#E1E4E8">, Env...</span><span style="color:#D73A49;--shiki-dark:#F97583">></span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">      _then_value_transform</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;</span><span style="color:#24292E;--shiki-dark:#E1E4E8">data_of</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;</span><span style="color:#24292E;--shiki-dark:#E1E4E8">Self</span><span style="color:#D73A49;--shiki-dark:#F97583">>></span><span style="color:#6A737D;--shiki-dark:#6A737D">   // Only write how you change the value</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    );</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">  // start(): create internal receiver and start child operation</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  template</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> &#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Op</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  static</span><span style="color:#D73A49;--shiki-dark:#F97583"> void</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> start</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">Op</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x26;</span><span style="color:#E36209;--shiki-dark:#FFAB70"> op</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) </span><span style="color:#D73A49;--shiki-dark:#F97583">noexcept</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
+<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">    start_child</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(op.child_ops_[</span><span style="color:#005CC5;--shiki-dark:#79B8FF">0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">], then_receiver{</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x26;</span><span style="color:#24292E;--shiki-dark:#E1E4E8">op});</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  }</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">};</span></span></code></pre></div>
 <p>Above, <code>impls-for&#x3C;then_t></code> only overrides two things — <code>get_completion_signatures</code> (changed) and <code>start</code> (changed). Everything else — <code>connect</code>, <code>get_env</code>, <code>operator|</code> — is auto-generated by <code>basic_sender</code>.</p>
 <hr>
 <h2 id="what-default-impls-provides">What <code>default-impls</code> Provides</h2>
@@ -270,8 +258,7 @@ This chapter is for library authors contributing new algorithms to the C++26 std
 
 
 
-<table><thead><tr><th>Traditional Hand-Rolled</th><th><code>impls-for</code></th></tr></thead><tbody><tr><td>Hand-write sender type for every algorithm</td><td><code>basic_sender&#x3C;Tag, Data, Child...></code> auto-generates</td></tr><tr><td>Hand-write operation state for every algorithm</td><td><code>basic_operation</code> manages automatically</td></tr><tr><td>Hand-write receiver environment forwarding</td><td><code>basic_receiver</code> forwards automatically</td></tr><tr><td>Repeated connect / get_env boilerplate</td><td>Only specialize <code>impls-for</code></td></tr></tbody></table></div>
-<hr></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/34-custom-scheduler/" data-astro-cid-ykvenys5>← 34 · Writing a Custom Scheduler</a><a href="/exec/tutorials/36-linux-io-uring/" data-astro-cid-ykvenys5>36 · Linux io_uring — True Async File I/O →</a></nav></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
+<table><thead><tr><th>Traditional Hand-Rolled</th><th><code>impls-for</code></th></tr></thead><tbody><tr><td>Hand-write sender type for every algorithm</td><td><code>basic_sender&#x3C;Tag, Data, Child...></code> auto-generates</td></tr><tr><td>Hand-write operation state for every algorithm</td><td><code>basic_operation</code> manages automatically</td></tr><tr><td>Hand-write receiver environment forwarding</td><td><code>basic_receiver</code> forwards automatically</td></tr><tr><td>Repeated connect / get_env boilerplate</td><td>Only specialize <code>impls-for</code></td></tr></tbody></table></div></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/34-custom-scheduler/" data-astro-cid-ykvenys5>← 34 · Writing a Custom Scheduler</a><a href="/exec/tutorials/36-linux-io-uring/" data-astro-cid-ykvenys5>36 · Linux io_uring — True Async File I/O →</a></nav></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
       (function() {
         const STORAGE_KEY = "exectutorial-theme";
 

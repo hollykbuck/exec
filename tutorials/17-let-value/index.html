@@ -142,8 +142,7 @@
 <p>Internally, <code>let_value</code> creates new <code>connect</code> + <code>start</code> calls, flattening the nested sender into the outer pipeline.</p>
 <h2 id="limitations">Limitations</h2>
 <p>Each branch returned by <code>let_value</code> must satisfy the same <code>sender_to&#x3C;Receiver></code> constraint. If different branches return different sender types (e.g., one returns <code>sender&#x3C;set_value_t(int)></code>, another <code>sender&#x3C;set_value_t(double)></code>), the compiler will error. In that case, use <code>into_variant</code> from chapter 21 to unify the types.</p>
-<p>Also, <code>let_value</code> re-connects and re-starts on every invocation, which has some runtime overhead. For simple value transformations, <code>then</code> is lighter.</p>
-<hr></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/16-then-upon/" data-astro-cid-ykvenys5>← 16 · then / upon_error / upon_stopped — Handling the Three Completion Signals</a><a href="/exec/tutorials/18-starts-on-continues-on/" data-astro-cid-ykvenys5>18 · starts_on / continues_on / on — Switching Execution Contexts →</a></nav></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
+<p>Also, <code>let_value</code> re-connects and re-starts on every invocation, which has some runtime overhead. For simple value transformations, <code>then</code> is lighter.</p></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/16-then-upon/" data-astro-cid-ykvenys5>← 16 · then / upon_error / upon_stopped — Handling the Three Completion Signals</a><a href="/exec/tutorials/18-starts-on-continues-on/" data-astro-cid-ykvenys5>18 · starts_on / continues_on / on — Switching Execution Contexts →</a></nav></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
       (function() {
         const STORAGE_KEY = "exectutorial-theme";
 

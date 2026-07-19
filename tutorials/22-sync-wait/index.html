@@ -138,8 +138,7 @@
 <h2 id="limitations">Limitations</h2>
 <p><code>sync_wait</code> <strong>blocks the calling thread</strong>. If that thread is an IO thread or event-loop thread, the entire program will appear to hang.</p>
 <p>Also, <code>sync_wait</code> creates and drives a temporary <code>run_loop</code> internally, which has some runtime overhead. In high-frequency scenarios (hundreds of thousands of calls per second), this overhead accumulates.</p>
-<p>After calling <code>sync_wait</code>, the sender is moved-from and consumed. A given sender can only be <code>sync_wait</code>-ed once. If you need to wait multiple times, prepend <code>ensure_started</code> (see chapter 23).</p>
-<hr></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/21-into-variant/" data-astro-cid-ykvenys5>← 21 · into_variant / stopped_as_optional / stopped_as_error — Type Erasure and Signal Conversion</a><a href="/exec/tutorials/23-spawn-ensure-started/" data-astro-cid-ykvenys5>23 · spawn / ensure_started —— Fire-and-Forget &amp; Eager Start →</a></nav></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
+<p>After calling <code>sync_wait</code>, the sender is moved-from and consumed. A given sender can only be <code>sync_wait</code>-ed once. If you need to wait multiple times, prepend <code>ensure_started</code> (see chapter 23).</p></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/21-into-variant/" data-astro-cid-ykvenys5>← 21 · into_variant / stopped_as_optional / stopped_as_error — Type Erasure and Signal Conversion</a><a href="/exec/tutorials/23-spawn-ensure-started/" data-astro-cid-ykvenys5>23 · spawn / ensure_started —— Fire-and-Forget &amp; Eager Start →</a></nav></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
       (function() {
         const STORAGE_KEY = "exectutorial-theme";
 

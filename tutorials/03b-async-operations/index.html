@@ -152,25 +152,19 @@
 <table><thead><tr><th>Category</th><th>Takes</th><th>Returns</th><th>Example</th></tr></thead><tbody><tr><td>Factory</td><td>Non-senders</td><td>A sender</td><td><code>just(42)</code></td></tr><tr><td>Adaptor</td><td>One or more senders + args</td><td>A parent sender</td><td><code>then(sndr, f)</code>, <code>when_all(s1, s2)</code></td></tr><tr><td>Consumer</td><td>One or more senders</td><td>Non-sender</td><td><code>sync_wait(sndr)</code></td></tr></tbody></table></div>
 <p>An async operation created by a parent sender (adaptor) is the <strong>parent</strong> of the child operations created by the child senders. Parent operations complete after all started child operations complete.</p>
 <h2 id="putting-it-all-together">Putting It All Together</h2>
-<pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="plaintext"><code><span class="line"><span>Sender (factory/adaptor)</span></span>
-<span class="line"><span>  |</span></span>
-<span class="line"><span>  |-- connect(sndr, rcvr) -></span></span>
-<span class="line"><span>  v</span></span>
-<span class="line"><span>Operation State (owns receiver + internal state)</span></span>
-<span class="line"><span>  |</span></span>
-<span class="line"><span>  |-- start(opstate) -></span></span>
-<span class="line"><span>  v</span></span>
-<span class="line"><span>Async Lifetime Begins</span></span>
-<span class="line"><span>  |-- executes on Execution Resource (via Scheduler)</span></span>
-<span class="line"><span>  |-- can create Child Operations</span></span>
-<span class="line"><span>  |     (each child has its own lifecycle)</span></span>
-<span class="line"><span>  v</span></span>
-<span class="line"><span>Completion Operation</span></span>
-<span class="line"><span>  |-- one of set_value / set_error / set_stopped</span></span>
-<span class="line"><span>  |-- may run on a different scheduler than the start</span></span>
-<span class="line"><span>  v</span></span>
-<span class="line"><span>Async Lifetime Ends</span></span>
-<span class="line"><span>  Operation State becomes invalid</span></span></code></pre>
+<pre class="mermaid">flowchart TD
+    S["Sender (factory/adaptor)"]
+    OS["Operation State (owns receiver + internal state)"]
+    AL["Async Lifetime Begins"]
+    CO["Completion Operation"]
+    AE["Async Lifetime Ends&#x3C;br/>Operation State becomes invalid"]
+
+    S -->|"connect(sndr, rcvr)"| OS
+    OS -->|"start(opstate)"| AL
+    AL -->|"executes on Execution Resource (via Scheduler)"| CO
+    AL -->|"can create Child Operations (each child has its own lifecycle)"| CO
+    CO -->|"one of set_value / set_error / set_stopped"| AE
+    CO -->|"may run on a different scheduler than the start"| AE</pre>
 <p>The next chapter (04) shows all of this in action with a real program.</p></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/03-completion-signals/" data-astro-cid-ykvenys5>← 03 · Three Completion Signals — set_value / set_error / set_stopped</a><a href="/exec/tutorials/04-hello-world-pipeline/" data-astro-cid-ykvenys5>04 · Hello World Pipeline — schedule | then | sync_wait →</a></nav></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
       (function() {
         const STORAGE_KEY = "exectutorial-theme";

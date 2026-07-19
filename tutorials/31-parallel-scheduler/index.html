@@ -24,15 +24,13 @@
 <hr>
 <h2 id="architecture-frontend--backend">Architecture: Frontend + Backend</h2>
 <p><code>parallel_scheduler</code> uses a separated frontend (type erasure layer) and backend (concrete implementation) architecture:</p>
-<pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="plaintext"><code><span class="line"><span>┌─────────────────────────────────┐</span></span>
-<span class="line"><span>│  User code: bulk(N, f)          │</span></span>
-<span class="line"><span>├─────────────────────────────────┤</span></span>
-<span class="line"><span>│  Frontend (sender/receiver API)  │  ← receiver_proxy for type erasure</span></span>
-<span class="line"><span>├─────────────────────────────────┤</span></span>
-<span class="line"><span>│  Backend (virtual interface)     │  ← schedule / schedule_bulk_*</span></span>
-<span class="line"><span>├─────────────────────────────────┤</span></span>
-<span class="line"><span>│  Default impl (std::thread pool) │  ← Replaceable with TBB / Taskflow</span></span>
-<span class="line"><span>└─────────────────────────────────┘</span></span></code></pre>
+<pre class="mermaid">flowchart TD
+    U["User code: bulk(N, f)"]
+    F["Frontend (sender/receiver API)&#x3C;br/>← receiver_proxy for type erasure"]
+    B["Backend (virtual interface)&#x3C;br/>← schedule / schedule_bulk_*"]
+    D["Default impl (std::thread pool)&#x3C;br/>← Replaceable with TBB / Taskflow"]
+
+    U --> F --> B --> D</pre>
 <p>This layering lets you replace the underlying implementation <strong>without changing a single line of user code</strong>. If your company has a custom GPU task scheduler, or uses TBB’s scheduling system, you just swap the backend layer — all user code stays the same.</p>
 <hr>
 <h2 id="compile-time-backend-replacement">Compile-Time Backend Replacement</h2>

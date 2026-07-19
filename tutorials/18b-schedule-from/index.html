@@ -86,17 +86,16 @@
 </ol>
 <h2 id="the-two-step-transition-model">The Two-Step Transition Model</h2>
 <p>The transition between execution resources is a two-step process:</p>
-<pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="plaintext"><code><span class="line"><span>Source Resource                    Destination Resource</span></span>
-<span class="line"><span>  ┌──────────┐                     ┌──────────────┐</span></span>
-<span class="line"><span>  │ sndr     │                     │ downstream   │</span></span>
-<span class="line"><span>  │ runs     │                     │ runs here    │</span></span>
-<span class="line"><span>  │ here     │                     │              │</span></span>
-<span class="line"><span>  └────┬─────┘                     └──────┬───────┘</span></span>
-<span class="line"><span>       │                                  ▲</span></span>
-<span class="line"><span>       │  Step 1: continues_on            │</span></span>
-<span class="line"><span>       │  (customized by source)          │ Step 2: schedule_from</span></span>
-<span class="line"><span>       │                                  │ (customized by destination)</span></span>
-<span class="line"><span>       └──────────────────────────────────┘</span></span></code></pre>
+<pre class="mermaid">flowchart LR
+    subgraph SRC["Source Resource"]
+        SNDR["sndr runs here"]
+    end
+    subgraph DST["Destination Resource"]
+        DOWN["downstream runs here"]
+    end
+
+    SNDR -->|"Step 1: continues_on (customized by source)"| DOWN
+    DOWN -.->|"Step 2: schedule_from (customized by destination)"| SNDR</pre>
 <p><strong>Step 1 (continues_on)</strong>: The source scheduler can customize how it off-ramps. The default captures results in a variant and schedules a work item on the destination scheduler.</p>
 <p><strong>Step 2 (schedule_from)</strong>: The destination scheduler controls the on-ramp. The default implementation of <code>continues_on</code> calls <code>schedule(sch)</code> which returns a sender that runs on <code>sch</code>. The destination scheduler can override what happens in the <code>receiver-type</code> above — for example, it might inject allocator information or set up thread-local state.</p>
 <p>A custom scheduler that wants to control both off-ramp and on-ramp would specialize for both <code>continues_on</code> and <code>schedule_from</code>.</p>

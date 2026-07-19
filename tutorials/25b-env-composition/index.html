@@ -115,26 +115,15 @@
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// starts_on(sch, sndr) ensures the child sees sch as its scheduler</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">JOIN</span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#6F42C1;--shiki-dark:#B392F0">ENV</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(MAKE</span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#6F42C1;--shiki-dark:#B392F0">ENV</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(get_scheduler, sch), FWD</span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#6F42C1;--shiki-dark:#B392F0">ENV</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">get_env</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(rcvr)))</span></span></code></pre></div>
 <h2 id="the-full-picture">The Full Picture</h2>
-<pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="plaintext"><code><span class="line"><span>Outer Receiver Environment</span></span>
-<span class="line"><span>  ├── get_scheduler → io_pool scheduler</span></span>
-<span class="line"><span>  ├── get_stop_token → inplace_stop_token</span></span>
-<span class="line"><span>  └── get_completion_scheduler&#x3C;set_value_t> → cpu_pool scheduler</span></span>
-<span class="line"><span></span></span>
-<span class="line"><span>        │</span></span>
-<span class="line"><span>        │  then adaptor creates basic-receiver</span></span>
-<span class="line"><span>        │  basic-receiver::get_env() returns:</span></span>
-<span class="line"><span>        ▼</span></span>
-<span class="line"><span>FWD-ENV(get_env(outer_rcvr))</span></span>
-<span class="line"><span>  ├── get_scheduler → io_pool scheduler         (forwarded)</span></span>
-<span class="line"><span>  ├── get_stop_token → inplace_stop_token        (forwarded)</span></span>
-<span class="line"><span>  └── get_completion_scheduler&#x3C;set_value_t> →    (blocked!)</span></span>
-<span class="line"><span></span></span>
-<span class="line"><span>        │</span></span>
-<span class="line"><span>        │  write_env injects additional queries</span></span>
-<span class="line"><span>        ▼</span></span>
-<span class="line"><span>JOIN-ENV(write_env_state, FWD-ENV(get_env(outer_rcvr)))</span></span>
-<span class="line"><span>  ├── write_env's queries take priority</span></span>
-<span class="line"><span>  └── remaining forwarding queries fall through to outer env</span></span></code></pre>
+<pre class="mermaid">flowchart TD
+    OR["Outer Receiver Environment&#x3C;br/>├─ get_scheduler → io_pool scheduler&#x3C;br/>├─ get_stop_token → inplace_stop_token&#x3C;br/>└─ get_completion_scheduler&#x26;lt;set_value_t&#x26;gt; → cpu_pool scheduler"]
+
+    FWD["FWD-ENV(get_env(outer_rcvr))&#x3C;br/>├─ get_scheduler → io_pool scheduler (forwarded)&#x3C;br/>├─ get_stop_token → inplace_stop_token (forwarded)&#x3C;br/>└─ get_completion_scheduler&#x26;lt;set_value_t&#x26;gt; → (blocked!)"]
+
+    JOIN["JOIN-ENV(write_env_state, FWD-ENV(get_env(outer_rcvr)))&#x3C;br/>├─ write_env's queries take priority&#x3C;br/>└─ remaining forwarding queries fall through to outer env"]
+
+    OR -->|"then adaptor creates basic-receiver&#x3C;br/>basic-receiver::get_env() returns:"| FWD
+    FWD -->|"write_env injects additional queries"| JOIN</pre>
 <p>Every sender adaptor in the standard uses this pattern: wrap the receiver’s environment in <code>FWD-ENV</code>, then optionally <code>JOIN-ENV</code> with algorithm-specific state. This ensures queries propagate correctly without leaking implementation details across layers.</p></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/25-query-system-env/" data-astro-cid-ykvenys5>← 25 · Query System — Reading Properties from the Environment</a><a href="/exec/tutorials/26-domain-mechanism/" data-astro-cid-ykvenys5>26 · Domain — Letting Schedulers Take Over Algorithm Implementation →</a></nav></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
       (function() {
         const STORAGE_KEY = "exectutorial-theme";

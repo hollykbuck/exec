@@ -136,8 +136,7 @@
 <p>The difference is that <code>when_all_with_variant</code> handles variant expansion internally, which may be more efficient.</p>
 <h2 id="limitations">Limitations</h2>
 <p><code>into_variant</code> introduces <code>variant</code> overhead at runtime — every access requires <code>std::visit</code> or <code>std::get</code>. If you only have a few branches (typically 2-3), this is negligible, but if there are many branches or frequent calls, consider reducing the number of branches at the design level.</p>
-<p><code>stopped_as_optional</code> adds a layer of wrapping — <code>set_value(int)</code> becomes <code>set_value(optional&#x3C;int>)</code>, and the downstream must unwrap one extra level. In deeply nested pipelines this can make types verbose.</p>
-<hr></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/20-bulk/" data-astro-cid-ykvenys5>← 20 · bulk — Data Parallel Operations</a><a href="/exec/tutorials/22-sync-wait/" data-astro-cid-ykvenys5>22 · sync_wait / sync_wait_with_variant —— Blocking Wait for Results →</a></nav></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
+<p><code>stopped_as_optional</code> adds a layer of wrapping — <code>set_value(int)</code> becomes <code>set_value(optional&#x3C;int>)</code>, and the downstream must unwrap one extra level. In deeply nested pipelines this can make types verbose.</p></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/20-bulk/" data-astro-cid-ykvenys5>← 20 · bulk — Data Parallel Operations</a><a href="/exec/tutorials/22-sync-wait/" data-astro-cid-ykvenys5>22 · sync_wait / sync_wait_with_variant —— Blocking Wait for Results →</a></nav></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
       (function() {
         const STORAGE_KEY = "exectutorial-theme";
 
