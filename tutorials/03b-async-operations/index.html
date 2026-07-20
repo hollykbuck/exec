@@ -79,8 +79,8 @@
 <p>Every async operation has an <strong>environment</strong> — a queryable object that represents the caller’s execution-time properties. The environment is equal to the receiver’s environment (obtained via <code>get_env(rcvr)</code>).</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Inside a receiver:</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> get_env</span><span style="color:#24292E;--shiki-dark:#E1E4E8">() </span><span style="color:#D73A49;--shiki-dark:#F97583">const</span><span style="color:#D73A49;--shiki-dark:#F97583"> noexcept</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
-<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  return</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> prop{get_scheduler, my_sched,</span></span>
-<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">             get_stop_token, my_stop_source.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">get_token</span><span style="color:#24292E;--shiki-dark:#E1E4E8">()};</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  return</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> env{prop{get_scheduler, my_sched},</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">             prop{get_stop_token, my_stop_source.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">get_token</span><span style="color:#24292E;--shiki-dark:#E1E4E8">()}};</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span></code></pre></div>
 <p>The environment flows from parent to child through the pipeline.</p>
 <h2 id="sender">Sender</h2>

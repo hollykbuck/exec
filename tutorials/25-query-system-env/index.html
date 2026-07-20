@@ -22,6 +22,60 @@ Packaging (allocator): std::allocator</p>
 </blockquote>
 <p>The sender doesn’t need to know who put the label there — it just reads the label. The query system is the set of conventions that lets the sender ask these questions.</p>
 <hr>
+<h2 id="overview-how-queries-work">Overview: How Queries Work</h2>
+<p>At its core, the query system is a <strong>type-keyed dispatch</strong> mechanism. Every query is a unique type (a CPO like <code>get_scheduler_t</code>), and every environment answers queries through member function overload resolution.</p>
+<pre class="mermaid">flowchart LR
+    subgraph Sender["Sender Pipeline"]
+        S["then(my_fn)"]
+        R["read_env(get_scheduler)"]
+    end
+
+    subgraph Connect["connect(sndr, rcvr)"]
+        OS["Operation State"]
+    end
+
+    subgraph Receiver["Receiver"]
+        E["Environment&#x3C;br/>prop{get_scheduler, pool_a}&#x3C;br/>prop{get_stop_token, ...}"]
+    end
+
+    subgraph Query["Query CPO"]
+        Q["get_scheduler(env)"]
+        Q2["env.query(get_scheduler)"]
+    end
+
+    R -->|"at runtime"| Q
+    Q -->|"1. try .query() member"| E
+    E -->|"2. returns scheduler"| R
+    S -->|"connect"| OS
+    OS -->|"holds rcvr"| Receiver
+    Receiver -->|"get_env(rcvr)"| E</pre>
+<p>The lifecycle of a query is:</p>
+<ol>
+<li><strong><code>connect(sndr, rcvr)</code></strong> stores the receiver inside the operation state</li>
+<li><strong><code>get_env(rcvr)</code></strong> extracts the receiver’s environment — a type-keyed bag of <code>prop</code>s</li>
+<li><strong>A sender calls <code>get_scheduler(env)</code></strong> (or <code>env.query(get_scheduler)</code> — equivalent)</li>
+<li><strong>The environment dispatches</strong> to the matching <code>prop</code> or sub-environment via overload resolution or linear search</li>
+<li><strong>The value is returned</strong> — the sender now has the scheduler, stop token, allocator, etc.</li>
+</ol>
+<pre class="mermaid">sequenceDiagram
+    participant S as Sender
+    participant R as Receiver
+    participant E as Environment
+    participant OS as OperationState
+
+    Note over S,R: connect(sndr, rcvr)
+    R->>E: get_env(rcvr)
+    E-->>OS: stored inside opstate
+
+    Note over S,R: start(opstate)
+    S->>E: get_scheduler(env)
+    E-->>S: scheduler (e.g. thread_pool)
+    S->>E: get_stop_token(env)
+    E-->>S: stop_token
+    S->>E: get_allocator(env)
+    E-->>S: allocator</pre>
+<p>Each query is <strong>type-keyed</strong> — the compiler selects the right <code>prop</code> at compile time by matching the query type. No runtime dispatch, no string lookups, no virtual calls.</p>
+<hr>
 <h2 id="built-in-query-objects">Built-in Query Objects</h2>
 <p>The standard defines the following query objects — each one is like a “standard question”:</p>
 <div class="table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch">
@@ -88,16 +142,18 @@ Packaging (allocator): std::allocator</p>
 <h3 id="prop-internals"><code>prop</code> Internals</h3>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">template</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> &#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Query</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Value</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">struct</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> prop</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
-<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  Value value_;</span></span>
+<span class="line"><span style="color:#005CC5;--shiki-dark:#79B8FF">  [[</span><span style="color:#6F42C1;--shiki-dark:#B392F0">no_unique_address</span><span style="color:#005CC5;--shiki-dark:#79B8FF">]]</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> Query __query;</span></span>
+<span class="line"><span style="color:#005CC5;--shiki-dark:#79B8FF">  [[</span><span style="color:#6F42C1;--shiki-dark:#B392F0">no_unique_address</span><span style="color:#005CC5;--shiki-dark:#79B8FF">]]</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> Value __value;</span></span>
 <span class="line"></span>
-<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">  // Only responds to exact-match queries</span></span>
-<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  template</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> &#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Other</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
-<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    requires</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> std</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::same_as</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;</span><span style="color:#24292E;--shiki-dark:#E1E4E8">Query, </span><span style="color:#6F42C1;--shiki-dark:#B392F0">std</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#005CC5;--shiki-dark:#79B8FF">decay_t</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;</span><span style="color:#24292E;--shiki-dark:#E1E4E8">Other</span><span style="color:#D73A49;--shiki-dark:#F97583">>></span></span>
-<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  constexpr</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Value</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> query</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">Other</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) </span><span style="color:#D73A49;--shiki-dark:#F97583">const</span><span style="color:#D73A49;--shiki-dark:#F97583"> noexcept</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
-<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    return</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> value_;</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">  // Only responds to exact-match queries — _Query is the non-deduced</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">  // class template parameter, so this overload only matches when the</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">  // query type matches exactly.</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  constexpr</span><span style="color:#D73A49;--shiki-dark:#F97583"> auto</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> query</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">_Query</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#D73A49;--shiki-dark:#F97583"> &#x26;&#x26;</span><span style="color:#24292E;--shiki-dark:#E1E4E8">...) </span><span style="color:#D73A49;--shiki-dark:#F97583">const</span><span style="color:#D73A49;--shiki-dark:#F97583"> noexcept</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    -> </span><span style="color:#6F42C1;--shiki-dark:#B392F0">_Value</span><span style="color:#D73A49;--shiki-dark:#F97583"> const</span><span style="color:#D73A49;--shiki-dark:#F97583"> &#x26;</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    return</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> __value;</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  }</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">};</span></span></code></pre></div>
-<p>The key line is <code>requires std::same_as&#x3C;Query, Other></code> — only an exact match on the query key gets a response. Everything else is eliminated at compile time.</p>
+<p><code>prop</code> only has a single <code>query()</code> overload where the first parameter type <code>_Query</code> is the <strong>non-deduced class template parameter</strong>. This means only an exact type match triggers a response — there is no template argument deduction that could accidentally broaden the match. All other queries are eliminated at compile time.</p>
 <hr>
 <h2 id="env--multi-key-composite-environment"><code>env</code> — Multi-Key Composite Environment</h2>
 <p>In real code, a receiver needs to answer multiple questions — the scheduler, the stop token, the allocator. <code>env</code> stitches multiple <code>prop</code>s together:</p>
@@ -108,20 +164,43 @@ Packaging (allocator): std::allocator</p>
 <span class="line"></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">get_scheduler</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(e);</span><span style="color:#6A737D;--shiki-dark:#6A737D">    // → my_scheduler</span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">get_stop_token</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(e);</span><span style="color:#6A737D;--shiki-dark:#6A737D">   // → my_stop_token</span></span></code></pre></div>
-<p><code>env</code> uses multiple inheritance + a <code>using</code> declaration to merge the <code>query()</code> member functions from all sub-environments:</p>
-<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">template</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> &#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">queryable</span><span style="color:#24292E;--shiki-dark:#E1E4E8">... </span><span style="color:#6F42C1;--shiki-dark:#B392F0">Envs</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
-<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">struct</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> env</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> : Envs... {</span></span>
-<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  using</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Envs</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::query...;</span><span style="color:#6A737D;--shiki-dark:#6A737D">  // Bring every sub-env's query() into scope</span></span>
+<p><code>env</code> stores sub-environments in a tuple and dispatches queries via <strong>linear search</strong> — it scans the sub-environments in order and returns the first one that can answer the query:</p>
+<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Simplified: actual stdexec uses __get_1st_env to search linearly</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">template</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> &#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#24292E;--shiki-dark:#E1E4E8">... </span><span style="color:#6F42C1;--shiki-dark:#B392F0">Envs</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">struct</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> env</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> : __tuple&#x3C;Envs...> {</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  template</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> &#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Query</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#24292E;--shiki-dark:#E1E4E8">... </span><span style="color:#6F42C1;--shiki-dark:#B392F0">Args</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    requires</span><span style="color:#6A737D;--shiki-dark:#6A737D"> /* at least one sub-env can answer Query */</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  constexpr</span><span style="color:#D73A49;--shiki-dark:#F97583"> auto</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> query</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">Query</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#6F42C1;--shiki-dark:#B392F0">Args</span><span style="color:#D73A49;--shiki-dark:#F97583"> &#x26;&#x26;</span><span style="color:#24292E;--shiki-dark:#E1E4E8">...</span><span style="color:#E36209;--shiki-dark:#FFAB70">args</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) </span><span style="color:#D73A49;--shiki-dark:#F97583">const</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    auto</span><span style="color:#D73A49;--shiki-dark:#F97583"> &#x26;</span><span style="color:#24292E;--shiki-dark:#E1E4E8">sub_env </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> __get_1st_env</span><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#6F42C1;--shiki-dark:#B392F0">Query</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, Args...>()(</span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#005CC5;--shiki-dark:#79B8FF">this</span><span style="color:#24292E;--shiki-dark:#E1E4E8">);</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    return</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> __query</span><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#6F42C1;--shiki-dark:#B392F0">Query</span><span style="color:#24292E;--shiki-dark:#E1E4E8">>()(sub_env, </span><span style="color:#D73A49;--shiki-dark:#F97583">static_cast&#x3C;</span><span style="color:#24292E;--shiki-dark:#E1E4E8">Args </span><span style="color:#D73A49;--shiki-dark:#F97583">&#x26;&#x26;></span><span style="color:#24292E;--shiki-dark:#E1E4E8">(args)...);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  }</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">};</span></span></code></pre></div>
-<p>C++ overload resolution automatically picks the matching <code>query()</code>. If a <code>prop</code> is like a single label on a package, <code>env</code> is the label booklet with all the labels stapled together.</p>
-<h3 id="important-rule-query-keys-must-be-unique">Important Rule: Query Keys Must Be Unique</h3>
-<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Compile error! Two props both claim to answer get_scheduler</span></span>
-<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> bad </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> stdexec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::env{</span></span>
+<p>The <code>__get_1st_env</code> helper (concept-based linear search) iterates through the sub-environments at compile time and returns a reference to the first one that satisfies <code>__queryable_with&#x3C;Env, Query, Args...></code>:</p>
+<pre class="mermaid">flowchart LR
+    subgraph E["env{prop{get_scheduler, A}, prop{get_stop_token, B}, prop{get_domain, C}}"]
+        P1["prop{get_scheduler, A}"]
+        P2["prop{get_stop_token, B}"]
+        P3["prop{get_domain, C}"]
+    end
+
+    Q1["get_scheduler(env)"] --> P1
+    Q2["get_stop_token(env)"] --> P2
+    Q3["get_domain(env)"] --> P3
+
+    style P1 fill:#4a9,stroke:#333
+    style P2 fill:#4a9,stroke:#333
+    style P3 fill:#4a9,stroke:#333
+    style Q1 fill:#69c,stroke:#333
+    style Q2 fill:#69c,stroke:#333
+    style Q3 fill:#69c,stroke:#333</pre>
+<p>This design avoids diamond-inheritance issues and allows mixing <code>prop</code> types with other queryable objects (like <code>__sched_attrs</code> or <code>non_dependent_attrs</code>) in the same <code>env</code>.</p>
+<h3 id="important-duplicate-keys-resolve-by-position">Important: Duplicate Keys Resolve by Position</h3>
+<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> e </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> stdexec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::env{</span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">  stdexec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::prop{get_scheduler, sched_a},</span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">  stdexec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::prop{get_scheduler, sched_b}</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">};</span></span>
-<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// get_scheduler(bad) → ambiguous → compile failure</span></span></code></pre></div>
-<p>Duplicate keys are forbidden by design. If an environment has two contradictory answers, something is wrong — the compiler rejects it immediately, which is far better than a runtime bug.</p>
+<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">get_scheduler</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(e);</span><span style="color:#6A737D;--shiki-dark:#6A737D">  // → sched_a — the FIRST match wins</span></span></code></pre></div>
+<p>Unlike the multiple-inheritance approach (which would produce an ambiguity error), the tuple-based linear search silently picks the first sub-environment that answers the query. This is intentional: it gives <code>JOIN-ENV</code>-style composition predictable priority semantics and avoids spurious compilation failures when unrelated sub-environments happen to support overlapping queries.</p>
 <hr>
 <h2 id="bidirectional-dispatch-two-equivalent-calls">Bidirectional Dispatch: Two Equivalent Calls</h2>
 <p>The query system supports two invocation styles, which are completely equivalent:</p>
@@ -130,26 +209,108 @@ Packaging (allocator): std::allocator</p>
 <span class="line"></span>
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Style 2: queryable responds to the query object</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> sched </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> env.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">query</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(get_scheduler);</span></span></code></pre></div>
-<p>stdexec internally prefers the <code>.query()</code> member function path (more efficient), falling back to ADL-based <code>tag_invoke</code> if no member exists. The full dispatch chain:</p>
-<pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="plaintext"><code><span class="line"><span>get_scheduler(env)</span></span>
-<span class="line"><span>  → Does env have a query(get_scheduler) member?</span></span>
-<span class="line"><span>    → Yes: call env.query(get_scheduler), return result</span></span>
-<span class="line"><span>    → No: try tag_invoke(get_scheduler, env) via ADL</span></span>
-<span class="line"><span>      → Found: call the custom tag_invoke overload</span></span>
-<span class="line"><span>      → Not found: compile error</span></span></code></pre>
+<p>stdexec internally prefers the <code>.query()</code> member function path, with a deprecated <code>tag_invoke</code> fallback:</p>
+<pre class="mermaid">flowchart TD
+    START["get_scheduler(env)"]
+    DECIDE{"env has&#x3C;br/>query(get_scheduler) member?"}
+    YES["call env.query(get_scheduler)"]
+    NO{"tag_invoke(get_scheduler, env)&#x3C;br/>well-formed?&#x3C;br/>(deprecated)"}
+    FOUND["call custom tag_invoke overload"]
+    NOT_FOUND["compile error"]
+    RESULT["return scheduler"]
+
+    START --> DECIDE
+    DECIDE -->|Yes| YES
+    DECIDE -->|No| NO
+    NO -->|Yes| FOUND
+    NO -->|No| NOT_FOUND
+    YES --> RESULT
+    FOUND --> RESULT</pre>
+<blockquote>
+<p><strong>Note</strong>: The <code>tag_invoke</code> path for queries is <code>[[deprecated]]</code> as of P2300R10. New code should only implement <code>query(MyQuery, args...)</code> as a member function of the environment, not as a free <code>tag_invoke</code> overload.</p>
+</blockquote>
 <hr>
 <h2 id="forwarding_query--which-queries-penetrate-wrappers"><code>forwarding_query</code> — Which Queries Penetrate Wrappers?</h2>
 <p>This is a more subtle concept. Let’s use a scenario to understand why it exists:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// write_env overrides get_scheduler downstream</span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">write_env</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(sndr, prop{get_scheduler, new_sched})</span></span>
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Question: can get_stop_token still pass through to downstream?</span></span></code></pre></div>
-<p><code>write_env</code> overrides one property, but it shouldn’t block all others. So the standard introduces <code>forwarding_query</code> — a marker for which queries can “penetrate” environment wrappers:</p>
-<pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="plaintext"><code><span class="line"><span>forwarding_query(get_scheduler)     // true — can penetrate</span></span>
-<span class="line"><span>forwarding_query(get_stop_token)    // true — can penetrate</span></span>
-<span class="line"><span>forwarding_query(get_allocator)     // true — can penetrate</span></span>
-<span class="line"><span>forwarding_query(get_domain)        // true — can penetrate</span></span>
-<span class="line"><span>// Custom queries default → false — blocked</span></span></code></pre>
-<p>Internally, stdexec’s <code>__hide_query</code> maintains a “blocklist” — queries on the list are intercepted (because an upper layer overrode them), everything else passes through. This way <code>write_env</code> only replaces what it said it would replace, and other properties flow through unaffected.</p>
+<p><code>write_env</code> overrides one property, but it shouldn’t block all others. So the standard introduces <code>forwarding_query</code> — a marker for which queries can “penetrate” environment wrappers.</p>
+<p>The dispatch for determining forwarding status:</p>
+<ol>
+<li>If <code>q.query(forwarding_query_t)</code> is well-formed, use its result (a <code>bool</code> constant expression);</li>
+<li>Otherwise, <code>true</code> if <code>q</code> derives from <code>forwarding_query_t</code>;</li>
+<li>Otherwise, <code>false</code>.</li>
+</ol>
+<p>This means a custom query can <strong>opt in</strong> to forwarding simply by inheriting from <code>forwarding_query_t</code>:</p>
+<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">struct</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> my_forwarding_query_t</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  : </span><span style="color:#6F42C1;--shiki-dark:#B392F0">stdexec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">__query</span><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#005CC5;--shiki-dark:#79B8FF">my_forwarding_query_t</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  , </span><span style="color:#6F42C1;--shiki-dark:#B392F0">stdexec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#005CC5;--shiki-dark:#79B8FF">forwarding_query_t</span><span style="color:#6A737D;--shiki-dark:#6A737D">        // ← opt in</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">{</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  using</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> stdexec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">__query</span><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#005CC5;--shiki-dark:#79B8FF">my_forwarding_query_t</span><span style="color:#24292E;--shiki-dark:#E1E4E8">>::operator();</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">};</span></span></code></pre></div>
+<h3 id="which-queries-forward">Which Queries Forward?</h3>
+<div class="table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Query</th><th>Forwards?</th><th>Mechanism</th></tr></thead><tbody><tr><td><code>get_scheduler</code></td><td>Yes</td><td>Explicit <code>query(forwarding_query_t) -> true</code></td></tr><tr><td><code>get_stop_token</code></td><td>Yes</td><td>Inherits default + <code>forwarding_query_t</code> tag</td></tr><tr><td><code>get_allocator</code></td><td>Yes</td><td>Explicit <code>query(forwarding_query_t) -> true</code></td></tr><tr><td><code>get_domain</code></td><td>Yes</td><td>Explicit <code>query(forwarding_query_t) -> true</code></td></tr><tr><td><code>get_delegation_scheduler</code></td><td>Yes</td><td>Explicit <code>query(forwarding_query_t) -> true</code></td></tr><tr><td><code>get_completion_scheduler&#x3C;Tag></code></td><td>Yes</td><td>Explicit <code>query(forwarding_query_t) -> true</code></td></tr><tr><td><code>get_forward_progress_guarantee</code></td><td>No</td><td>No override, no derivation</td></tr><tr><td><code>__execute_may_block_caller</code></td><td>No</td><td>No override, no derivation</td></tr></tbody></table></div>
+<p>The rule: <strong>runtime-context queries</strong> (scheduler, stop token, allocator) forward; <strong>static-property queries</strong> (forward progress, may-block-caller) do not. <code>get_completion_scheduler</code> is an exception — though it feels like a static property, it forwards because the completion scheduler may depend on outer environment context.</p>
+<p>Internally, <code>__fwd</code> (FWD-ENV) wraps an environment and constrains its <code>query()</code> template with <code>__forwarding_query</code>:</p>
+<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">template</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> &#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">__forwarding_query</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> _Query</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#24292E;--shiki-dark:#E1E4E8">... </span><span style="color:#6F42C1;--shiki-dark:#B392F0">_Args</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  requires</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> __queryable_with</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;</span><span style="color:#24292E;--shiki-dark:#E1E4E8">_Env, _Query, _Args...</span><span style="color:#D73A49;--shiki-dark:#F97583">></span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">constexpr</span><span style="color:#D73A49;--shiki-dark:#F97583"> auto</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> query</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">_Query</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#6F42C1;--shiki-dark:#B392F0">_Args</span><span style="color:#D73A49;--shiki-dark:#F97583"> &#x26;&#x26;</span><span style="color:#24292E;--shiki-dark:#E1E4E8">...</span><span style="color:#E36209;--shiki-dark:#FFAB70">__args</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) </span><span style="color:#D73A49;--shiki-dark:#F97583">const</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  -> </span><span style="color:#005CC5;--shiki-dark:#79B8FF">__query_result_t</span><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#6F42C1;--shiki-dark:#B392F0">_Env</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#6F42C1;--shiki-dark:#B392F0">_Query</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, _Args...></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">{</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  return</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> __query</span><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#6F42C1;--shiki-dark:#B392F0">_Query</span><span style="color:#24292E;--shiki-dark:#E1E4E8">>()(__env_, </span><span style="color:#D73A49;--shiki-dark:#F97583">static_cast&#x3C;</span><span style="color:#24292E;--shiki-dark:#E1E4E8">_Args </span><span style="color:#D73A49;--shiki-dark:#F97583">&#x26;&#x26;></span><span style="color:#24292E;--shiki-dark:#E1E4E8">(__args)...);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span></code></pre></div>
+<p>Only queries that satisfy <code>__forwarding_query</code> can pass through <code>FWD-ENV</code>. Non-forwarding queries are blocked at compile time.</p>
 <hr>
 <h2 id="try-query--do-you-have-this-info"><code>TRY-QUERY</code> — “Do You Have This Info?”</h2>
 <p>Not every query is required. Some are “nice to have.” For example, the <code>let_value</code> algorithm, before starting a child sender, asks the receiver’s environment: “Which scheduler are you bound to?” If there is one, it switches there; if not, it stays put. This “ask and see” pattern is called <code>TRY-QUERY</code>:</p>
@@ -163,12 +324,99 @@ Packaging (allocator): std::allocator</p>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span></code></pre></div>
 <p>Above, <code>if constexpr</code> checks at compile time whether the receiver’s environment provides <code>get_scheduler</code>. This pattern is used heavily in scheduler affinity internals — sender algorithms “ask” the receiver for its scheduler preference, respect it if present, and fall back if not.</p>
 <hr>
-<h2 id="limitations">Limitations</h2>
+<h2 id="deeper-dive-query-implementation-mechanics">Deeper Dive: Query Implementation Mechanics</h2>
+<h3 id="the-__query-crtp-base-defaults-and-transforms">The <code>__query</code> CRTP Base: Defaults and Transforms</h3>
+<p>Under the hood, every query CPO inherits from <code>STDEXEC::__query&#x3C;Query, Default, Transform></code>:</p>
+<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">template</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> &#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> _Query</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> _Default</span><span style="color:#D73A49;--shiki-dark:#F97583"> =</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> __no_default, </span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> _Transform</span><span style="color:#D73A49;--shiki-dark:#F97583"> =</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> __q1&#x3C;</span><span style="color:#6F42C1;--shiki-dark:#B392F0">__midentity</span><span style="color:#24292E;--shiki-dark:#E1E4E8">>></span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">struct</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> __query</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> : __query&#x3C;</span><span style="color:#6F42C1;--shiki-dark:#B392F0">_Query</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#6F42C1;--shiki-dark:#B392F0">__no_default</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#6F42C1;--shiki-dark:#B392F0">_Transform</span><span style="color:#24292E;--shiki-dark:#E1E4E8">> {</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">  // Calls _Default when no environment answers</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  constexpr</span><span style="color:#D73A49;--shiki-dark:#F97583"> auto</span><span style="color:#D73A49;--shiki-dark:#F97583"> operator</span><span style="color:#6F42C1;--shiki-dark:#B392F0">()</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">__ignore</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#6F42C1;--shiki-dark:#B392F0">_Args</span><span style="color:#D73A49;--shiki-dark:#F97583"> &#x26;&#x26;</span><span style="color:#24292E;--shiki-dark:#E1E4E8">...) </span><span style="color:#D73A49;--shiki-dark:#F97583">const</span><span style="color:#D73A49;--shiki-dark:#F97583"> noexcept</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    -></span><span style="color:#24292E;--shiki-dark:#E1E4E8"> __mcall1&#x3C;</span><span style="color:#6F42C1;--shiki-dark:#B392F0">_Transform</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#6F42C1;--shiki-dark:#B392F0">__mtypeof</span><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#6F42C1;--shiki-dark:#B392F0">_Default</span><span style="color:#24292E;--shiki-dark:#E1E4E8">>> {</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    return</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> _Default;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  }</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">};</span></span></code></pre></div>
+<p>The three template parameters are:</p>
+<div class="table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Parameter</th><th>Meaning</th><th>Example</th></tr></thead><tbody><tr><td><code>_Query</code></td><td>The CPO type itself</td><td><code>get_allocator_t</code></td></tr><tr><td><code>_Default</code></td><td>Fallback value when no environment answers</td><td><code>forward_progress_guarantee::weakly_parallel</code> for <code>get_forward_progress_guarantee</code>, <code>true</code> for <code>__execute_may_block_caller</code></td></tr><tr><td><code>_Transform</code></td><td>Type transformation applied to the result</td><td><code>__q1&#x3C;__decay_t></code> for <code>get_forward_progress_guarantee</code> (decays return type)</td></tr></tbody></table></div>
+<p>For queries with the default (the primary template), the <code>operator()(__ignore, ...)</code> overload fires when the environment does not have the query — it silently returns <code>_Default</code> instead of producing a compile error. <code>get_forward_progress_guarantee_t</code> uses this to default to <code>weakly_parallel</code>:</p>
+<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">struct</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> get_forward_progress_guarantee_t</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  : __query&#x3C;</span><span style="color:#005CC5;--shiki-dark:#79B8FF">get_forward_progress_guarantee_t</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">            forward_progress_guarantee</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">weakly_parallel</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">            __q1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#005CC5;--shiki-dark:#79B8FF">__decay_t</span><span style="color:#24292E;--shiki-dark:#E1E4E8">>></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">{ ... };</span></span></code></pre></div>
+<h3 id="cprop--compile-time-constant-queries"><code>cprop</code> — Compile-Time Constant Queries</h3>
+<p>For queries whose answer is known at compile time, use <code>cprop&#x3C;Query, Value></code>:</p>
+<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> env </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> stdexec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::env{</span></span>
+<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">  stdexec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::cprop</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;</span><span style="color:#005CC5;--shiki-dark:#79B8FF">get_domain_t</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, my_domain</span><span style="color:#D73A49;--shiki-dark:#F97583">></span><span style="color:#24292E;--shiki-dark:#E1E4E8">{}</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">};</span></span></code></pre></div>
+<p><code>cprop</code> provides a <code>static constexpr query()</code> with no data members — zero overhead for compile-time known values. It’s used internally by <code>__mk_secondary_env</code> to inject domain information without runtime storage.</p>
+<h3 id="__root_env--the-bottom-of-the-stack"><code>__root_env</code> — The Bottom of the Stack</h3>
+<p>Every environment chain eventually bottoms out at <code>__root_env</code>, which answers exactly one query:</p>
+<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">struct</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> __root_env</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  static</span><span style="color:#D73A49;--shiki-dark:#F97583"> constexpr</span><span style="color:#D73A49;--shiki-dark:#F97583"> auto</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> query</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">__root_t</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) </span><span style="color:#D73A49;--shiki-dark:#F97583">noexcept</span><span style="color:#D73A49;--shiki-dark:#F97583"> -></span><span style="color:#D73A49;--shiki-dark:#F97583"> bool</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> { </span><span style="color:#D73A49;--shiki-dark:#F97583">return</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> true</span><span style="color:#24292E;--shiki-dark:#E1E4E8">; }</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">};</span></span></code></pre></div>
+<p>The <code>__as_root_env</code> wrapper joins an environment with <code>__root_env</code>, guaranteeing there is always a base that can answer <code>__root_t</code>. This is used by <code>let_value</code>/<code>finally</code> to anchor the secondary environment chain.</p>
+<h3 id="get_domain--three-tier-dispatch"><code>get_domain</code> — Three-Tier Dispatch</h3>
+<p><code>get_domain</code> has a richer resolution order than a simple query:</p>
 <ol>
-<li><strong>prop’s exact-match semantics mean no flexibility</strong> — you can’t define one <code>prop</code> that answers a family of related queries with the same default. Each query key needs its own <code>prop</code>.</li>
-<li><strong>forwarding_query defaults to false for custom queries</strong> — a custom query won’t automatically penetrate <code>write_env</code> wrappers unless you explicitly specialize <code>forwarding_query</code>.</li>
-<li><strong>The query system is read-only</strong> — it only provides the ability to read environment information. To modify values in the environment, use <code>write_env</code> (Chapter 24).</li>
-<li><strong>Compile-time exact matching means a wrong query key produces a compiler error, not a silent fallback</strong> — this is usually a good thing, but in generic code where you want “return if available, ignore if not” semantics, you need <code>if constexpr</code> + <code>TRY-QUERY</code>.</li>
+<li><strong>Member function</strong>: If the environment has a <code>query(get_domain_t)</code> member, use it.</li>
+<li><strong>Start scheduler derivation</strong>: Otherwise, if the environment provides <code>get_start_scheduler</code>, derive the domain from the <strong>completion scheduler</strong> of that scheduler’s <code>set_value_t</code> completion.</li>
+<li><strong>Default</strong>: Otherwise, return <code>default_domain</code> (the no-op domain).</li>
+</ol>
+<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Simplified logic</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#D73A49;--shiki-dark:#F97583"> operator</span><span style="color:#6F42C1;--shiki-dark:#B392F0">()</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">_Env</span><span style="color:#D73A49;--shiki-dark:#F97583"> const</span><span style="color:#D73A49;--shiki-dark:#F97583"> &#x26;</span><span style="color:#E36209;--shiki-dark:#FFAB70">env</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) </span><span style="color:#D73A49;--shiki-dark:#F97583">const</span><span style="color:#D73A49;--shiki-dark:#F97583"> noexcept</span><span style="color:#D73A49;--shiki-dark:#F97583"> -></span><span style="color:#D73A49;--shiki-dark:#F97583"> auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  if</span><span style="color:#D73A49;--shiki-dark:#F97583"> constexpr</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (has_query_member</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;</span><span style="color:#005CC5;--shiki-dark:#79B8FF">get_domain_t</span><span style="color:#D73A49;--shiki-dark:#F97583">></span><span style="color:#24292E;--shiki-dark:#E1E4E8">) {</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    return</span><span style="color:#6A737D;--shiki-dark:#6A737D"> /* env's explicit domain */</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  } </span><span style="color:#D73A49;--shiki-dark:#F97583">else</span><span style="color:#D73A49;--shiki-dark:#F97583"> if</span><span style="color:#D73A49;--shiki-dark:#F97583"> constexpr</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (has_start_scheduler) {</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> sched </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> get_start_scheduler</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(env);</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> cmpl_sched </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> get_completion_scheduler</span><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#005CC5;--shiki-dark:#79B8FF">set_value_t</span><span style="color:#24292E;--shiki-dark:#E1E4E8">>(sched, hide_scheduler{env});</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    return</span><span style="color:#6A737D;--shiki-dark:#6A737D"> /* domain of cmpl_sched */</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  } </span><span style="color:#D73A49;--shiki-dark:#F97583">else</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    return</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> default_domain{};</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  }</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span></code></pre></div>
+<p>This means that even without an explicit <code>get_domain</code> in the environment, the domain is automatically derived from whichever scheduler is running the pipeline — the scheduler’s own <code>get_domain</code> query flows up through the completion scheduler chain.</p>
+<h3 id="extension-get_scheduler-falls-back-to-get_start_scheduler">Extension: <code>get_scheduler</code> Falls Back to <code>get_start_scheduler</code></h3>
+<p>stdexec includes a NOT-TO-SPEC extension: if the environment does not have <code>get_scheduler</code> but does have <code>get_start_scheduler</code>, then <code>get_scheduler</code> returns the start scheduler:</p>
+<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">template</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> &#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> _Env</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  requires</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#D73A49;--shiki-dark:#F97583">!</span><span style="color:#24292E;--shiki-dark:#E1E4E8">__callable</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;</span><span style="color:#24292E;--shiki-dark:#E1E4E8">__query</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;</span><span style="color:#005CC5;--shiki-dark:#79B8FF">get_scheduler_t</span><span style="color:#D73A49;--shiki-dark:#F97583">></span><span style="color:#24292E;--shiki-dark:#E1E4E8">, _Env </span><span style="color:#D73A49;--shiki-dark:#F97583">const</span><span style="color:#D73A49;--shiki-dark:#F97583"> &#x26;></span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">       &#x26;&#x26;</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> __callable</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;</span><span style="color:#005CC5;--shiki-dark:#79B8FF">get_start_scheduler_t</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, _Env </span><span style="color:#D73A49;--shiki-dark:#F97583">const</span><span style="color:#D73A49;--shiki-dark:#F97583"> &#x26;></span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">constexpr</span><span style="color:#D73A49;--shiki-dark:#F97583"> auto</span><span style="color:#D73A49;--shiki-dark:#F97583"> operator</span><span style="color:#6F42C1;--shiki-dark:#B392F0">()</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">_Env</span><span style="color:#D73A49;--shiki-dark:#F97583"> const</span><span style="color:#D73A49;--shiki-dark:#F97583"> &#x26;</span><span style="color:#E36209;--shiki-dark:#FFAB70">__env</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) </span><span style="color:#D73A49;--shiki-dark:#F97583">const</span><span style="color:#D73A49;--shiki-dark:#F97583"> noexcept</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  return</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> get_start_scheduler</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(__env);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span></code></pre></div>
+<p>This is a quality-of-life extension — it means you can always call <code>get_scheduler(env)</code> in generic code and get a reasonable answer as long as a start scheduler is present.</p>
+<h3 id="__hide_scheduler--preventing-recursive-queries"><code>__hide_scheduler</code> — Preventing Recursive Queries</h3>
+<p>When one query internally needs to call another query on the same environment (e.g., <code>get_domain</code> calling <code>get_start_scheduler</code> and then <code>get_completion_scheduler</code> on the result), the system uses <code>__hide_scheduler</code> to avoid infinite recursion. It wraps the scheduler and blocks <code>get_scheduler</code> / <code>get_start_scheduler</code> queries on the wrapped type, ensuring the domain derivation logic terminates.</p>
+<h2 id="notes">Notes</h2>
+<ol>
+<li>prop’s exact-match semantics mean no flexibility — you can’t define one <code>prop</code> that answers a family of related queries with the same default. Each query key needs its own <code>prop</code>.</li>
+<li>forwarding_query defaults to false for custom queries unless they derive from forwarding_query_t — a custom query won’t automatically penetrate <code>write_env</code> wrappers unless you either override <code>query(forwarding_query_t)</code> or inherit from <code>forwarding_query_t</code>.</li>
+<li>The query system is read-only — it only provides the ability to read environment information. To modify values in the environment, use <code>write_env</code> (Chapter 24).</li>
+<li>Compile-time exact matching means a wrong query key produces a compiler error, not a silent fallback — this is usually a good thing, but in generic code where you want “return if available, ignore if not” semantics, you need <code>if constexpr</code> + <code>TRY-QUERY</code>. (Queries with a <code>_Default</code> parameter in <code>__query</code> are the exception — they silently return the default.)</li>
 </ol></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/24-write-env-unstoppable/" data-astro-cid-ykvenys5>← 24 · write_env / unstoppable —— Modifying Environment Properties</a><a href="/exec/tutorials/25b-env-composition/" data-astro-cid-ykvenys5>25b · Environment Composition and Query Forwarding →</a></nav></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
       (function() {
         const STORAGE_KEY = "exectutorial-theme";

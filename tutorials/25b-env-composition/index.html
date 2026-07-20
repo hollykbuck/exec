@@ -69,8 +69,8 @@
 
 
 
-<table><thead><tr><th>Query</th><th>Forwards?</th><th>Reason</th></tr></thead><tbody><tr><td><code>get_scheduler</code></td><td>Yes</td><td><code>forwarding_query(get_scheduler)</code> is <code>true</code></td></tr><tr><td><code>get_stop_token</code></td><td>Yes</td><td>Stop token must propagate through wrappers</td></tr><tr><td><code>get_allocator</code></td><td>Yes</td><td>Allocator must propagate for consistent allocation</td></tr><tr><td><code>get_delegation_scheduler</code></td><td>Yes</td><td>Explicitly specified as forwarding</td></tr><tr><td><code>get_domain</code></td><td>Yes</td><td>Domain must propagate for algorithm customization</td></tr><tr><td><code>get_completion_scheduler&#x3C;Tag></code></td><td>No</td><td>Completion scheduler is specific to a sender layer</td></tr><tr><td><code>get_forward_progress_guarantee</code></td><td>No</td><td>Each scheduler provides its own guarantee</td></tr></tbody></table></div>
-<p>The rule: <strong>runtime-context queries</strong> (scheduler, stop token, allocator) forward; <strong>static-property queries</strong> (completion scheduler, forward progress) do not.</p>
+<table><thead><tr><th>Query</th><th>Forwards?</th><th>Reason</th></tr></thead><tbody><tr><td><code>get_scheduler</code></td><td>Yes</td><td><code>forwarding_query(get_scheduler)</code> is <code>true</code></td></tr><tr><td><code>get_stop_token</code></td><td>Yes</td><td>Stop token must propagate through wrappers</td></tr><tr><td><code>get_allocator</code></td><td>Yes</td><td>Allocator must propagate for consistent allocation</td></tr><tr><td><code>get_delegation_scheduler</code></td><td>Yes</td><td>Explicitly specified as forwarding</td></tr><tr><td><code>get_domain</code></td><td>Yes</td><td>Domain must propagate for algorithm customization</td></tr><tr><td><code>get_completion_scheduler&#x3C;Tag></code></td><td>Yes</td><td>Completion scheduler depends on outer env context</td></tr><tr><td><code>get_forward_progress_guarantee</code></td><td>No</td><td>Each scheduler provides its own guarantee</td></tr></tbody></table></div>
+<p>The rule: <strong>runtime-context queries</strong> (scheduler, stop token, allocator) forward; <strong>static-property queries</strong> (forward progress, may-block-caller) generally do not. <code>get_completion_scheduler</code> is a notable exception — though it feels like a static property, it forwards because the completion scheduler can depend on outer environment context, and the recursive scheduler-chain walk in the implementation needs to see through environment layers.</p>
 <h2 id="fwd-env--the-forwarding-filter">FWD-ENV — The Forwarding Filter</h2>
 <p><code>FWD-ENV(env)</code> wraps a queryable object and blocks non-forwarding queries:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Given a receiver's environment:</span></span>
@@ -81,8 +81,34 @@
 <span class="line"></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">get_scheduler</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(fwd);</span><span style="color:#6A737D;--shiki-dark:#6A737D">     // OK — forwards</span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">get_stop_token</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(fwd);</span><span style="color:#6A737D;--shiki-dark:#6A737D">    // OK — forwards</span></span>
-<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">get_completion_scheduler</span><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#005CC5;--shiki-dark:#79B8FF">set_value_t</span><span style="color:#24292E;--shiki-dark:#E1E4E8">>(fwd);</span><span style="color:#6A737D;--shiki-dark:#6A737D">  // Ill-formed — blocked!</span></span></code></pre></div>
-<p>Internally, every adaptor’s <code>basic-receiver</code> calls <code>FWD-ENV(get_env(rcvr))</code> when the child sender queries the environment. This prevents child senders from seeing completion-scheduler metadata that belongs to the outer pipeline layer.</p>
+<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">get_completion_scheduler</span><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#005CC5;--shiki-dark:#79B8FF">set_value_t</span><span style="color:#24292E;--shiki-dark:#E1E4E8">>(fwd);</span><span style="color:#6A737D;--shiki-dark:#6A737D">  // OK — forwards!</span></span>
+<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">get_forward_progress_guarantee</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(fwd);</span><span style="color:#6A737D;--shiki-dark:#6A737D">         // Ill-formed — blocked!</span></span></code></pre></div>
+<p>Internally, every adaptor’s <code>basic-receiver</code> calls <code>FWD-ENV(get_env(rcvr))</code> when the child sender queries the environment. This blocks non-forwarding queries (like <code>get_forward_progress_guarantee</code>) from propagating beyond their owning layer, while letting runtime-context queries (scheduler, stop token, allocator) pass through.</p>
+<pre class="mermaid">flowchart LR
+    subgraph Outer["Outer Receiver Environment"]
+        S1["get_scheduler → io_pool"]
+        S2["get_stop_token → inplace_stop_token"]
+        S3["get_forward_progress_guarantee → weakly_parallel"]
+        S4["get_completion_scheduler&#x26;lt;set_value_t&#x26;gt; → cpu_pool"]
+    end
+
+    subgraph FWD["FWD-ENV Gate"]
+        G1["✅ get_scheduler passes"]
+        G2["✅ get_stop_token passes"]
+        G3["❌ get_forward_progress_guarantee blocked"]
+        G4["✅ get_completion_scheduler passes"]
+    end
+
+    subgraph Child["Child Sender's View"]
+        C1["sees: get_scheduler"]
+        C2["sees: get_stop_token"]
+        C3["sees: get_completion_scheduler"]
+    end
+
+    S1 --> G1 --> C1
+    S2 --> G2 --> C2
+    S3 --> G3
+    S4 --> G4 --> C3</pre>
 <h2 id="make-env--single-key-environment-factory">MAKE-ENV — Single-Key Environment Factory</h2>
 <p><code>MAKE-ENV(q, v)</code> creates a queryable object that answers exactly one query:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Create an environment that answers get_scheduler with my_sched</span></span>
@@ -114,11 +140,105 @@
 <p><strong><code>starts_on</code></strong> uses <code>JOIN-ENV</code> to inject the target scheduler:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// starts_on(sch, sndr) ensures the child sees sch as its scheduler</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">JOIN</span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#6F42C1;--shiki-dark:#B392F0">ENV</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(MAKE</span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#6F42C1;--shiki-dark:#B392F0">ENV</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(get_scheduler, sch), FWD</span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#6F42C1;--shiki-dark:#B392F0">ENV</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">get_env</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(rcvr)))</span></span></code></pre></div>
+<h2 id="secondary-environments--let_value-finally-sequence">Secondary Environments — let_value, finally, sequence</h2>
+<p>When one sender’s <strong>completion</strong> triggers the start of another sender (e.g., <code>let_value</code> runs a child sender when <code>set_value</code> arrives), the child needs an environment that reflects the <strong>completing</strong> sender’s properties, not the outer receiver’s. This is called a <strong>secondary environment</strong> (<code>__mk_secondary_env</code>).</p>
+<p><code>__mk_secondary_env&#x3C;SetTags...></code> builds the child’s environment from:</p>
+<ol>
+<li><strong>Completion scheduler</strong>: If the completing sender has a completion scheduler for the triggering tag, that scheduler becomes the child’s <strong>start scheduler</strong> (wrapped in <code>__sched_env</code> which provides <code>get_start_scheduler</code> and optionally <code>get_domain</code>).</li>
+<li><strong>Completion domain</strong>: If no single completion scheduler can be determined but a completion domain is available, it injects the domain as a <code>cprop</code>.</li>
+<li><strong>Empty fallback</strong>: If neither is available, the child gets an empty <code>env&#x3C;></code>.</li>
+</ol>
+<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Simplified: let_value(set_value_t) builds:</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> child_env </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> __mk_secondary_env</span><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#005CC5;--shiki-dark:#79B8FF">set_value_t</span><span style="color:#24292E;--shiki-dark:#E1E4E8">>(</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  __cv{},</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  parent_sender,</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  FWD</span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#6F42C1;--shiki-dark:#B392F0">ENV</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">get_env</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(outer_receiver))</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// If parent_sender completes on a thread_pool scheduler:</span></span>
+<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">get_start_scheduler</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(child_env)</span><span style="color:#6A737D;--shiki-dark:#6A737D">  // → the thread_pool</span></span></code></pre></div>
+<p>This is what makes <code>let_value</code> and <code>finally</code> “stay” on the completing scheduler — the child sender automatically inherits the completion environment of its parent.</p>
+<h3 id="__sched_env--scheduler-backed-environment">__sched_env — Scheduler-Backed Environment</h3>
+<p><code>__sched_env&#x3C;Scheduler></code> wraps a scheduler into an environment that answers:</p>
+<ul>
+<li><code>get_start_scheduler</code> → the scheduler itself</li>
+<li><code>get_domain</code> → the scheduler’s domain (derived via <code>__scheduler_domain_t</code>)</li>
+</ul>
+<p>This is used not only by <code>__mk_secondary_env</code> but also by the <code>starts_on</code> adaptor to inject the target scheduler into the child’s environment.</p>
+<h2 id="sender-adaptor-environment-chain">Sender Adaptor Environment Chain</h2>
+<p>Every sender adaptor follows the same pattern when constructing the child sender’s environment:</p>
+<ol>
+<li><strong>Extract</strong> the outer receiver’s environment via <code>get_env(rcvr)</code></li>
+<li><strong>Filter</strong> through <code>FWD-ENV</code> to block non-forwarding queries</li>
+<li><strong>Merge</strong> with algorithm-specific state via <code>JOIN-ENV</code> (if applicable)</li>
+</ol>
+<pre class="mermaid">flowchart TD
+    OR["Outer Receiver&#x3C;br/>get_env(rcvr)"]
+    FWD["FWD-ENV Filter&#x3C;br/>✅ forwarding queries pass&#x3C;br/>❌ non-forwarding blocked"]
+    WRITE["write_env State&#x3C;br/>prop{get_scheduler, new_sched}"]
+    STARTS["starts_on State&#x3C;br/>prop{get_scheduler, target_sched}"]
+    SECONDARY["__mk_secondary_env&#x3C;br/>completion scheduler → start_scheduler&#x3C;br/>completion domain → domain"]
+    JOIN1["JOIN-ENV&#x3C;br/>(write_env state wins)"]
+    JOIN2["JOIN-ENV&#x3C;br/>(target scheduler wins)"]
+    JOIN3["JOIN-ENV&#x3C;br/>(secondary env wraps)"]
+    CHILD1["Child Sender Env&#x3C;br/>adapted scheduler + forwarded props"]
+    CHILD2["Child Sender Env&#x3C;br/>target scheduler + forwarded props"]
+    CHILD3["Child Sender Env&#x3C;br/>completing scheduler + domain"]
+
+    OR --> FWD
+    FWD --> JOIN1
+    WRITE --> JOIN1
+    JOIN1 --> CHILD1
+
+    FWD --> JOIN2
+    STARTS --> JOIN2
+    JOIN2 --> CHILD2
+
+    FWD --> JOIN3
+    SECONDARY --> JOIN3
+    JOIN3 --> CHILD3
+
+    style FWD fill:#f9a,stroke:#333
+    style JOIN1 fill:#9cf,stroke:#333
+    style JOIN2 fill:#9cf,stroke:#333
+    style JOIN3 fill:#9cf,stroke:#333</pre>
+<p>The three main scenarios:</p>
+<div class="table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Adaptor</th><th>State Injected</th><th>Mechanism</th></tr></thead><tbody><tr><td><code>then</code>, <code>upon_*</code>, <code>let_*</code></td><td>None (filter only)</td><td><code>FWD-ENV(env)</code> alone</td></tr><tr><td><code>write_env</code></td><td>Override props</td><td><code>JOIN-ENV(state, FWD-ENV(env))</code></td></tr><tr><td><code>starts_on</code>, <code>continues_on</code></td><td>Target scheduler</td><td><code>JOIN-ENV(MAKE-ENV(get_scheduler, sch), FWD-ENV(env))</code></td></tr><tr><td><code>let_value</code>, <code>finally</code></td><td>Completion env</td><td><code>__mk_secondary_env + JOIN-ENV(FWD-ENV(env))</code></td></tr></tbody></table></div>
 <h2 id="the-full-picture">The Full Picture</h2>
 <pre class="mermaid">flowchart TD
-    OR["Outer Receiver Environment&#x3C;br/>├─ get_scheduler → io_pool scheduler&#x3C;br/>├─ get_stop_token → inplace_stop_token&#x3C;br/>└─ get_completion_scheduler&#x26;lt;set_value_t&#x26;gt; → cpu_pool scheduler"]
+    OR["Outer Receiver Environment&#x3C;br/>├─ get_scheduler → io_pool scheduler&#x3C;br/>├─ get_stop_token → inplace_stop_token&#x3C;br/>├─ get_completion_scheduler&#x26;lt;set_value_t&#x26;gt; → cpu_pool scheduler&#x3C;br/>└─ get_forward_progress_guarantee → weakly_parallel"]
 
-    FWD["FWD-ENV(get_env(outer_rcvr))&#x3C;br/>├─ get_scheduler → io_pool scheduler (forwarded)&#x3C;br/>├─ get_stop_token → inplace_stop_token (forwarded)&#x3C;br/>└─ get_completion_scheduler&#x26;lt;set_value_t&#x26;gt; → (blocked!)"]
+    FWD["FWD-ENV(get_env(outer_rcvr))&#x3C;br/>├─ get_scheduler → io_pool scheduler (forwarded)&#x3C;br/>├─ get_stop_token → inplace_stop_token (forwarded)&#x3C;br/>├─ get_completion_scheduler&#x26;lt;set_value_t&#x26;gt; → cpu_pool scheduler (forwarded!)&#x3C;br/>└─ get_forward_progress_guarantee → (blocked!)"]
 
     JOIN["JOIN-ENV(write_env_state, FWD-ENV(get_env(outer_rcvr)))&#x3C;br/>├─ write_env's queries take priority&#x3C;br/>└─ remaining forwarding queries fall through to outer env"]
 
