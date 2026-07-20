@@ -7,9 +7,7 @@
       })();
     </script><link rel="stylesheet" href="/exec/_astro/01-why-stdexec.hXKgsPrw.css"></head><body data-astro-cid-ykvenys5><div class="container" data-astro-cid-ykvenys5><header data-astro-cid-ykvenys5><div class="title-area" data-astro-cid-ykvenys5><a href="/exec/tutorials/" style="color:var(--fg-muted);text-decoration:none;font-size:0.85rem;" data-astro-cid-ykvenys5>← Back to index</a><h1 data-astro-cid-ykvenys5>04 · Hello World Pipeline — schedule | then | sync_wait</h1></div><button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" data-astro-cid-ykvenys5>🌙</button></header><article class="article-content" data-astro-cid-ykvenys5>
 <blockquote>
-<p><strong>Standard Section</strong>: <code>[exec.sched]</code> <code>[exec.sync.wait]</code>
-<strong>stdexec Reference</strong>: <code>examples/hello_world.cpp</code>
-<strong>Related Tests</strong>: <code>tests/test_basics.cpp</code></p>
+<p><strong>Related Tests</strong>: <code>tests/test_basics.cpp</code></p>
 </blockquote>
 <p>The previous chapters covered concepts. Now let’s write our first real <code>std::execution</code> program.</p>
 <h2 id="your-first-stdexec-program">Your First stdexec Program</h2>
@@ -49,7 +47,7 @@
 <li>Calls <code>connect(sender, receiver)</code> to get an Operation State</li>
 <li>Calls <code>start()</code> to begin execution, then blocks until completion, and returns the result</li>
 </ol>
-<p>You might ask: how does <code>sync_wait</code> know which thread pool to use? Because the Scheduler was captured inside the Sender when <code>schedule(sch)</code> was called. It propagates through the pipeline, so when <code>sync_wait</code> kicks things off, the Sender knows exactly where to run.</p>
+<p>How does <code>sync_wait</code> know which thread pool to use? Because the Scheduler was captured inside the Sender when <code>schedule(sch)</code> was called. It propagates through the pipeline, so when <code>sync_wait</code> kicks things off, the Sender knows exactly where to run.</p>
 <h2 id="pipe-syntax">Pipe Syntax</h2>
 <p>The pipeline above is equivalent to nested function calls:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Nested function call (not recommended)</span></span>
@@ -107,7 +105,7 @@
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">  get_stop_token</span><span style="color:#24292E;--shiki-dark:#E1E4E8">()</span><span style="color:#6A737D;--shiki-dark:#6A737D">       // query the stop token</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">));</span></span></code></pre></div>
 <p>In the code above, <code>get_scheduler()</code> and <code>get_stop_token()</code> aren’t ordinary Sender Factories — they read information from the Receiver’s environment. This is especially useful when crossing execution contexts.</p>
-<h3 id="key-takeaways">Key Takeaways</h3>
+<h3 id="summary">Summary</h3>
 <ol>
 <li>Pipeline construction is an <strong>O(1) lazy operation</strong> that does no work</li>
 <li><code>sync_wait</code> is a <strong>synchronization boundary</strong> that pulls the async world back into the sync world</li>

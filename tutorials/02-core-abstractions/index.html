@@ -7,51 +7,24 @@
       })();
     </script><link rel="stylesheet" href="/exec/_astro/01-why-stdexec.hXKgsPrw.css"></head><body data-astro-cid-ykvenys5><div class="container" data-astro-cid-ykvenys5><header data-astro-cid-ykvenys5><div class="title-area" data-astro-cid-ykvenys5><a href="/exec/tutorials/" style="color:var(--fg-muted);text-decoration:none;font-size:0.85rem;" data-astro-cid-ykvenys5>← Back to index</a><h1 data-astro-cid-ykvenys5>02 · Three Core Abstractions — receiver, sender, scheduler, operation_state Overview</h1></div><button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" data-astro-cid-ykvenys5>🌙</button></header><article class="article-content" data-astro-cid-ykvenys5>
 <blockquote>
-<p><strong>Standard Section</strong>: <code>[exec.async.ops]</code> <br>
-<strong>stdexec Reference</strong>: <code>include/stdexec/execution.hpp</code>, <code>include/stdexec/concepts.hpp</code> <br>
-<strong>Related Tests</strong>: <code>tests/test_basics.cpp</code> · <code>tests/test_receiver.cpp</code></p>
+<p><strong>Related Tests</strong>: <code>tests/test_basics.cpp</code> · <code>tests/test_receiver.cpp</code></p>
 </blockquote>
 <p>In the previous chapter, we saw how <code>std::execution</code> solves the async problem at a high level. Now let’s break down its four core abstractions.</p>
-<p>You might ask: why four? Couldn’t we get by with fewer?</p>
+<p>Four abstractions might seem like a lot — couldn’t we simplify things? But each one actually addresses a distinct and essential question about an async operation:</p>
 <p>Each abstraction answers one fundamental question about an async operation:</p>
-<div class="table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch">
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<table><thead><tr><th>Abstraction</th><th>Question it answers</th><th>Analogy</th></tr></thead><tbody><tr><td>Scheduler</td><td><strong>Where</strong> does it run?</td><td>Kitchen</td></tr><tr><td>Sender</td><td><strong>What</strong> runs?</td><td>Recipe</td></tr><tr><td>Receiver</td><td><strong>How</strong> is the result handled?</td><td>Diner</td></tr><tr><td>Operation State</td><td>The thing actually <strong>in progress</strong></td><td>Pot on the stove</td></tr></tbody></table></div>
+<ul>
+<li>Where does the work actually run? That’s the job of the Scheduler. Think of it as the kitchen.</li>
+<li>What needs to be done? The Sender captures that. You can picture it as a recipe.</li>
+<li>How should the result be handled once it’s ready? The Receiver is responsible for that — the diner, in our analogy.</li>
+<li>And what about the work while it’s actually underway? That’s the Operation State, the pot simmering on the stove.</li>
+</ul>
 <p>Let’s go through them one by one.</p>
 <h2 id="1-scheduler--abstraction-of-execution-resources">1. Scheduler — Abstraction of Execution Resources</h2>
-<p>Standard definition (<code>exec.tex:310</code>):</p>
+<p>Standard definition :</p>
 <blockquote>
 <p>A <em>scheduler</em> is an abstraction of an execution resource with a uniform, generic interface for scheduling work onto that resource.</p>
 </blockquote>
-<p>In plain English: a Scheduler is a handle to an “execution resource” — a thread pool, a GPU, the current thread — with a standard way to put work on it.</p>
+<p>A Scheduler is a handle to an “execution resource” — a thread pool, a GPU, the current thread — with a standard way to put work on it.</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Simplified standard concept</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">template</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> &#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> S</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">concept</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> scheduler </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span></span>
@@ -72,7 +45,7 @@
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">exec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::inline_scheduler{}</span><span style="color:#6A737D;--shiki-dark:#6A737D">                      // executes immediately on the current thread</span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">nvexec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::stream_scheduler{}</span><span style="color:#6A737D;--shiki-dark:#6A737D">                    // GPU stream scheduler</span></span></code></pre></div>
 <h2 id="2-sender--the-recipe-for-async-work">2. Sender — The “Recipe” for Async Work</h2>
-<p>Standard definition (<code>exec.tex:290</code>):</p>
+<p>Standard definition :</p>
 <blockquote>
 <p>A <em>sender</em> is a factory for one or more asynchronous operations.</p>
 </blockquote>
@@ -112,13 +85,13 @@
 <table><thead><tr><th>Category</th><th>Description</th><th>Example</th></tr></thead><tbody><tr><td><strong>Sender Factory</strong></td><td>Creates a Sender from non-Sender input</td><td><code>schedule(sch)</code>, <code>just(42)</code>, <code>read_env</code></td></tr><tr><td><strong>Sender Adaptor</strong></td><td>Takes Sender(s) and returns a new Sender</td><td><code>then(sndr, f)</code>, <code>when_all(s1, s2)</code>, <code>let_value</code></td></tr><tr><td><strong>Sender Consumer</strong></td><td>Consumes a Sender, returns non-Sender</td><td><code>sync_wait(sndr)</code>, <code>spawn(sndr)</code></td></tr></tbody></table></div>
 <h3 id="key-characteristics">Key Characteristics</h3>
 <ul>
-<li><strong>Lazy</strong>: building a pipeline does no actual work</li>
-<li><strong>Pipeable</strong>: <code>sndr | then(f) | upon_error(h)</code></li>
-<li><strong>Completion Signatures</strong>: compile-time description of possible completion signal types</li>
-<li><strong>Each Sender has an environment</strong>: queryable via <code>get_env(sndr)</code></li>
+<li>Lazy: building a pipeline does no actual work</li>
+<li>Pipeable: <code>sndr | then(f) | upon_error(h)</code></li>
+<li>Completion Signatures: compile-time description of possible completion signal types</li>
 </ul>
+<!-- - Each Sender has an environment: queryable via `get_env(sndr)` -->
 <h2 id="3-receiver--handler-of-completion-signals">3. Receiver — Handler of Completion Signals</h2>
-<p>Standard definition (<code>exec.tex:241</code>):</p>
+<p>Standard definition:</p>
 <blockquote>
 <p>A <em>receiver</em> is an aggregation of three handlers for the three asynchronous completion dispositions.</p>
 </blockquote>
@@ -171,7 +144,7 @@
 <table><thead><tr><th>Concept</th><th>Requirement</th></tr></thead><tbody><tr><td><code>receiver</code></td><td>Only requires <code>get_env(r)</code></td></tr><tr><td><code>receiver_of&#x3C;R, Completions></code></td><td>Requires ability to handle a specified set of completion signatures</td></tr><tr><td><code>inlinable_receiver&#x3C;R></code></td><td>Allows inline completion on the <code>start()</code> call stack</td></tr></tbody></table></div>
 <p>You might ask: why does a Receiver need to provide <code>get_env()</code>? Because a Receiver carries context — like a stop token that tells upstream “the user cancelled, don’t bother continuing.”</p>
 <h2 id="4-operation-state--the-running-operation">4. Operation State — The Running Operation</h2>
-<p>Standard definition (<code>exec.tex:230</code>):</p>
+<p>Standard definition:</p>
 <blockquote>
 <p>An asynchronous operation has associated state known as its <em>operation state</em>.</p>
 </blockquote>
@@ -193,7 +166,7 @@
   F --> G["Uncancellable until completion"]
   F --> H["set_value / set_error / set_stopped"]
   H --> I["operation_state invalidated"]</pre>
-<p><strong>Important lifecycle rules</strong> (<code>exec.tex:270-287</code>):</p>
+<p><strong>Important lifecycle rules</strong>:</p>
 <ul>
 <li>The lifetime of an async operation begins with <code>start()</code> and ends when a completion function is called</li>
 <li><code>start()</code> must be called after <code>connect()</code> and at most once</li>

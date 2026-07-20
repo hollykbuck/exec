@@ -7,9 +7,7 @@
       })();
     </script><link rel="stylesheet" href="/exec/_astro/01-why-stdexec.hXKgsPrw.css"></head><body data-astro-cid-ykvenys5><div class="container" data-astro-cid-ykvenys5><header data-astro-cid-ykvenys5><div class="title-area" data-astro-cid-ykvenys5><a href="/exec/tutorials/" style="color:var(--fg-muted);text-decoration:none;font-size:0.85rem;" data-astro-cid-ykvenys5>← Back to index</a><h1 data-astro-cid-ykvenys5>05 · Thread Pools and Execution Contexts</h1></div><button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" data-astro-cid-ykvenys5>🌙</button></header><article class="article-content" data-astro-cid-ykvenys5>
 <blockquote>
-<p><strong>Standard Section</strong>: <code>[exec.ctx]</code>
-<strong>stdexec Reference</strong>: <code>exec/static_thread_pool.hpp</code>
-<strong>Related Tests</strong>: <code>tests/test_thread_pool.cpp</code>, <code>exec/inline_scheduler.hpp</code></p>
+<p><strong>Related Tests</strong>: <code>tests/test_thread_pool.cpp</code>, <code>exec/inline_scheduler.hpp</code></p>
 </blockquote>
 <p>The Hello World in the previous chapter used a thread pool. Now let’s take a closer look — what exactly is an “execution context” in <code>std::execution</code>, what options are available, and how do you switch between them?</p>
 <h2 id="execution-contexts">Execution Contexts</h2>
@@ -50,7 +48,7 @@
 
 
 <table><thead><tr><th>Context</th><th>Header</th><th>Behavior</th></tr></thead><tbody><tr><td><code>static_thread_pool</code></td><td><code>exec/static_thread_pool.hpp</code></td><td>Fixed-size thread pool</td></tr><tr><td><code>inline_scheduler</code></td><td><code>exec/inline_scheduler.hpp</code></td><td>Executes immediately on the current thread</td></tr><tr><td><code>trampoline_scheduler</code></td><td><code>exec/trampoline_scheduler.hpp</code></td><td>Executes after stack unwinding (prevents stack overflow)</td></tr><tr><td><code>run_loop</code></td><td><code>stdexec/execution.hpp</code></td><td>Manually controlled FIFO event loop</td></tr><tr><td><code>parallel_scheduler</code></td><td><code>stdexec/__detail/</code></td><td>Standard parallel scheduler</td></tr></tbody></table></div>
-<p>You might ask: why isn’t there a simple <code>std::thread</code> scheduler? Because <code>static_thread_pool</code> is the general-purpose scheduler you’ll use most of the time, and <code>inline_scheduler</code> is there for testing and synchronous scenarios.</p>
+<p>Why isn’t there a simple <code>std::thread</code> scheduler? Because <code>static_thread_pool</code> is the general-purpose scheduler you’ll use most of the time, and <code>inline_scheduler</code> is there for testing and synchronous scenarios.</p>
 <h2 id="static_thread_pool-in-detail">static_thread_pool in Detail</h2>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">exec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::static_thread_pool pool{</span><span style="color:#005CC5;--shiki-dark:#79B8FF">4</span><span style="color:#24292E;--shiki-dark:#E1E4E8">};</span><span style="color:#6A737D;--shiki-dark:#6A737D">   // Create 4 threads</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> sch </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> pool.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">get_scheduler</span><span style="color:#24292E;--shiki-dark:#E1E4E8">();</span><span style="color:#6A737D;--shiki-dark:#6A737D">    // Get the scheduler</span></span>
@@ -73,7 +71,7 @@
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// pool is destroyed here, automatically waits for all queued tasks to finish</span></span></code></pre></div>
 <p>This code demonstrates proper lifecycle management: make sure all async operations finish before the pool is destroyed. <code>static_thread_pool</code>’s destructor <strong>automatically waits for all queued tasks to complete</strong>, rather than brutally interrupting them.</p>
 <h2 id="execution-context-switching">Execution Context Switching</h2>
-<p>You might ask: what if I want some work to run on one thread pool for I/O, and other work on a different thread pool for computation?</p>
+<p>What if I want some work to run on one thread pool for I/O, and other work on a different thread pool for computation?</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">exec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::static_thread_pool io_pool{</span><span style="color:#005CC5;--shiki-dark:#79B8FF">2</span><span style="color:#24292E;--shiki-dark:#E1E4E8">};</span><span style="color:#6A737D;--shiki-dark:#6A737D">    // simulate I/O thread</span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">exec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::static_thread_pool cpu_pool{</span><span style="color:#005CC5;--shiki-dark:#79B8FF">4</span><span style="color:#24292E;--shiki-dark:#E1E4E8">};</span><span style="color:#6A737D;--shiki-dark:#6A737D">   // simulate compute thread</span></span>
 <span class="line"></span>
@@ -150,7 +148,7 @@
   B --> C["Scheduler&#x3C;br/>(lightweight handle, copyable)"]
   C --> D["schedule()"]
   D --> E["Sender (lazy description)"]</pre>
-<p>This separation brings three benefits:</p>
+<p>This separation three benefits:</p>
 <ol>
 <li><strong>Execution context and scheduler are decoupled</strong>: multiple schedulers can reference the same resource</li>
 <li><strong>Scheduler is a lightweight copyable object</strong>: it can be safely passed through pipelines</li>

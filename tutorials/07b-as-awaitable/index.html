@@ -5,20 +5,43 @@
         if(!s&&matchMedia("(prefers-color-scheme:light)").matches)theme="light";
         document.documentElement.setAttribute("data-theme",theme);
       })();
-    </script><link rel="stylesheet" href="/exec/_astro/01-why-stdexec.hXKgsPrw.css"></head><body data-astro-cid-ykvenys5><div class="container" data-astro-cid-ykvenys5><header data-astro-cid-ykvenys5><div class="title-area" data-astro-cid-ykvenys5><a href="/exec/tutorials/" style="color:var(--fg-muted);text-decoration:none;font-size:0.85rem;" data-astro-cid-ykvenys5>← Back to index</a><h1 data-astro-cid-ykvenys5>07b · as_awaitable and with_awaitable_senders — How co_await Sender Works Inside</h1></div><button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" data-astro-cid-ykvenys5>🌙</button></header><article class="article-content" data-astro-cid-ykvenys5><blockquote>
-<p><strong>Standard Section</strong>: <code>[exec.as.awaitable]</code> <code>[exec.with.awaitable.senders]</code> <br>
-<strong>Draft Reference</strong>: <code>exec.tex</code> lines 7011–7298</p>
+    </script><link rel="stylesheet" href="/exec/_astro/01-why-stdexec.hXKgsPrw.css"></head><body data-astro-cid-ykvenys5><div class="container" data-astro-cid-ykvenys5><header data-astro-cid-ykvenys5><div class="title-area" data-astro-cid-ykvenys5><a href="/exec/tutorials/" style="color:var(--fg-muted);text-decoration:none;font-size:0.85rem;" data-astro-cid-ykvenys5>← Back to index</a><h1 data-astro-cid-ykvenys5>07b · as_awaitable and with_awaitable_senders — How co_await Sender Works Inside</h1></div><button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" data-astro-cid-ykvenys5>🌙</button></header><article class="article-content" data-astro-cid-ykvenys5><h2 id="the-missing-piece">The Missing Piece</h2>
+<blockquote>
+<p>This chapter explains the internals of coroutine integration. You can skip it without affecting subsequent reading.</p>
 </blockquote>
-<h2 id="the-missing-piece">The Missing Piece</h2>
 <p>Chapter 07 showed you <em>that</em> you can <code>co_await</code> a sender inside <code>task&#x3C;T></code>. But how does it actually work?</p>
-<p>The answer is two exposition classes and one CPO:</p>
+<p>When you co_await a sender, two things happen: first the coroutine suspends, then after the sender completes the receiver is invoked, obtains the value, and resumes.</p>
+<p>Coroutines only understand awaitables, not senders, so a bridge is needed.</p>
+<p>Two exposition classes and one CPO solve this problem:</p>
 <ol>
 <li><strong><code>with_awaitable_senders&#x3C;Promise></code></strong> — a CRTP base class for promise types that makes any sender awaitable</li>
 <li><strong><code>sender-awaitable&#x3C;Sndr, Promise></code></strong> — the bridge that connects sender/receiver to the coroutine machinery</li>
-<li><strong><code>as_awaitable</code></strong> — the CPO that dispatches: “is this thing a sender, an awaitable, or something else?“</li>
+<li><strong><code>as_awaitable</code></strong> — the CPO that dispatches: “is this thing a sender, an awaitable, or something else?”</li>
 </ol>
+<pre class="mermaid">graph TD
+    A["co_await sender"] -->|1. Intercepted by Promise| B["with_awaitable_senders::await_transform(sender)"]
+    B -->|2. Dispatched by CPO| C["as_awaitable(sender, promise)"]
+    C --> D["sender-awaitable&#x3C;Sndr, Promise>"]
+    
+    subgraph Coroutine_Suspend["3. Coroutine Suspends via await_suspend()"]
+        D --> E["connect(sender, awaitable-receiver)"]
+        E --> F["start(state)"]
+    end
+    
+    F -->|Async Execution Phase| G["awaitable-receiver"]
+    
+    G -->|set_value| H["Stores value in variant"]
+    G -->|set_error| I["Stores exception_ptr"]
+    G -->|set_stopped| J["Calls promise.unhandled_stopped()"]
+    
+    H --> K["Resumes Coroutine"]
+    I --> K
+    J -->|Bypasses Coroutine Frame| L["Propagates Cancellation UP"]
+    
+    K --> M["await_resume(): returns value / rethrows exception"]</pre>
+<p>The diagram above shows the complete execution flow. With this diagram, you won’t get lost.</p>
 <h2 id="with_awaitable_senders--the-promise-base">with_awaitable_senders — The Promise Base</h2>
-<p><code>task&#x3C;T></code>’s promise type inherits from <code>with_awaitable_senders&#x3C;task::promise_type></code>:</p>
+<p><code>task&#x3C;T></code>’s promise type needs to inherit from <code>with_awaitable_senders&#x3C;task::promise_type></code>:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">namespace</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> std</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">execution</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  template</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> &#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Promise</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  struct</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> with_awaitable_senders</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
@@ -35,7 +58,6 @@
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    auto</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> await_transform</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">Value</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x26;&#x26;</span><span style="color:#E36209;--shiki-dark:#FFAB70"> value</span><span style="color:#24292E;--shiki-dark:#E1E4E8">);</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  };</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span></code></pre></div>
-<p>Three key members:</p>
 <p><strong><code>set_continuation</code></strong> — called when this coroutine is <code>co_await</code>-ed by another coroutine. It saves the caller’s coroutine handle and propagates the caller’s <code>unhandled_stopped</code> handler.</p>
 <p><strong><code>unhandled_stopped</code></strong> — invoked when a <code>co_await sender</code> completes with <code>set_stopped</code>. By default it calls <code>terminate()</code>. If a parent coroutine has a handler, it chains upward. This is how cancellation propagates through coroutine frames.</p>
 <p><strong><code>await_transform</code></strong> — the hook that C++ coroutines call for every <code>co_await expr</code>. It delegates to <code>as_awaitable(expr, *this)</code>:</p>
@@ -133,14 +155,13 @@
 </ol>
 <p>This is why <code>task&#x3C;T></code> can only <code>co_await</code> senders with exactly one value type. If a sender can complete with multiple value types, wrap it in <code>into_variant</code> or <code>stopped_as_optional</code> first.</p>
 <h2 id="cancellation-propagation-chain">Cancellation Propagation Chain</h2>
-<pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="plaintext"><code><span class="line"><span>co_await sender inside task&#x3C;A></span></span>
-<span class="line"><span>  -> sender completes with set_stopped</span></span>
-<span class="line"><span>  -> awaitable-receiver::set_stopped calls</span></span>
-<span class="line"><span>  -> promise.unhandled_stopped() returns a handle</span></span>
-<span class="line"><span>  -> resumes that handle (the parent coroutine)</span></span>
-<span class="line"><span>  -> parent's unhandled_stopped chains upward</span></span>
-<span class="line"><span>  -> ...</span></span>
-<span class="line"><span>  -> if no handler exists, terminate()</span></span></code></pre>
+<pre class="mermaid">graph TD
+    A["co_await sender inside task&#x26;lt;A&#x26;gt;"] --> B["Sender completes with set_stopped"]
+    B --> C["awaitable-receiver::set_stopped() called"]
+    C --> D["promise.unhandled_stopped() returns parent handle"]
+    D --> E["Resumes parent handle (task&#x26;lt;B&#x26;gt;)"]
+    E --> F["task&#x26;lt;B&#x26;gt;'s unhandled_stopped() chains upward"]
+    F --> G["If no handler in chain: terminate()"]</pre>
 <p>The <code>set_continuation()</code> method is what builds this chain:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">template</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> &#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> OtherPromise</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">void</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> set_continuation</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">coroutine_handle</span><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#6F42C1;--shiki-dark:#B392F0">OtherPromise</span><span style="color:#24292E;--shiki-dark:#E1E4E8">> </span><span style="color:#E36209;--shiki-dark:#FFAB70">h</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) </span><span style="color:#D73A49;--shiki-dark:#F97583">noexcept</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
@@ -186,7 +207,7 @@
 
 
 <table><thead><tr><th>Component</th><th>Role</th></tr></thead><tbody><tr><td><code>with_awaitable_senders&#x3C;P></code></td><td>Promise base class; provides <code>await_transform</code> and <code>unhandled_stopped</code></td></tr><tr><td><code>as_awaitable(expr, p)</code></td><td>CPO that routes <code>expr</code> to the right awaitable wrapper</td></tr><tr><td><code>sender-awaitable&#x3C;S, P></code></td><td>Awaiter that connects a sender, suspends, and resumes on completion</td></tr><tr><td><code>awaitable-receiver</code></td><td>Stores result + continuation handle; three handler forms</td></tr><tr><td><code>awaitable-sender</code> concept</td><td>Constrains which senders can be <code>co_await</code>-ed</td></tr></tbody></table></div>
-<p>Every <code>co_await sender</code> inside <code>task&#x3C;T></code> goes through this exact path. The elegance is that it uses the sender model’s own <code>connect</code> + <code>start</code> + completion signals — no special coroutine-specific dispatch layer needed.</p></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/07-coroutines/" data-astro-cid-ykvenys5>← 07 · Coroutine Integration — co_await sender in task&lt;T&gt;</a><a href="/exec/tutorials/07c-task-internals/" data-astro-cid-ykvenys5>07c · task\&lt;T\&gt; Internals and task_scheduler →</a></nav></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
+<p>Every <code>co_await sender</code> inside <code>task&#x3C;T></code> goes through this exact path. The elegance is that it uses the sender model’s own <code>connect</code> + <code>start</code> + completion signals — no special coroutine-specific dispatch layer needed.</p></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/07-coroutines/" data-astro-cid-ykvenys5>← 07 · Coroutine Integration — co_await sender in task&lt;T&gt;</a><a href="/exec/tutorials/07c-task-internals/" data-astro-cid-ykvenys5>07c · task&lt;T&gt; Internals and task_scheduler →</a></nav></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
       (function() {
         const STORAGE_KEY = "exectutorial-theme";
 
