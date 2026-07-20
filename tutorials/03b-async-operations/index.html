@@ -5,15 +5,15 @@
         if(!s&&matchMedia("(prefers-color-scheme:light)").matches)theme="light";
         document.documentElement.setAttribute("data-theme",theme);
       })();
-    </script><link rel="stylesheet" href="/exec/_astro/01-why-stdexec.hXKgsPrw.css"></head><body data-astro-cid-ykvenys5><div class="container" data-astro-cid-ykvenys5><header data-astro-cid-ykvenys5><div class="title-area" data-astro-cid-ykvenys5><a href="/exec/tutorials/" style="color:var(--fg-muted);text-decoration:none;font-size:0.85rem;" data-astro-cid-ykvenys5>← Back to index</a><h1 data-astro-cid-ykvenys5>03b · Formal Model of Asynchronous Operations</h1></div><button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" data-astro-cid-ykvenys5>🌙</button></header><article class="article-content" data-astro-cid-ykvenys5><h2 id="beyond-the-signals">Beyond the Signals</h2>
+    </script><link rel="stylesheet" href="/exec/_astro/01-why-stdexec.YzjJ_D8W.css"></head><body data-astro-cid-ykvenys5><div class="layout-wrap" data-astro-cid-ykvenys5><aside class="toc-sidebar" id="tocSidebar" data-astro-cid-ykvenys5><div class="toc-label" data-astro-cid-ykvenys5>On this page</div><nav id="tocNav" data-astro-cid-ykvenys5></nav></aside><div class="layout-main" data-astro-cid-ykvenys5><div class="container" data-astro-cid-ykvenys5><header data-astro-cid-ykvenys5><div class="title-area" data-astro-cid-ykvenys5><a href="/exec/tutorials/" style="color:var(--fg-muted);text-decoration:none;font-size:0.85rem;" data-astro-cid-ykvenys5>← Back to index</a><h1 data-astro-cid-ykvenys5>03b · Formal Model of Asynchronous Operations</h1></div><button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" data-astro-cid-ykvenys5>🌙</button></header><details class="toc-mobile" id="tocMobile" data-astro-cid-ykvenys5><summary data-astro-cid-ykvenys5>On this page</summary><nav id="tocNavMobile" data-astro-cid-ykvenys5></nav></details><article class="article-content" data-astro-cid-ykvenys5><h2 id="beyond-the-signals"><a aria-hidden="true" tabindex="-1" href="#beyond-the-signals"><span class="icon icon-link"></span></a>Beyond the Signals</h2>
 <p>Chapter 03 introduced the three completion signals, Chapter 02 the four abstractions. But the standard defines a formal model underneath all of it — the vocabulary that gives sender/receiver its precise semantics.</p>
-<h2 id="execution-resource">Execution Resource</h2>
+<h2 id="execution-resource"><a aria-hidden="true" tabindex="-1" href="#execution-resource"><span class="icon icon-link"></span></a>Execution Resource</h2>
 <p>An <strong>execution resource</strong> manages a set of execution agents (threads, GPU cores, IO completion ports). It is either <strong>valid</strong> or <strong>invalid</strong>.</p>
 <pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="plaintext"><code><span class="line"><span>Execution Resource</span></span>
 <span class="line"><span>  ├── Valid   -> can execute work</span></span>
 <span class="line"><span>  └── Invalid -> destroyed, all derived objects are unusable</span></span></code></pre>
 <p>Examples: the currently active thread, a system thread pool, a CUDA stream.</p>
-<h2 id="asynchronous-operation">Asynchronous Operation</h2>
+<h2 id="asynchronous-operation"><a aria-hidden="true" tabindex="-1" href="#asynchronous-operation"><span class="icon icon-link"></span></a>Asynchronous Operation</h2>
 <p>An <strong>asynchronous operation</strong> is a unit of program execution with five properties:</p>
 <ul>
 <li><strong>Created</strong> explicitly (connecting a sender + receiver)</li>
@@ -28,7 +28,7 @@
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">//   ... work executes ...</span></span>
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">//   set_{value,error,stopped}(rcvr, ...) -> async lifetime ends</span></span></code></pre></div>
 <p>The <strong>async lifetime</strong> begins when <code>start()</code> executes and ends when a completion function executes. Accessing the operation state after its lifetime ends is undefined behavior.</p>
-<h3 id="the-three-dispositions">The Three Dispositions</h3>
+<h3 id="the-three-dispositions"><a aria-hidden="true" tabindex="-1" href="#the-three-dispositions"><span class="icon icon-link"></span></a>The Three Dispositions</h3>
 <div class="table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch">
 
 
@@ -56,7 +56,7 @@
 
 <table><thead><tr><th>Disposition</th><th>Completion</th><th>Result Datums</th></tr></thead><tbody><tr><td>Success</td><td><code>set_value(rcvr, vs...)</code></td><td>Any number</td></tr><tr><td>Failure</td><td><code>set_error(rcvr, err)</code></td><td>Exactly one</td></tr><tr><td>Cancellation</td><td><code>set_stopped(rcvr)</code></td><td>None</td></tr></tbody></table></div>
 <p>Every async operation ends in exactly one of these three.</p>
-<h2 id="operation-state">Operation State</h2>
+<h2 id="operation-state"><a aria-hidden="true" tabindex="-1" href="#operation-state"><span class="icon icon-link"></span></a>Operation State</h2>
 <p>Every async operation has associated <strong>operation state</strong>. This is the object returned by <code>connect()</code>. It owns:</p>
 <ul>
 <li>The receiver (which contains the completion handlers)</li>
@@ -75,7 +75,7 @@
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">start</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(op);</span></span>
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// destroy op here -> op invalid while async operation still active</span></span></code></pre></div>
 <p>The operation state becomes invalid <strong>during</strong> the execution of the completion function. This is intentional — it allows the receiver’s completion handler to destroy the operation state itself.</p>
-<h2 id="environment">Environment</h2>
+<h2 id="environment"><a aria-hidden="true" tabindex="-1" href="#environment"><span class="icon icon-link"></span></a>Environment</h2>
 <p>Every async operation has an <strong>environment</strong> — a queryable object that represents the caller’s execution-time properties. The environment is equal to the receiver’s environment (obtained via <code>get_env(rcvr)</code>).</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Inside a receiver:</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> get_env</span><span style="color:#24292E;--shiki-dark:#E1E4E8">() </span><span style="color:#D73A49;--shiki-dark:#F97583">const</span><span style="color:#D73A49;--shiki-dark:#F97583"> noexcept</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
@@ -83,7 +83,7 @@
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">             prop{get_stop_token, my_stop_source.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">get_token</span><span style="color:#24292E;--shiki-dark:#E1E4E8">()}};</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span></code></pre></div>
 <p>The environment flows from parent to child through the pipeline.</p>
-<h2 id="sender">Sender</h2>
+<h2 id="sender"><a aria-hidden="true" tabindex="-1" href="#sender"><span class="icon icon-link"></span></a>Sender</h2>
 <p>A <strong>sender</strong> is a factory for async operations. When you <code>connect(sndr, rcvr)</code>, you create an operation — the sender tells the system what to do, the receiver tells it what to do with the result.</p>
 <p>A sender is:</p>
 <ul>
@@ -91,7 +91,7 @@
 <li>Started when connected + started</li>
 <li>Valid or invalid — becomes invalid when its parent sender becomes invalid</li>
 </ul>
-<h2 id="scheduler">Scheduler</h2>
+<h2 id="scheduler"><a aria-hidden="true" tabindex="-1" href="#scheduler"><span class="icon icon-link"></span></a>Scheduler</h2>
 <p>A <strong>scheduler</strong> abstracts an execution resource. Its job is to produce senders whose operations execute on that resource.</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">sender </span><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> s </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> schedule</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(my_scheduler);</span><span style="color:#6A737D;--shiki-dark:#6A737D">  // get a sender</span></span>
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Connecting this sender creates an operation that runs on my_scheduler</span></span></code></pre></div>
@@ -101,20 +101,20 @@
 <li>Becomes invalid when its execution resource becomes invalid</li>
 <li>All derived objects (schedule senders, operation states) become invalid too</li>
 </ul>
-<h2 id="completion-scheduler">Completion Scheduler</h2>
+<h2 id="completion-scheduler"><a aria-hidden="true" tabindex="-1" href="#completion-scheduler"><span class="icon icon-link"></span></a>Completion Scheduler</h2>
 <p>An async operation can have <strong>different</strong> schedulers for each completion disposition:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Value completion may run on one scheduler,</span></span>
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// error completion on another,</span></span>
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// stopped completion on yet another.</span></span></code></pre></div>
 <p>A schedule sender is required to have a value completion scheduler equal to the scheduler that produced it. This is how adaptors know where to transfer execution.</p>
-<h2 id="completion-signature">Completion Signature</h2>
+<h2 id="completion-signature"><a aria-hidden="true" tabindex="-1" href="#completion-signature"><span class="icon icon-link"></span></a>Completion Signature</h2>
 <p>A <strong>completion signature</strong> is a function type describing a completion operation:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#005CC5;--shiki-dark:#79B8FF">set_value_t</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#D73A49;--shiki-dark:#F97583">int</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#D73A49;--shiki-dark:#F97583">float</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span><span style="color:#6A737D;--shiki-dark:#6A737D">   // set_value(rcvr, int, float)</span></span>
 <span class="line"><span style="color:#005CC5;--shiki-dark:#79B8FF">set_error_t</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(error_code)</span><span style="color:#6A737D;--shiki-dark:#6A737D">   // set_error(rcvr, error_code)</span></span>
 <span class="line"><span style="color:#005CC5;--shiki-dark:#79B8FF">set_stopped_t</span><span style="color:#24292E;--shiki-dark:#E1E4E8">()</span><span style="color:#6A737D;--shiki-dark:#6A737D">           // set_stopped(rcvr)</span></span></code></pre></div>
 <p>Together, a sender type and an environment type determine the set of possible completion signatures. The receiver’s type does not affect signatures — only the receiver’s environment type does.</p>
 <p>A <strong>non-dependent sender</strong> is one whose completion signatures are knowable without any environment.</p>
-<h2 id="three-categories-of-sender-algorithms">Three Categories of Sender Algorithms</h2>
+<h2 id="three-categories-of-sender-algorithms"><a aria-hidden="true" tabindex="-1" href="#three-categories-of-sender-algorithms"><span class="icon icon-link"></span></a>Three Categories of Sender Algorithms</h2>
 <div class="table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch">
 
 
@@ -146,7 +146,7 @@
 
 <table><thead><tr><th>Category</th><th>Takes</th><th>Returns</th><th>Example</th></tr></thead><tbody><tr><td>Factory</td><td>Non-senders</td><td>A sender</td><td><code>just(42)</code></td></tr><tr><td>Adaptor</td><td>One or more senders + args</td><td>A parent sender</td><td><code>then(sndr, f)</code>, <code>when_all(s1, s2)</code></td></tr><tr><td>Consumer</td><td>One or more senders</td><td>Non-sender</td><td><code>sync_wait(sndr)</code></td></tr></tbody></table></div>
 <p>An async operation created by a parent sender (adaptor) is the <strong>parent</strong> of the child operations created by the child senders. Parent operations complete after all started child operations complete.</p>
-<h2 id="putting-it-all-together">Putting It All Together</h2>
+<h2 id="putting-it-all-together"><a aria-hidden="true" tabindex="-1" href="#putting-it-all-together"><span class="icon icon-link"></span></a>Putting It All Together</h2>
 <pre class="mermaid">flowchart TD
     S["Sender (factory/adaptor)"]
     OS["Operation State (owns receiver + internal state)"]
@@ -160,7 +160,7 @@
     AL -->|"can create Child Operations (each child has its own lifecycle)"| CO
     CO -->|"one of set_value / set_error / set_stopped"| AE
     CO -->|"may run on a different scheduler than the start"| AE</pre>
-<p>The next chapter (04) shows all of this in action with a real program.</p></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/03-completion-signals/" data-astro-cid-ykvenys5>← 03 · Three Completion Signals — set_value / set_error / set_stopped</a><a href="/exec/tutorials/04-hello-world-pipeline/" data-astro-cid-ykvenys5>04 · Hello World Pipeline — schedule | then | sync_wait →</a></nav></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
+<p>The next chapter (04) shows all of this in action with a real program.</p></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/03-completion-signals/" data-astro-cid-ykvenys5>← 03 · Three Completion Signals — set_value / set_error / set_stopped</a><a href="/exec/tutorials/04-hello-world-pipeline/" data-astro-cid-ykvenys5>04 · Hello World Pipeline — schedule | then | sync_wait →</a></nav></div></div></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
       (function() {
         const STORAGE_KEY = "exectutorial-theme";
 
@@ -193,5 +193,55 @@
           try { localStorage.setItem(STORAGE_KEY, next); } catch(e) {}
           setTheme(next);
         });
+      })();
+    </script><script>
+      (function() {
+        function buildToc(containerId, navId) {
+          var container = document.getElementById(containerId);
+          var nav = document.getElementById(navId);
+          if (!nav) return;
+          var headings = document.querySelectorAll(".article-content h2, .article-content h3");
+          if (headings.length === 0) { if (container) container.style.display = "none"; return; }
+
+          var ul = document.createElement("ul");
+          headings.forEach(function(h) {
+            if (!h.id) return;
+            var li = document.createElement("li");
+            var a = document.createElement("a");
+            a.href = "#" + h.id;
+            a.textContent = h.textContent.replace(/¶$/, "").trim();
+            a.className = "toc-" + h.tagName.toLowerCase();
+            li.appendChild(a);
+            ul.appendChild(li);
+          });
+          nav.appendChild(ul);
+        }
+
+        buildToc("tocSidebar", "tocNav");
+        buildToc(null, "tocNavMobile");
+
+        // active heading highlight
+        var tocLinks = document.querySelectorAll("#tocNav a, #tocNavMobile a");
+        if (tocLinks.length > 0) {
+          var headings = document.querySelectorAll(".article-content h2, .article-content h3");
+          function onScroll() {
+            var scrollY = window.scrollY + 80;
+            var active = null;
+            headings.forEach(function(h) {
+              if (h.offsetTop <= scrollY) active = h;
+            });
+            tocLinks.forEach(function(link) { link.classList.remove("active"); });
+            if (active) {
+              var id = active.id;
+              tocLinks.forEach(function(link) {
+                if (link.getAttribute("href") === "#" + id) {
+                  link.classList.add("active");
+                }
+              });
+            }
+          }
+          window.addEventListener("scroll", onScroll, { passive: true });
+          onScroll();
+        }
       })();
     </script></body></html>

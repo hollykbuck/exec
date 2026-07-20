@@ -5,14 +5,13 @@
         if(!s&&matchMedia("(prefers-color-scheme:light)").matches)theme="light";
         document.documentElement.setAttribute("data-theme",theme);
       })();
-    </script><link rel="stylesheet" href="/exec/_astro/01-why-stdexec.hXKgsPrw.css"></head><body data-astro-cid-ykvenys5><div class="container" data-astro-cid-ykvenys5><header data-astro-cid-ykvenys5><div class="title-area" data-astro-cid-ykvenys5><a href="/exec/tutorials/" style="color:var(--fg-muted);text-decoration:none;font-size:0.85rem;" data-astro-cid-ykvenys5>← Back to index</a><h1 data-astro-cid-ykvenys5>25b · Environment Composition and Query Forwarding</h1></div><button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" data-astro-cid-ykvenys5>🌙</button></header><article class="article-content" data-astro-cid-ykvenys5><blockquote>
-<p><strong>Standard Section</strong>: <code>[exec.fwd.env]</code> <code>[exec.snd.expos]</code> <br>
-<strong>Draft Reference</strong>: <code>exec.tex</code> lines 851–874, 1746–1796</p>
-</blockquote>
-<h2 id="beyond-single-key-environments">Beyond Single-Key Environments</h2>
+    </script><link rel="stylesheet" href="/exec/_astro/01-why-stdexec.YzjJ_D8W.css"></head><body data-astro-cid-ykvenys5><div class="layout-wrap" data-astro-cid-ykvenys5><aside class="toc-sidebar" id="tocSidebar" data-astro-cid-ykvenys5><div class="toc-label" data-astro-cid-ykvenys5>On this page</div><nav id="tocNav" data-astro-cid-ykvenys5></nav></aside><div class="layout-main" data-astro-cid-ykvenys5><div class="container" data-astro-cid-ykvenys5><header data-astro-cid-ykvenys5><div class="title-area" data-astro-cid-ykvenys5><a href="/exec/tutorials/" style="color:var(--fg-muted);text-decoration:none;font-size:0.85rem;" data-astro-cid-ykvenys5>← Back to index</a><h1 data-astro-cid-ykvenys5>25b · Environment Composition and Query Forwarding</h1></div><button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" data-astro-cid-ykvenys5>🌙</button></header><details class="toc-mobile" id="tocMobile" data-astro-cid-ykvenys5><summary data-astro-cid-ykvenys5>On this page</summary><nav id="tocNavMobile" data-astro-cid-ykvenys5></nav></details><article class="article-content" data-astro-cid-ykvenys5><!-- > **Standard Section**: `[exec.fwd.env]` `[exec.snd.expos]` <br/> -->
+<!-- > **Draft Reference**: `exec.tex` lines 851–874, 1746–1796 -->
+<h2 id="beyond-single-key-environments"><a aria-hidden="true" tabindex="-1" href="#beyond-single-key-environments"><span class="icon icon-link"></span></a>Beyond Single-Key Environments</h2>
 <p>Chapter 25 introduced <code>prop</code> for single-key environments. But real environments are composites — a receiver’s environment combines queries from its parent, the scheduler, and any <code>write_env</code> injectors.</p>
+<p>If you are familiar with <a href="https://go.dev/blog/context">go context</a>,  environments in C++ std::execution serve similiar purposes.</p>
 <p>Three exposition utilities govern how environments compose and how queries propagate through them.</p>
-<h2 id="forwarding_query--which-queries-cross-boundaries">forwarding_query — Which Queries Cross Boundaries</h2>
+<h2 id="forwarding_query--which-queries-cross-boundaries"><a aria-hidden="true" tabindex="-1" href="#forwarding_query--which-queries-cross-boundaries"><span class="icon icon-link"></span></a>forwarding_query — Which Queries Cross Boundaries</h2>
 <p>When a sender wraps another sender (e.g., <code>then</code> wraps its child), the environment seen by the child is <strong>not</strong> the same as the outer environment. Some queries pass through; others are blocked.</p>
 <p><code>forwarding_query</code> determines which queries are forwarded through queryable adaptors:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">template</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> &#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> T</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
@@ -23,7 +22,7 @@
 <li>Otherwise, <code>true</code> if <code>q</code> derives from <code>forwarding_query_t</code></li>
 <li>Otherwise, <code>false</code></li>
 </ol>
-<h3 id="which-queries-forward">Which Queries Forward?</h3>
+<h3 id="which-queries-forward"><a aria-hidden="true" tabindex="-1" href="#which-queries-forward"><span class="icon icon-link"></span></a>Which Queries Forward?</h3>
 <div class="table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch">
 
 
@@ -71,7 +70,22 @@
 
 <table><thead><tr><th>Query</th><th>Forwards?</th><th>Reason</th></tr></thead><tbody><tr><td><code>get_scheduler</code></td><td>Yes</td><td><code>forwarding_query(get_scheduler)</code> is <code>true</code></td></tr><tr><td><code>get_stop_token</code></td><td>Yes</td><td>Stop token must propagate through wrappers</td></tr><tr><td><code>get_allocator</code></td><td>Yes</td><td>Allocator must propagate for consistent allocation</td></tr><tr><td><code>get_delegation_scheduler</code></td><td>Yes</td><td>Explicitly specified as forwarding</td></tr><tr><td><code>get_domain</code></td><td>Yes</td><td>Domain must propagate for algorithm customization</td></tr><tr><td><code>get_completion_scheduler&#x3C;Tag></code></td><td>Yes</td><td>Completion scheduler depends on outer env context</td></tr><tr><td><code>get_forward_progress_guarantee</code></td><td>No</td><td>Each scheduler provides its own guarantee</td></tr></tbody></table></div>
 <p>The rule: <strong>runtime-context queries</strong> (scheduler, stop token, allocator) forward; <strong>static-property queries</strong> (forward progress, may-block-caller) generally do not. <code>get_completion_scheduler</code> is a notable exception — though it feels like a static property, it forwards because the completion scheduler can depend on outer environment context, and the recursive scheduler-chain walk in the implementation needs to see through environment layers.</p>
-<h2 id="fwd-env--the-forwarding-filter">FWD-ENV — The Forwarding Filter</h2>
+<pre class="mermaid">flowchart TD
+    Q["Query call e.g. get_scheduler(fwd_env) ├ forwarding_query → true └ get_forward_progress_guarantee(fwd_env) └ forwarding_query → false"]
+    FWD["__fwd wraps inner_env"]
+    PASS["✔ Passes through ─ __forwarding_query constraint satisfied ─ calls inner_env.query(get_scheduler)"]
+    BLOCK["✘ Blocked ─ __forwarding_query constraint not satisfied ─ SFINAE / compile error"]
+    INNER["inner_env.query(get_scheduler) ─ returns scheduler"]
+    RESULT["Result returned to caller"]
+
+    Q -->|"forwarding query"| FWD
+    Q -->|"non-forwarding query"| FWD
+    FWD -->|"__forwarding_query _Query constraint ├─ satisfied"| PASS
+    FWD -->|"not satisfied"| BLOCK
+    PASS --> INNER --> RESULT
+    BLOCK -->|"no viable query() overload"| RESULT</pre>
+<p>The filter is enforced at the <strong>constraint level</strong> — <code>__fwd::query()</code> is templated with <code>__forwarding_query _Query</code>, so a non-forwarding query fails template argument deduction before any runtime code is reached.</p>
+<h2 id="fwd-env--the-forwarding-filter"><a aria-hidden="true" tabindex="-1" href="#fwd-env--the-forwarding-filter"><span class="icon icon-link"></span></a>FWD-ENV — The Forwarding Filter</h2>
 <p><code>FWD-ENV(env)</code> wraps a queryable object and blocks non-forwarding queries:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Given a receiver's environment:</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> env </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> get_env</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(rcvr);</span></span>
@@ -109,7 +123,7 @@
     S2 --> G2 --> C2
     S3 --> G3
     S4 --> G4 --> C3</pre>
-<h2 id="make-env--single-key-environment-factory">MAKE-ENV — Single-Key Environment Factory</h2>
+<h2 id="make-env--single-key-environment-factory"><a aria-hidden="true" tabindex="-1" href="#make-env--single-key-environment-factory"><span class="icon icon-link"></span></a>MAKE-ENV — Single-Key Environment Factory</h2>
 <p><code>MAKE-ENV(q, v)</code> creates a queryable object that answers exactly one query:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Create an environment that answers get_scheduler with my_sched</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> env </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> MAKE</span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#6F42C1;--shiki-dark:#B392F0">ENV</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(get_scheduler, my_sched);</span></span>
@@ -117,7 +131,7 @@
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">get_scheduler</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(env);</span><span style="color:#6A737D;--shiki-dark:#6A737D">   // → my_sched</span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">get_stop_token</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(env);</span><span style="color:#6A737D;--shiki-dark:#6A737D">  // Ill-formed — not answered</span></span></code></pre></div>
 <p><code>MAKE-ENV</code> is the exposition equivalent of <code>prop{q, v}</code> from Chapter 25.</p>
-<h2 id="join-env--composing-environments">JOIN-ENV — Composing Environments</h2>
+<h2 id="join-env--composing-environments"><a aria-hidden="true" tabindex="-1" href="#join-env--composing-environments"><span class="icon icon-link"></span></a>JOIN-ENV — Composing Environments</h2>
 <p><code>JOIN-ENV(env1, env2)</code> merges two environments. The first takes priority:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> base </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> MAKE</span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#6F42C1;--shiki-dark:#B392F0">ENV</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(get_scheduler, io_sched);</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#D73A49;--shiki-dark:#F97583"> override</span><span style="color:#D73A49;--shiki-dark:#F97583"> =</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> MAKE</span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#6F42C1;--shiki-dark:#B392F0">ENV</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(get_scheduler, cpu_sched);</span></span>
@@ -131,7 +145,7 @@
 <li>Otherwise, try <code>env2.query(q, as...)</code> — if well-formed, use it</li>
 <li>Otherwise, ill-formed</li>
 </ol>
-<h3 id="where-join-env-is-used">Where JOIN-ENV Is Used</h3>
+<h3 id="where-join-env-is-used"><a aria-hidden="true" tabindex="-1" href="#where-join-env-is-used"><span class="icon icon-link"></span></a>Where JOIN-ENV Is Used</h3>
 <p><strong><code>write_env</code></strong> uses <code>JOIN-ENV</code> to merge the injected environment with the receiver’s environment:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// write_env(sndr, env) internally:</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">impls</span><span style="color:#D73A49;--shiki-dark:#F97583">-for&#x3C;</span><span style="color:#24292E;--shiki-dark:#E1E4E8">write_env</span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#24292E;--shiki-dark:#E1E4E8">t</span><span style="color:#D73A49;--shiki-dark:#F97583">></span><span style="color:#24292E;--shiki-dark:#E1E4E8">::join</span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#6F42C1;--shiki-dark:#B392F0">env</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(state, FWD</span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#6F42C1;--shiki-dark:#B392F0">ENV</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">get_env</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(rcvr)))</span></span>
@@ -140,7 +154,7 @@
 <p><strong><code>starts_on</code></strong> uses <code>JOIN-ENV</code> to inject the target scheduler:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// starts_on(sch, sndr) ensures the child sees sch as its scheduler</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">JOIN</span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#6F42C1;--shiki-dark:#B392F0">ENV</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(MAKE</span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#6F42C1;--shiki-dark:#B392F0">ENV</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(get_scheduler, sch), FWD</span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#6F42C1;--shiki-dark:#B392F0">ENV</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">get_env</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(rcvr)))</span></span></code></pre></div>
-<h2 id="secondary-environments--let_value-finally-sequence">Secondary Environments — let_value, finally, sequence</h2>
+<h2 id="secondary-environments--let_value-finally-sequence"><a aria-hidden="true" tabindex="-1" href="#secondary-environments--let_value-finally-sequence"><span class="icon icon-link"></span></a>Secondary Environments — let_value, finally, sequence</h2>
 <p>When one sender’s <strong>completion</strong> triggers the start of another sender (e.g., <code>let_value</code> runs a child sender when <code>set_value</code> arrives), the child needs an environment that reflects the <strong>completing</strong> sender’s properties, not the outer receiver’s. This is called a <strong>secondary environment</strong> (<code>__mk_secondary_env</code>).</p>
 <p><code>__mk_secondary_env&#x3C;SetTags...></code> builds the child’s environment from:</p>
 <ol>
@@ -158,14 +172,14 @@
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// If parent_sender completes on a thread_pool scheduler:</span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">get_start_scheduler</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(child_env)</span><span style="color:#6A737D;--shiki-dark:#6A737D">  // → the thread_pool</span></span></code></pre></div>
 <p>This is what makes <code>let_value</code> and <code>finally</code> “stay” on the completing scheduler — the child sender automatically inherits the completion environment of its parent.</p>
-<h3 id="__sched_env--scheduler-backed-environment">__sched_env — Scheduler-Backed Environment</h3>
+<h3 id="__sched_env--scheduler-backed-environment"><a aria-hidden="true" tabindex="-1" href="#__sched_env--scheduler-backed-environment"><span class="icon icon-link"></span></a>__sched_env — Scheduler-Backed Environment</h3>
 <p><code>__sched_env&#x3C;Scheduler></code> wraps a scheduler into an environment that answers:</p>
 <ul>
 <li><code>get_start_scheduler</code> → the scheduler itself</li>
 <li><code>get_domain</code> → the scheduler’s domain (derived via <code>__scheduler_domain_t</code>)</li>
 </ul>
 <p>This is used not only by <code>__mk_secondary_env</code> but also by the <code>starts_on</code> adaptor to inject the target scheduler into the child’s environment.</p>
-<h2 id="sender-adaptor-environment-chain">Sender Adaptor Environment Chain</h2>
+<h2 id="sender-adaptor-environment-chain"><a aria-hidden="true" tabindex="-1" href="#sender-adaptor-environment-chain"><span class="icon icon-link"></span></a>Sender Adaptor Environment Chain</h2>
 <p>Every sender adaptor follows the same pattern when constructing the child sender’s environment:</p>
 <ol>
 <li><strong>Extract</strong> the outer receiver’s environment via <code>get_env(rcvr)</code></li>
@@ -234,7 +248,7 @@
 
 
 <table><thead><tr><th>Adaptor</th><th>State Injected</th><th>Mechanism</th></tr></thead><tbody><tr><td><code>then</code>, <code>upon_*</code>, <code>let_*</code></td><td>None (filter only)</td><td><code>FWD-ENV(env)</code> alone</td></tr><tr><td><code>write_env</code></td><td>Override props</td><td><code>JOIN-ENV(state, FWD-ENV(env))</code></td></tr><tr><td><code>starts_on</code>, <code>continues_on</code></td><td>Target scheduler</td><td><code>JOIN-ENV(MAKE-ENV(get_scheduler, sch), FWD-ENV(env))</code></td></tr><tr><td><code>let_value</code>, <code>finally</code></td><td>Completion env</td><td><code>__mk_secondary_env + JOIN-ENV(FWD-ENV(env))</code></td></tr></tbody></table></div>
-<h2 id="the-full-picture">The Full Picture</h2>
+<h2 id="the-full-picture"><a aria-hidden="true" tabindex="-1" href="#the-full-picture"><span class="icon icon-link"></span></a>The Full Picture</h2>
 <pre class="mermaid">flowchart TD
     OR["Outer Receiver Environment&#x3C;br/>├─ get_scheduler → io_pool scheduler&#x3C;br/>├─ get_stop_token → inplace_stop_token&#x3C;br/>├─ get_completion_scheduler&#x26;lt;set_value_t&#x26;gt; → cpu_pool scheduler&#x3C;br/>└─ get_forward_progress_guarantee → weakly_parallel"]
 
@@ -243,8 +257,11 @@
     JOIN["JOIN-ENV(write_env_state, FWD-ENV(get_env(outer_rcvr)))&#x3C;br/>├─ write_env's queries take priority&#x3C;br/>└─ remaining forwarding queries fall through to outer env"]
 
     OR -->|"then adaptor creates basic-receiver&#x3C;br/>basic-receiver::get_env() returns:"| FWD
-    FWD -->|"write_env injects additional queries"| JOIN</pre>
-<p>Every sender adaptor in the standard uses this pattern: wrap the receiver’s environment in <code>FWD-ENV</code>, then optionally <code>JOIN-ENV</code> with algorithm-specific state. This ensures queries propagate correctly without leaking implementation details across layers.</p></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/25-query-system-env/" data-astro-cid-ykvenys5>← 25 · Query System — Reading Properties from the Environment</a><a href="/exec/tutorials/26-domain-mechanism/" data-astro-cid-ykvenys5>26 · Domain — Letting Schedulers Take Over Algorithm Implementation →</a></nav></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
+    FWD -->|"write_env injects additional queries"| JOIN
+    style OR text-align:left
+    style FWD text-align:left
+    style JOIN text-align:left</pre>
+<p>Every sender adaptor in the standard uses this pattern: wrap the receiver’s environment in <code>FWD-ENV</code>, then optionally <code>JOIN-ENV</code> with algorithm-specific state. This ensures queries propagate correctly without leaking implementation details across layers.</p></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/25-query-system-env/" data-astro-cid-ykvenys5>← 25 · Query System — Reading Properties from the Environment</a><a href="/exec/tutorials/26-domain-mechanism/" data-astro-cid-ykvenys5>26 · Domain — Letting Schedulers Take Over Algorithm Implementation →</a></nav></div></div></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
       (function() {
         const STORAGE_KEY = "exectutorial-theme";
 
@@ -277,5 +294,55 @@
           try { localStorage.setItem(STORAGE_KEY, next); } catch(e) {}
           setTheme(next);
         });
+      })();
+    </script><script>
+      (function() {
+        function buildToc(containerId, navId) {
+          var container = document.getElementById(containerId);
+          var nav = document.getElementById(navId);
+          if (!nav) return;
+          var headings = document.querySelectorAll(".article-content h2, .article-content h3");
+          if (headings.length === 0) { if (container) container.style.display = "none"; return; }
+
+          var ul = document.createElement("ul");
+          headings.forEach(function(h) {
+            if (!h.id) return;
+            var li = document.createElement("li");
+            var a = document.createElement("a");
+            a.href = "#" + h.id;
+            a.textContent = h.textContent.replace(/¶$/, "").trim();
+            a.className = "toc-" + h.tagName.toLowerCase();
+            li.appendChild(a);
+            ul.appendChild(li);
+          });
+          nav.appendChild(ul);
+        }
+
+        buildToc("tocSidebar", "tocNav");
+        buildToc(null, "tocNavMobile");
+
+        // active heading highlight
+        var tocLinks = document.querySelectorAll("#tocNav a, #tocNavMobile a");
+        if (tocLinks.length > 0) {
+          var headings = document.querySelectorAll(".article-content h2, .article-content h3");
+          function onScroll() {
+            var scrollY = window.scrollY + 80;
+            var active = null;
+            headings.forEach(function(h) {
+              if (h.offsetTop <= scrollY) active = h;
+            });
+            tocLinks.forEach(function(link) { link.classList.remove("active"); });
+            if (active) {
+              var id = active.id;
+              tocLinks.forEach(function(link) {
+                if (link.getAttribute("href") === "#" + id) {
+                  link.classList.add("active");
+                }
+              });
+            }
+          }
+          window.addEventListener("scroll", onScroll, { passive: true });
+          onScroll();
+        }
       })();
     </script></body></html>

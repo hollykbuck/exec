@@ -5,12 +5,12 @@
         if(!s&&matchMedia("(prefers-color-scheme:light)").matches)theme="light";
         document.documentElement.setAttribute("data-theme",theme);
       })();
-    </script><link rel="stylesheet" href="/exec/_astro/01-why-stdexec.hXKgsPrw.css"></head><body data-astro-cid-ykvenys5><div class="container" data-astro-cid-ykvenys5><header data-astro-cid-ykvenys5><div class="title-area" data-astro-cid-ykvenys5><a href="/exec/tutorials/" style="color:var(--fg-muted);text-decoration:none;font-size:0.85rem;" data-astro-cid-ykvenys5>← Back to index</a><h1 data-astro-cid-ykvenys5>35 · The impls-for System — For Library Authors</h1></div><button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" data-astro-cid-ykvenys5>🌙</button></header><article class="article-content" data-astro-cid-ykvenys5>
+    </script><link rel="stylesheet" href="/exec/_astro/01-why-stdexec.YzjJ_D8W.css"></head><body data-astro-cid-ykvenys5><div class="layout-wrap" data-astro-cid-ykvenys5><aside class="toc-sidebar" id="tocSidebar" data-astro-cid-ykvenys5><div class="toc-label" data-astro-cid-ykvenys5>On this page</div><nav id="tocNav" data-astro-cid-ykvenys5></nav></aside><div class="layout-main" data-astro-cid-ykvenys5><div class="container" data-astro-cid-ykvenys5><header data-astro-cid-ykvenys5><div class="title-area" data-astro-cid-ykvenys5><a href="/exec/tutorials/" style="color:var(--fg-muted);text-decoration:none;font-size:0.85rem;" data-astro-cid-ykvenys5>← Back to index</a><h1 data-astro-cid-ykvenys5>35 · The impls-for System — For Library Authors</h1></div><button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" data-astro-cid-ykvenys5>🌙</button></header><details class="toc-mobile" id="tocMobile" data-astro-cid-ykvenys5><summary data-astro-cid-ykvenys5>On this page</summary><nav id="tocNavMobile" data-astro-cid-ykvenys5></nav></details><article class="article-content" data-astro-cid-ykvenys5>
 <blockquote>
 <p><strong>If you only use sender/receiver for application code, please skip this chapter.</strong>
 This chapter is for library authors contributing new algorithms to the C++26 std::execution ecosystem.</p>
 </blockquote>
-<h2 id="why-impls-for">Why impls-for?</h2>
+<h2 id="why-impls-for"><a aria-hidden="true" tabindex="-1" href="#why-impls-for"><span class="icon icon-link"></span></a>Why impls-for?</h2>
 <p>In Chapter 32 we hand-rolled a <code>then</code> — wrote the sender class, receiver class, operation state class, completion signature transformation, the whole set. Writing one algorithm is fine. But writing ten? You’ll find yourself copy-pasting the same boilerplate for every algorithm:</p>
 <ul>
 <li>Define a sender type → nearly identical to the last one</li>
@@ -23,7 +23,7 @@ This chapter is for library authors contributing new algorithms to the C++26 std
 <p><code>basic-sender</code> handles the “common parts” (connect / get_env / operator|)
 <code>impls-for</code> handles only the “unique parts” (completion signature transformation / start behavior)</p>
 </blockquote>
-<h2 id="analogy-from-class-components-to-hooks">Analogy: From Class Components to Hooks</h2>
+<h2 id="analogy-from-class-components-to-hooks"><a aria-hidden="true" tabindex="-1" href="#analogy-from-class-components-to-hooks"><span class="icon icon-link"></span></a>Analogy: From Class Components to Hooks</h2>
 <p>If you’re familiar with React’s evolution:</p>
 <div class="table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch">
 
@@ -48,7 +48,7 @@ This chapter is for library authors contributing new algorithms to the C++26 std
 <table><thead><tr><th></th><th>Class Component</th><th>Functional + Hooks</th></tr></thead><tbody><tr><td>You write</td><td>constructor / render / componentDidMount — full lifecycle</td><td>Only the <code>useState</code> / <code>useEffect</code> you care about</td></tr><tr><td>Boilerplate</td><td>Lots (every component repeats fixed methods)</td><td>Little (focus on state logic only)</td></tr></tbody></table></div>
 <p><code>impls-for</code> is to hand-rolling senders what hooks are to class components — it eliminates roughly 80% of the template code.</p>
 <hr>
-<h2 id="the-core-of-basic-sender">The Core of <code>basic-sender</code></h2>
+<h2 id="the-core-of-basic-sender"><a aria-hidden="true" tabindex="-1" href="#the-core-of-basic-sender"><span class="icon icon-link"></span></a>The Core of <code>basic-sender</code></h2>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">template</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> &#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Tag</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Data</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#24292E;--shiki-dark:#E1E4E8">... </span><span style="color:#6F42C1;--shiki-dark:#B392F0">Child</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">struct</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> basic_sender</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">  // connect() → auto-generates basic_operation</span></span>
@@ -61,9 +61,9 @@ This chapter is for library authors contributing new algorithms to the C++26 std
 <li><strong>Data</strong> — algorithm-specific data (e.g., <code>then</code>’s callback function <code>f</code>)</li>
 <li><strong>Children</strong> — child senders (the pipeline’s input senders)</li>
 </ul>
-<h2 id="the-skeleton-templates">The Skeleton Templates</h2>
+<h2 id="the-skeleton-templates"><a aria-hidden="true" tabindex="-1" href="#the-skeleton-templates"><span class="icon icon-link"></span></a>The Skeleton Templates</h2>
 <p>Under the hood, <code>basic-sender</code> delegates to four exposition-only templates:</p>
-<h3 id="product-type--the-senders-storage">product-type — The Sender’s Storage</h3>
+<h3 id="product-type--the-senders-storage"><a aria-hidden="true" tabindex="-1" href="#product-type--the-senders-storage"><span class="icon icon-link"></span></a>product-type — The Sender’s Storage</h3>
 <p><code>basic-sender</code> inherits from <code>product-type&#x3C;Tag, Data, Child...></code>:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">template</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> &#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> T0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> T1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, ..., </span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Tn</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">struct</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> product</span><span style="color:#24292E;--shiki-dark:#E1E4E8">-type {</span></span>
@@ -83,7 +83,7 @@ This chapter is for library authors contributing new algorithms to the C++26 std
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// tag    → the algorithm type (e.g., then_t)</span></span>
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// data   → algorithm-specific data (e.g., the callable)</span></span>
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// children → child senders</span></span></code></pre></div>
-<h3 id="emplace-from--non-movable-construction">emplace-from — Non-Movable Construction</h3>
+<h3 id="emplace-from--non-movable-construction"><a aria-hidden="true" tabindex="-1" href="#emplace-from--non-movable-construction"><span class="icon icon-link"></span></a>emplace-from — Non-Movable Construction</h3>
 <p>Used internally to emplace non-movable types into tuples and variants:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">template</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> &#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">callable</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Fun</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  requires</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> is_nothrow_move_constructible_v</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;</span><span style="color:#24292E;--shiki-dark:#E1E4E8">Fun</span><span style="color:#D73A49;--shiki-dark:#F97583">></span></span>
@@ -96,7 +96,7 @@ This chapter is for library authors contributing new algorithms to the C++26 std
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  }</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">};</span></span></code></pre></div>
 <p>This is used in <code>async-mutex</code> style primitives where a completion handler is not movable.</p>
-<h3 id="basic-state--the-operation-states-data">basic-state — The Operation State’s Data</h3>
+<h3 id="basic-state--the-operation-states-data"><a aria-hidden="true" tabindex="-1" href="#basic-state--the-operation-states-data"><span class="icon icon-link"></span></a>basic-state — The Operation State’s Data</h3>
 <p><code>basic-state&#x3C;Sndr, Rcvr></code> stores the receiver and algorithm-specific state:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">template</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> &#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Sndr</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Rcvr</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">struct</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> basic</span><span style="color:#24292E;--shiki-dark:#E1E4E8">-state {</span></span>
@@ -108,7 +108,7 @@ This chapter is for library authors contributing new algorithms to the C++26 std
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  state</span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#24292E;--shiki-dark:#E1E4E8">type</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;</span><span style="color:#24292E;--shiki-dark:#E1E4E8">Sndr, Rcvr</span><span style="color:#D73A49;--shiki-dark:#F97583">></span><span style="color:#24292E;--shiki-dark:#E1E4E8"> state;</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">};</span></span></code></pre></div>
 <p>The <code>state</code> member is computed by the algorithm’s <code>get-state</code> hook. For <code>then</code>, this stores the callable; for <code>continues_on</code>, it stores a variant for captured results plus the scheduled operation.</p>
-<h3 id="basic-receiver--completion-dispatch">basic-receiver — Completion Dispatch</h3>
+<h3 id="basic-receiver--completion-dispatch"><a aria-hidden="true" tabindex="-1" href="#basic-receiver--completion-dispatch"><span class="icon icon-link"></span></a>basic-receiver — Completion Dispatch</h3>
 <p><code>basic-receiver&#x3C;Sndr, Rcvr, Index></code> forwards completion signals to <code>impls-for&#x3C;Tag>::complete</code>:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">template</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> &#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Sndr</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Rcvr</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Index</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">struct</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> basic</span><span style="color:#24292E;--shiki-dark:#E1E4E8">-receiver {</span></span>
@@ -136,7 +136,7 @@ This chapter is for library authors contributing new algorithms to the C++26 std
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  basic</span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#24292E;--shiki-dark:#E1E4E8">state</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;</span><span style="color:#24292E;--shiki-dark:#E1E4E8">Sndr, Rcvr</span><span style="color:#D73A49;--shiki-dark:#F97583">>*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> op;</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">};</span></span></code></pre></div>
 <p>Every completion handler calls <code>complete(Index(), state, rcvr, tag, args...)</code>. The <code>Index</code> parameter identifies which child sender completed — this is how <code>when_all</code> knows which branch to mark as done.</p>
-<h3 id="basic-operation--the-complete-operation-state">basic-operation — The Complete Operation State</h3>
+<h3 id="basic-operation--the-complete-operation-state"><a aria-hidden="true" tabindex="-1" href="#basic-operation--the-complete-operation-state"><span class="icon icon-link"></span></a>basic-operation — The Complete Operation State</h3>
 <p><code>basic-operation&#x3C;Sndr, Rcvr></code> inherits from <code>basic-state</code> and adds child operation connections:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">template</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> &#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Sndr</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Rcvr</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">struct</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> basic</span><span style="color:#24292E;--shiki-dark:#E1E4E8">-operation : </span><span style="color:#6F42C1;--shiki-dark:#B392F0">basic</span><span style="color:#24292E;--shiki-dark:#E1E4E8">-state&#x3C;</span><span style="color:#6F42C1;--shiki-dark:#B392F0">Sndr</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#6F42C1;--shiki-dark:#B392F0">Rcvr</span><span style="color:#24292E;--shiki-dark:#E1E4E8">> {</span></span>
@@ -156,7 +156,7 @@ This chapter is for library authors contributing new algorithms to the C++26 std
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  }</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">};</span></span></code></pre></div>
 <p><code>connect-all</code> recursively connects child senders to <code>basic-receiver</code> instances. The <code>start</code> method delegates to <code>impls-for&#x3C;Tag>::start</code>, which is the only part the algorithm author customizes.</p>
-<h3 id="the-flow">The Flow</h3>
+<h3 id="the-flow"><a aria-hidden="true" tabindex="-1" href="#the-flow"><span class="icon icon-link"></span></a>The Flow</h3>
 <pre class="mermaid">flowchart TD
     BS["basic-sender&#x26;lt;Tag, Data, Children...&#x26;gt;"]
     BO["basic-operation&#x26;lt;Sndr, Rcvr&#x26;gt;&#x3C;br/>[inherits basic-state → stores rcvr + algorithm state]&#x3C;br/>[connect-all → connects children to basic-receiver instances]"]
@@ -171,7 +171,7 @@ This chapter is for library authors contributing new algorithms to the C++26 std
     BR --> IC
     IC --> DN</pre>
 <hr>
-<h2 id="basic-usage">Basic Usage</h2>
+<h2 id="basic-usage"><a aria-hidden="true" tabindex="-1" href="#basic-usage"><span class="icon icon-link"></span></a>Basic Usage</h2>
 <p>Rewriting <code>then</code> with <code>impls-for</code>:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// 1. Define the data part (the function object)</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">template</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> &#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Fn</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
@@ -199,7 +199,7 @@ This chapter is for library authors contributing new algorithms to the C++26 std
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">};</span></span></code></pre></div>
 <p>Above, <code>impls-for&#x3C;then_t></code> only overrides two things — <code>get_completion_signatures</code> (changed) and <code>start</code> (changed). Everything else — <code>connect</code>, <code>get_env</code>, <code>operator|</code> — is auto-generated by <code>basic_sender</code>.</p>
 <hr>
-<h2 id="what-default-impls-provides">What <code>default-impls</code> Provides</h2>
+<h2 id="what-default-impls-provides"><a aria-hidden="true" tabindex="-1" href="#what-default-impls-provides"><span class="icon icon-link"></span></a>What <code>default-impls</code> Provides</h2>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">struct</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> default_impls</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">  // Auto-fetch completion signatures</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  template</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> &#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Sender</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#24292E;--shiki-dark:#E1E4E8">... </span><span style="color:#6F42C1;--shiki-dark:#B392F0">Env</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
@@ -219,7 +219,7 @@ This chapter is for library authors contributing new algorithms to the C++26 std
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">};</span></span></code></pre></div>
 <p>You only override what you’re unhappy with. Everything you don’t override takes the default.</p>
 <hr>
-<h2 id="actual-usage-inside-stdexec">Actual Usage Inside stdexec</h2>
+<h2 id="actual-usage-inside-stdexec"><a aria-hidden="true" tabindex="-1" href="#actual-usage-inside-stdexec"><span class="icon icon-link"></span></a>Actual Usage Inside stdexec</h2>
 <p>Under stdexec’s <code>__detail/</code> directory, nearly every algorithm uses <code>impls-for</code>:</p>
 <pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="plaintext"><code><span class="line"><span>__then.hpp       → impls_for&#x3C;then_t></span></span>
 <span class="line"><span>__let.hpp        → impls_for&#x3C;let_t></span></span>
@@ -232,7 +232,7 @@ This chapter is for library authors contributing new algorithms to the C++26 std
 <li>User-facing API calls <code>basic_sender&#x3C;Tag, Data, Children...></code></li>
 </ol>
 <hr>
-<h2 id="what-it-unifies">What It Unifies</h2>
+<h2 id="what-it-unifies"><a aria-hidden="true" tabindex="-1" href="#what-it-unifies"><span class="icon icon-link"></span></a>What It Unifies</h2>
 <div class="table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch">
 
 
@@ -258,7 +258,7 @@ This chapter is for library authors contributing new algorithms to the C++26 std
 
 
 
-<table><thead><tr><th>Traditional Hand-Rolled</th><th><code>impls-for</code></th></tr></thead><tbody><tr><td>Hand-write sender type for every algorithm</td><td><code>basic_sender&#x3C;Tag, Data, Child...></code> auto-generates</td></tr><tr><td>Hand-write operation state for every algorithm</td><td><code>basic_operation</code> manages automatically</td></tr><tr><td>Hand-write receiver environment forwarding</td><td><code>basic_receiver</code> forwards automatically</td></tr><tr><td>Repeated connect / get_env boilerplate</td><td>Only specialize <code>impls-for</code></td></tr></tbody></table></div></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/34-custom-scheduler/" data-astro-cid-ykvenys5>← 34 · Writing a Custom Scheduler</a><a href="/exec/tutorials/36-linux-io-uring/" data-astro-cid-ykvenys5>36 · Linux io_uring — True Async File I/O →</a></nav></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
+<table><thead><tr><th>Traditional Hand-Rolled</th><th><code>impls-for</code></th></tr></thead><tbody><tr><td>Hand-write sender type for every algorithm</td><td><code>basic_sender&#x3C;Tag, Data, Child...></code> auto-generates</td></tr><tr><td>Hand-write operation state for every algorithm</td><td><code>basic_operation</code> manages automatically</td></tr><tr><td>Hand-write receiver environment forwarding</td><td><code>basic_receiver</code> forwards automatically</td></tr><tr><td>Repeated connect / get_env boilerplate</td><td>Only specialize <code>impls-for</code></td></tr></tbody></table></div></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/34-custom-scheduler/" data-astro-cid-ykvenys5>← 34 · Writing a Custom Scheduler</a><a href="/exec/tutorials/36-linux-io-uring/" data-astro-cid-ykvenys5>36 · Linux io_uring — True Async File I/O →</a></nav></div></div></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
       (function() {
         const STORAGE_KEY = "exectutorial-theme";
 
@@ -291,5 +291,55 @@ This chapter is for library authors contributing new algorithms to the C++26 std
           try { localStorage.setItem(STORAGE_KEY, next); } catch(e) {}
           setTheme(next);
         });
+      })();
+    </script><script>
+      (function() {
+        function buildToc(containerId, navId) {
+          var container = document.getElementById(containerId);
+          var nav = document.getElementById(navId);
+          if (!nav) return;
+          var headings = document.querySelectorAll(".article-content h2, .article-content h3");
+          if (headings.length === 0) { if (container) container.style.display = "none"; return; }
+
+          var ul = document.createElement("ul");
+          headings.forEach(function(h) {
+            if (!h.id) return;
+            var li = document.createElement("li");
+            var a = document.createElement("a");
+            a.href = "#" + h.id;
+            a.textContent = h.textContent.replace(/¶$/, "").trim();
+            a.className = "toc-" + h.tagName.toLowerCase();
+            li.appendChild(a);
+            ul.appendChild(li);
+          });
+          nav.appendChild(ul);
+        }
+
+        buildToc("tocSidebar", "tocNav");
+        buildToc(null, "tocNavMobile");
+
+        // active heading highlight
+        var tocLinks = document.querySelectorAll("#tocNav a, #tocNavMobile a");
+        if (tocLinks.length > 0) {
+          var headings = document.querySelectorAll(".article-content h2, .article-content h3");
+          function onScroll() {
+            var scrollY = window.scrollY + 80;
+            var active = null;
+            headings.forEach(function(h) {
+              if (h.offsetTop <= scrollY) active = h;
+            });
+            tocLinks.forEach(function(link) { link.classList.remove("active"); });
+            if (active) {
+              var id = active.id;
+              tocLinks.forEach(function(link) {
+                if (link.getAttribute("href") === "#" + id) {
+                  link.classList.add("active");
+                }
+              });
+            }
+          }
+          window.addEventListener("scroll", onScroll, { passive: true });
+          onScroll();
+        }
       })();
     </script></body></html>

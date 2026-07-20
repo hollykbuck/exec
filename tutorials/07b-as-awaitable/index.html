@@ -5,7 +5,7 @@
         if(!s&&matchMedia("(prefers-color-scheme:light)").matches)theme="light";
         document.documentElement.setAttribute("data-theme",theme);
       })();
-    </script><link rel="stylesheet" href="/exec/_astro/01-why-stdexec.hXKgsPrw.css"></head><body data-astro-cid-ykvenys5><div class="container" data-astro-cid-ykvenys5><header data-astro-cid-ykvenys5><div class="title-area" data-astro-cid-ykvenys5><a href="/exec/tutorials/" style="color:var(--fg-muted);text-decoration:none;font-size:0.85rem;" data-astro-cid-ykvenys5>← Back to index</a><h1 data-astro-cid-ykvenys5>07b · as_awaitable and with_awaitable_senders — How co_await Sender Works Inside</h1></div><button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" data-astro-cid-ykvenys5>🌙</button></header><article class="article-content" data-astro-cid-ykvenys5><h2 id="the-missing-piece">The Missing Piece</h2>
+    </script><link rel="stylesheet" href="/exec/_astro/01-why-stdexec.YzjJ_D8W.css"></head><body data-astro-cid-ykvenys5><div class="layout-wrap" data-astro-cid-ykvenys5><aside class="toc-sidebar" id="tocSidebar" data-astro-cid-ykvenys5><div class="toc-label" data-astro-cid-ykvenys5>On this page</div><nav id="tocNav" data-astro-cid-ykvenys5></nav></aside><div class="layout-main" data-astro-cid-ykvenys5><div class="container" data-astro-cid-ykvenys5><header data-astro-cid-ykvenys5><div class="title-area" data-astro-cid-ykvenys5><a href="/exec/tutorials/" style="color:var(--fg-muted);text-decoration:none;font-size:0.85rem;" data-astro-cid-ykvenys5>← Back to index</a><h1 data-astro-cid-ykvenys5>07b · as_awaitable and with_awaitable_senders — How co_await Sender Works Inside</h1></div><button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" data-astro-cid-ykvenys5>🌙</button></header><details class="toc-mobile" id="tocMobile" data-astro-cid-ykvenys5><summary data-astro-cid-ykvenys5>On this page</summary><nav id="tocNavMobile" data-astro-cid-ykvenys5></nav></details><article class="article-content" data-astro-cid-ykvenys5><h2 id="the-missing-piece"><a aria-hidden="true" tabindex="-1" href="#the-missing-piece"><span class="icon icon-link"></span></a>The Missing Piece</h2>
 <blockquote>
 <p>This chapter explains the internals of coroutine integration. You can skip it without affecting subsequent reading.</p>
 </blockquote>
@@ -40,7 +40,7 @@
     
     K --> M["await_resume(): returns value / rethrows exception"]</pre>
 <p>The diagram above shows the complete execution flow. With this diagram, you won’t get lost.</p>
-<h2 id="with_awaitable_senders--the-promise-base">with_awaitable_senders — The Promise Base</h2>
+<h2 id="with_awaitable_senders--the-promise-base"><a aria-hidden="true" tabindex="-1" href="#with_awaitable_senders--the-promise-base"><span class="icon icon-link"></span></a>with_awaitable_senders — The Promise Base</h2>
 <p><code>task&#x3C;T></code>’s promise type needs to inherit from <code>with_awaitable_senders&#x3C;task::promise_type></code>:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">namespace</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> std</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">execution</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  template</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> &#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Promise</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
@@ -65,7 +65,7 @@
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> await_transform</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">Value</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x26;&#x26;</span><span style="color:#E36209;--shiki-dark:#FFAB70"> value</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) {</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  return</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> as_awaitable</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">std</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">forward</span><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#6F42C1;--shiki-dark:#B392F0">Value</span><span style="color:#24292E;--shiki-dark:#E1E4E8">>(value), </span><span style="color:#D73A49;--shiki-dark:#F97583">static_cast&#x3C;</span><span style="color:#24292E;--shiki-dark:#E1E4E8">Promise</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x26;></span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#005CC5;--shiki-dark:#79B8FF">this</span><span style="color:#24292E;--shiki-dark:#E1E4E8">));</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span></code></pre></div>
-<h2 id="as_awaitable--the-dispatcher">as_awaitable — The Dispatcher</h2>
+<h2 id="as_awaitable--the-dispatcher"><a aria-hidden="true" tabindex="-1" href="#as_awaitable--the-dispatcher"><span class="icon icon-link"></span></a>as_awaitable — The Dispatcher</h2>
 <p><code>as_awaitable(expr, promise)</code> follows a priority chain:</p>
 <ol>
 <li><strong>If <code>expr.as_awaitable(promise)</code> is well-formed</strong> — use the object’s own custom awaitable conversion</li>
@@ -74,7 +74,7 @@
 <li><strong>As a fallback for single-value senders</strong> — <code>sender-awaitable{adapt-for-await-completion(transform_sender(expr)), promise}</code></li>
 </ol>
 <p>The <code>adapt-for-await-completion</code> step calls <code>get_await_completion_adaptor(get_env(s))</code> if available — a customization hook that lets schedulers inject adapter logic at the boundary between sender and coroutine.</p>
-<h2 id="sender-awaitable--the-bridge">sender-awaitable — The Bridge</h2>
+<h2 id="sender-awaitable--the-bridge"><a aria-hidden="true" tabindex="-1" href="#sender-awaitable--the-bridge"><span class="icon icon-link"></span></a>sender-awaitable — The Bridge</h2>
 <p>This is the workhorse. It is the <code>awaiter</code> type that <code>co_await expr</code> interacts with:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">template</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> &#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Sndr</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Promise</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> sender</span><span style="color:#24292E;--shiki-dark:#E1E4E8">-awaitable {</span></span>
@@ -101,7 +101,7 @@
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">  rethrow_exception</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">get</span><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#005CC5;--shiki-dark:#79B8FF">2</span><span style="color:#24292E;--shiki-dark:#E1E4E8">>(result));</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">if</span><span style="color:#D73A49;--shiki-dark:#F97583"> constexpr</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (</span><span style="color:#D73A49;--shiki-dark:#F97583">!</span><span style="color:#24292E;--shiki-dark:#E1E4E8">is_void_v</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;</span><span style="color:#24292E;--shiki-dark:#E1E4E8">value</span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#24292E;--shiki-dark:#E1E4E8">type</span><span style="color:#D73A49;--shiki-dark:#F97583">></span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  return</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> forward</span><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#6F42C1;--shiki-dark:#B392F0">value</span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#6F42C1;--shiki-dark:#B392F0">type</span><span style="color:#24292E;--shiki-dark:#E1E4E8">>(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">get</span><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#005CC5;--shiki-dark:#79B8FF">1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">>(result));</span></span></code></pre></div>
-<h3 id="the-awaitable-receiver">The awaitable-receiver</h3>
+<h3 id="the-awaitable-receiver"><a aria-hidden="true" tabindex="-1" href="#the-awaitable-receiver"><span class="icon icon-link"></span></a>The awaitable-receiver</h3>
 <p>This is the receiver type inside <code>sender-awaitable</code>. It stores:</p>
 <ul>
 <li>A pointer to the <code>result</code> variant (where completion data goes)</li>
@@ -138,7 +138,7 @@
 <li><strong><code>set_stopped</code></strong> — don’t resume the coroutine at all; instead call the promise’s <code>unhandled_stopped()</code> to propagate cancellation upward</li>
 </ul>
 <p>Importantly, the environment of <code>awaitable-receiver</code> forwards all forwarding queries to the coroutine’s promise. This means <code>get_scheduler()</code>, <code>get_stop_token()</code>, etc. work transparently inside <code>co_await</code>.</p>
-<h2 id="the-awaitable-sender-concept">The awaitable-sender Concept</h2>
+<h2 id="the-awaitable-sender-concept"><a aria-hidden="true" tabindex="-1" href="#the-awaitable-sender-concept"><span class="icon icon-link"></span></a>The awaitable-sender Concept</h2>
 <p>A sender S is awaitable in a coroutine with promise P if:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">template</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> &#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Sndr</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Promise</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">concept</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> awaitable</span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#24292E;--shiki-dark:#E1E4E8">sender </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span></span>
@@ -154,7 +154,7 @@
 <li>The promise type must expose <code>unhandled_stopped()</code> returning a <code>coroutine_handle&#x3C;></code></li>
 </ol>
 <p>This is why <code>task&#x3C;T></code> can only <code>co_await</code> senders with exactly one value type. If a sender can complete with multiple value types, wrap it in <code>into_variant</code> or <code>stopped_as_optional</code> first.</p>
-<h2 id="cancellation-propagation-chain">Cancellation Propagation Chain</h2>
+<h2 id="cancellation-propagation-chain"><a aria-hidden="true" tabindex="-1" href="#cancellation-propagation-chain"><span class="icon icon-link"></span></a>Cancellation Propagation Chain</h2>
 <pre class="mermaid">graph TD
     A["co_await sender inside task&#x26;lt;A&#x26;gt;"] --> B["Sender completes with set_stopped"]
     B --> C["awaitable-receiver::set_stopped() called"]
@@ -176,7 +176,7 @@
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  }</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span></code></pre></div>
 <p>When coroutine B <code>co_await</code>s coroutine A’s task, B’s <code>set_continuation</code> is called with A’s promise handle. If A completes with <code>set_stopped</code>, the chain walks up to B’s <code>unhandled_stopped</code>, and so on.</p>
-<h2 id="summary">Summary</h2>
+<h2 id="summary"><a aria-hidden="true" tabindex="-1" href="#summary"><span class="icon icon-link"></span></a>Summary</h2>
 <div class="table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch">
 
 
@@ -207,7 +207,7 @@
 
 
 <table><thead><tr><th>Component</th><th>Role</th></tr></thead><tbody><tr><td><code>with_awaitable_senders&#x3C;P></code></td><td>Promise base class; provides <code>await_transform</code> and <code>unhandled_stopped</code></td></tr><tr><td><code>as_awaitable(expr, p)</code></td><td>CPO that routes <code>expr</code> to the right awaitable wrapper</td></tr><tr><td><code>sender-awaitable&#x3C;S, P></code></td><td>Awaiter that connects a sender, suspends, and resumes on completion</td></tr><tr><td><code>awaitable-receiver</code></td><td>Stores result + continuation handle; three handler forms</td></tr><tr><td><code>awaitable-sender</code> concept</td><td>Constrains which senders can be <code>co_await</code>-ed</td></tr></tbody></table></div>
-<p>Every <code>co_await sender</code> inside <code>task&#x3C;T></code> goes through this exact path. The elegance is that it uses the sender model’s own <code>connect</code> + <code>start</code> + completion signals — no special coroutine-specific dispatch layer needed.</p></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/07-coroutines/" data-astro-cid-ykvenys5>← 07 · Coroutine Integration — co_await sender in task&lt;T&gt;</a><a href="/exec/tutorials/07c-task-internals/" data-astro-cid-ykvenys5>07c · task&lt;T&gt; Internals and task_scheduler →</a></nav></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
+<p>Every <code>co_await sender</code> inside <code>task&#x3C;T></code> goes through this exact path. The elegance is that it uses the sender model’s own <code>connect</code> + <code>start</code> + completion signals — no special coroutine-specific dispatch layer needed.</p></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/07-coroutines/" data-astro-cid-ykvenys5>← 07 · Coroutine Integration — co_await sender in task&lt;T&gt;</a><a href="/exec/tutorials/07c-task-internals/" data-astro-cid-ykvenys5>07c · task&lt;T&gt; Internals and task_scheduler →</a></nav></div></div></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
       (function() {
         const STORAGE_KEY = "exectutorial-theme";
 
@@ -240,5 +240,55 @@
           try { localStorage.setItem(STORAGE_KEY, next); } catch(e) {}
           setTheme(next);
         });
+      })();
+    </script><script>
+      (function() {
+        function buildToc(containerId, navId) {
+          var container = document.getElementById(containerId);
+          var nav = document.getElementById(navId);
+          if (!nav) return;
+          var headings = document.querySelectorAll(".article-content h2, .article-content h3");
+          if (headings.length === 0) { if (container) container.style.display = "none"; return; }
+
+          var ul = document.createElement("ul");
+          headings.forEach(function(h) {
+            if (!h.id) return;
+            var li = document.createElement("li");
+            var a = document.createElement("a");
+            a.href = "#" + h.id;
+            a.textContent = h.textContent.replace(/¶$/, "").trim();
+            a.className = "toc-" + h.tagName.toLowerCase();
+            li.appendChild(a);
+            ul.appendChild(li);
+          });
+          nav.appendChild(ul);
+        }
+
+        buildToc("tocSidebar", "tocNav");
+        buildToc(null, "tocNavMobile");
+
+        // active heading highlight
+        var tocLinks = document.querySelectorAll("#tocNav a, #tocNavMobile a");
+        if (tocLinks.length > 0) {
+          var headings = document.querySelectorAll(".article-content h2, .article-content h3");
+          function onScroll() {
+            var scrollY = window.scrollY + 80;
+            var active = null;
+            headings.forEach(function(h) {
+              if (h.offsetTop <= scrollY) active = h;
+            });
+            tocLinks.forEach(function(link) { link.classList.remove("active"); });
+            if (active) {
+              var id = active.id;
+              tocLinks.forEach(function(link) {
+                if (link.getAttribute("href") === "#" + id) {
+                  link.classList.add("active");
+                }
+              });
+            }
+          }
+          window.addEventListener("scroll", onScroll, { passive: true });
+          onScroll();
+        }
       })();
     </script></body></html>

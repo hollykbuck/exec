@@ -5,8 +5,8 @@
         if(!s&&matchMedia("(prefers-color-scheme:light)").matches)theme="light";
         document.documentElement.setAttribute("data-theme",theme);
       })();
-    </script><link rel="stylesheet" href="/exec/_astro/01-why-stdexec.hXKgsPrw.css"></head><body data-astro-cid-ykvenys5><div class="container" data-astro-cid-ykvenys5><header data-astro-cid-ykvenys5><div class="title-area" data-astro-cid-ykvenys5><a href="/exec/tutorials/" style="color:var(--fg-muted);text-decoration:none;font-size:0.85rem;" data-astro-cid-ykvenys5>← Back to index</a><h1 data-astro-cid-ykvenys5>10 · Scheduler Concept</h1></div><button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" data-astro-cid-ykvenys5>🌙</button></header><article class="article-content" data-astro-cid-ykvenys5>
-<h2 id="overview">Overview</h2>
+    </script><link rel="stylesheet" href="/exec/_astro/01-why-stdexec.YzjJ_D8W.css"></head><body data-astro-cid-ykvenys5><div class="layout-wrap" data-astro-cid-ykvenys5><aside class="toc-sidebar" id="tocSidebar" data-astro-cid-ykvenys5><div class="toc-label" data-astro-cid-ykvenys5>On this page</div><nav id="tocNav" data-astro-cid-ykvenys5></nav></aside><div class="layout-main" data-astro-cid-ykvenys5><div class="container" data-astro-cid-ykvenys5><header data-astro-cid-ykvenys5><div class="title-area" data-astro-cid-ykvenys5><a href="/exec/tutorials/" style="color:var(--fg-muted);text-decoration:none;font-size:0.85rem;" data-astro-cid-ykvenys5>← Back to index</a><h1 data-astro-cid-ykvenys5>10 · Scheduler Concept</h1></div><button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" data-astro-cid-ykvenys5>🌙</button></header><details class="toc-mobile" id="tocMobile" data-astro-cid-ykvenys5><summary data-astro-cid-ykvenys5>On this page</summary><nav id="tocNavMobile" data-astro-cid-ykvenys5></nav></details><article class="article-content" data-astro-cid-ykvenys5>
+<h2 id="overview"><a aria-hidden="true" tabindex="-1" href="#overview"><span class="icon icon-link"></span></a>Overview</h2>
 <p>What is a Scheduler? It’s basically an <strong>abstraction of an execution resource</strong> — thread pool, GPU stream, event loop — all accessed through the same <code>schedule()</code> interface.</p>
 <p>In traditional async programming, every execution resource has a different API:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Three resources, three different interfaces</span></span>
@@ -37,7 +37,7 @@
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    };</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span></code></pre></div>
 <p>In the code above, the <code>scheduler</code> concept requires three things: <strong>value semantics</strong> (destructible, copyable, comparable), <strong><code>schedule(sch)</code> returns a Sender</strong>, and <strong>support for querying the concurrency guarantee</strong>.</p>
-<h2 id="what-schedule-does">What schedule() Does</h2>
+<h2 id="what-schedule-does"><a aria-hidden="true" tabindex="-1" href="#what-schedule-does"><span class="icon icon-link"></span></a>What schedule() Does</h2>
 <p><code>schedule(sch)</code> returns a Sender that does three things:</p>
 <ol>
 <li>Acquires an execution agent on the resource associated with the scheduler</li>
@@ -56,7 +56,7 @@
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">                     return</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> heavy_computation</span><span style="color:#24292E;--shiki-dark:#E1E4E8">();</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                   });</span></span></code></pre></div>
 <p>In the code above, <code>schedule(sch)</code> itself does no meaningful work — it only ensures the empty <code>set_value()</code> is sent on the correct execution resource. The actual business logic goes in the subsequent <code>then</code>.</p>
-<h2 id="three-concurrency-guarantees">Three Concurrency Guarantees</h2>
+<h2 id="three-concurrency-guarantees"><a aria-hidden="true" tabindex="-1" href="#three-concurrency-guarantees"><span class="icon icon-link"></span></a>Three Concurrency Guarantees</h2>
 <p>Every Scheduler must declare its concurrency characteristics:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">enum</span><span style="color:#D73A49;--shiki-dark:#F97583"> class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> forward_progress_guarantee</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
 <span class="line"><span style="color:#005CC5;--shiki-dark:#79B8FF">  concurrent</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span><span style="color:#6A737D;--shiki-dark:#6A737D">       // may execute concurrently, but may block each other</span></span>
@@ -91,8 +91,70 @@
 
 <table><thead><tr><th>Scheduler</th><th>Guarantee</th><th>Notes</th></tr></thead><tbody><tr><td><code>inline_scheduler</code></td><td><code>concurrent</code></td><td>Executes synchronously on the current thread</td></tr><tr><td><code>static_thread_pool</code></td><td><code>parallel</code></td><td>Multiple threads running truly in parallel</td></tr><tr><td><code>nvexec::stream_scheduler</code></td><td><code>weakly_parallel</code></td><td>GPU stream execution</td></tr></tbody></table></div>
 <p>In the table above, <code>concurrent</code> is the most basic guarantee — multiple tasks may be executing at the same time, but tasks on the same thread must queue sequentially. <code>parallel</code> is a stronger guarantee — it means true parallel access through lock-free data structures is possible. <code>weakly_parallel</code> applies to highly constrained execution environments like GPUs.</p>
-<h2 id="built-in-schedulers">Built-in Schedulers</h2>
-<h3 id="inline_scheduler">inline_scheduler</h3>
+<h3 id="what-each-level-means-for-algorithm-selection"><a aria-hidden="true" tabindex="-1" href="#what-each-level-means-for-algorithm-selection"><span class="icon icon-link"></span></a>What Each Level Means for Algorithm Selection</h3>
+<p>The framework uses <code>forward_progress_guarantee</code> to make optimization and correctness decisions:</p>
+<div class="table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Level</th><th>Safe to use blocking sync?</th><th>Safe to use lock-free?</th><th>Typical use</th></tr></thead><tbody><tr><td><code>concurrent</code></td><td>Yes</td><td>No (may deadlock)</td><td><code>inline_scheduler</code>, <code>run_loop</code></td></tr><tr><td><code>parallel</code></td><td>No (can block forward progress)</td><td>Yes</td><td><code>static_thread_pool</code></td></tr><tr><td><code>weakly_parallel</code></td><td>No (blocks entire warp)</td><td>No (warp divergence)</td><td>GPU schedulers</td></tr></tbody></table></div>
+<ul>
+<li><strong><code>concurrent</code></strong>: A task can safely block — other tasks on the same execution agent will still make progress. <code>sync_wait</code> on <code>inline_scheduler</code> works because the blocked thread can process other work via the delegation scheduler.</li>
+<li><strong><code>parallel</code></strong>: Lock-free algorithms are safe. Blocking is dangerous — a blocked thread prevents all tasks from making progress on that execution resource.</li>
+<li><strong><code>weakly_parallel</code></strong>: The strictest level. Even lock-free atomics may cause correctness issues (e.g., CUDA warp divergence). Tasks should never block or synchronize. This is the <strong>default</strong> — if a scheduler doesn’t explicitly declare its guarantee, the framework assumes the weakest level for safety.</li>
+</ul>
+<h3 id="default-weakly_parallel"><a aria-hidden="true" tabindex="-1" href="#default-weakly_parallel"><span class="icon icon-link"></span></a>Default: <code>weakly_parallel</code></h3>
+<p>The query object <code>get_forward_progress_guarantee_t</code> inherits from <code>__query&#x3C;..., forward_progress_guarantee::weakly_parallel, ...></code>:</p>
+<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">struct</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> get_forward_progress_guarantee_t</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  : __query&#x3C;</span><span style="color:#005CC5;--shiki-dark:#79B8FF">get_forward_progress_guarantee_t</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">            forward_progress_guarantee</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">weakly_parallel</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">            __q1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#005CC5;--shiki-dark:#79B8FF">__decay_t</span><span style="color:#24292E;--shiki-dark:#E1E4E8">>></span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">{ ... };</span></span></code></pre></div>
+<p>The <code>_Default = weakly_parallel</code> parameter means: if a scheduler’s environment doesn’t answer this query at all, the framework conservatively assumes <code>weakly_parallel</code>. This is the <strong>safe default</strong> — a scheduler that doesn’t declare its guarantee will not be assumed to support blocking or lock-free operations.</p>
+<h3 id="forward-progress-delegation-get_delegation_scheduler"><a aria-hidden="true" tabindex="-1" href="#forward-progress-delegation-get_delegation_scheduler"><span class="icon icon-link"></span></a>Forward Progress Delegation: <code>get_delegation_scheduler</code></h3>
+<p>When a <code>parallel</code> or <code>weakly_parallel</code> scheduler needs to perform a blocking operation (e.g., <code>sync_wait</code>), it cannot block the current execution agent without deadlocking. Instead, it asks for a <strong>delegation scheduler</strong> — a <code>concurrent</code> scheduler where blocking is safe:</p>
+<div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// sync_wait's internal environment provides a delegation scheduler:</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">struct</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> __env</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  template</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> &#x3C;__one_of&#x3C;</span><span style="color:#005CC5;--shiki-dark:#79B8FF">get_scheduler_t</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#005CC5;--shiki-dark:#79B8FF">get_start_scheduler_t</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#005CC5;--shiki-dark:#79B8FF">get_delegation_scheduler_t</span><span style="color:#24292E;--shiki-dark:#E1E4E8">> </span><span style="color:#D73A49;--shiki-dark:#F97583">_Query</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  constexpr</span><span style="color:#D73A49;--shiki-dark:#F97583"> auto</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> query</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">_Query</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) </span><span style="color:#D73A49;--shiki-dark:#F97583">const</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> noexcept -> run_loop::scheduler {</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    return</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> __loop_-></span><span style="color:#6F42C1;--shiki-dark:#B392F0">get_scheduler</span><span style="color:#24292E;--shiki-dark:#E1E4E8">();</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  }</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">};</span></span></code></pre></div>
+<p><code>sync_wait</code> creates a <code>run_loop</code> (which has <code>concurrent</code> guarantee) and exposes it via all three scheduler queries. When a <code>parallel</code> scheduler’s algorithm needs to block, it can borrow the <code>run_loop</code>’s thread via <code>get_delegation_scheduler</code>, execute the blocking work there, and keep the parallel execution resource unblocked.</p>
+<p>The flow:</p>
+<ol>
+<li><code>parallel_scheduler</code> needs to synchronize → queries <code>get_delegation_scheduler(env)</code></li>
+<li>Gets the <code>run_loop::scheduler</code> (concurrent)</li>
+<li>Delegates the blocking wait to that run loop</li>
+<li>The parallel thread is freed for other work</li>
+</ol>
+<h2 id="built-in-schedulers"><a aria-hidden="true" tabindex="-1" href="#built-in-schedulers"><span class="icon icon-link"></span></a>Built-in Schedulers</h2>
+<h3 id="inline_scheduler"><a aria-hidden="true" tabindex="-1" href="#inline_scheduler"><span class="icon icon-link"></span></a>inline_scheduler</h3>
 <p><code>inline_scheduler</code> is the simplest scheduler — its <code>start()</code> calls <code>set_value</code> directly on the current call stack:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">exec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::inline_scheduler sch;</span></span>
 <span class="line"></span>
@@ -101,7 +163,7 @@
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">start</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(op);</span><span style="color:#6A737D;--shiki-dark:#6A737D">  // set_value(rcvr) is called synchronously on this call stack</span></span>
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">            // When start() returns, the Receiver has already received the result</span></span></code></pre></div>
 <p>In the code above, <code>inline_scheduler</code> is <strong>fully synchronous</strong>. It’s mainly used for testing, or as a “placeholder scheduler” in scenarios that don’t need asynchronous dispatch.</p>
-<h3 id="static_thread_pool">static_thread_pool</h3>
+<h3 id="static_thread_pool"><a aria-hidden="true" tabindex="-1" href="#static_thread_pool"><span class="icon icon-link"></span></a>static_thread_pool</h3>
 <p><code>static_thread_pool</code> creates a fixed-size thread pool:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">exec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::static_thread_pool pool{</span><span style="color:#005CC5;--shiki-dark:#79B8FF">4</span><span style="color:#24292E;--shiki-dark:#E1E4E8">};</span><span style="color:#6A737D;--shiki-dark:#6A737D">  // 4 worker threads</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> sch </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> pool.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">get_scheduler</span><span style="color:#24292E;--shiki-dark:#E1E4E8">();</span></span>
@@ -117,7 +179,7 @@
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// 2. An idle thread in the pool picks up the work</span></span>
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// 3. That thread calls set_value(rcvr)</span></span></code></pre></div>
 <p>In the code above, <code>start()</code> returns immediately and the actual work completes on a background thread. You don’t need to manually manage thread creation and destruction — <code>static_thread_pool</code> cleans up automatically in its destructor.</p>
-<h3 id="run_loop">run_loop</h3>
+<h3 id="run_loop"><a aria-hidden="true" tabindex="-1" href="#run_loop"><span class="icon icon-link"></span></a>run_loop</h3>
 <p><code>run_loop</code> is a <strong>single-threaded event loop</strong> — you must manually invoke <code>loop.run()</code> to drive it:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">stdexec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::run_loop loop;</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> sch </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> loop.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">get_scheduler</span><span style="color:#24292E;--shiki-dark:#E1E4E8">();</span></span>
@@ -132,15 +194,15 @@
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Run the event loop — processes queued work</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">loop.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">run</span><span style="color:#24292E;--shiki-dark:#E1E4E8">();</span><span style="color:#6A737D;--shiki-dark:#6A737D">  // returns after all work is done</span></span></code></pre></div>
 <p>In the code above, <code>run_loop</code> is suitable for scenarios requiring <strong>precise control over execution timing</strong> — for example, simulating a single-threaded environment in tests, or using a main loop to drive all async operations in an embedded system.</p>
-<h3 id="comparison">Comparison</h3>
+<h3 id="comparison"><a aria-hidden="true" tabindex="-1" href="#comparison"><span class="icon icon-link"></span></a>Comparison</h3>
 <p>The core difference between the three schedulers — when <code>set_value</code> gets called after <code>start()</code>:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// inline_scheduler:    set_value called before start() returns</span></span>
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// static_thread_pool:  start() returns immediately, set_value called on another thread</span></span>
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// run_loop:            start() returns immediately, set_value called inside loop.run()</span></span></code></pre></div>
 <p>The comments above summarize the timing differences. Understanding these differences is essential for using each scheduler correctly.</p>
-<h2 id="implementing-a-custom-scheduler">Implementing a Custom Scheduler</h2>
+<h2 id="implementing-a-custom-scheduler"><a aria-hidden="true" tabindex="-1" href="#implementing-a-custom-scheduler"><span class="icon icon-link"></span></a>Implementing a Custom Scheduler</h2>
 <p>Implementing a custom scheduler requires two parts: the scheduler class itself, and the Sender returned by <code>schedule()</code>.</p>
-<h3 id="step-1-define-the-scheduler-class">Step 1: Define the Scheduler Class</h3>
+<h3 id="step-1-define-the-scheduler-class"><a aria-hidden="true" tabindex="-1" href="#step-1-define-the-scheduler-class"><span class="icon icon-link"></span></a>Step 1: Define the Scheduler Class</h3>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">struct</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> my_scheduler</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">  // Declare concurrency guarantee</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  friend</span><span style="color:#D73A49;--shiki-dark:#F97583"> auto</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> tag_invoke</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span></span>
@@ -153,7 +215,7 @@
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  bool</span><span style="color:#D73A49;--shiki-dark:#F97583"> operator</span><span style="color:#6F42C1;--shiki-dark:#B392F0">==</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#D73A49;--shiki-dark:#F97583">const</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> my_scheduler</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x26;</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) </span><span style="color:#D73A49;--shiki-dark:#F97583">const</span><span style="color:#D73A49;--shiki-dark:#F97583"> =</span><span style="color:#D73A49;--shiki-dark:#F97583"> default</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">};</span></span></code></pre></div>
 <p>In the code above, <code>get_forward_progress_guarantee</code> is the scheduler’s “ID card” — the framework uses it to assess the scheduler’s concurrency abilities. We chose <code>concurrent</code> because our scheduler executes synchronously on the current thread.</p>
-<h3 id="step-2-implement-the-schedule-sender">Step 2: Implement the schedule Sender</h3>
+<h3 id="step-2-implement-the-schedule-sender"><a aria-hidden="true" tabindex="-1" href="#step-2-implement-the-schedule-sender"><span class="icon icon-link"></span></a>Step 2: Implement the schedule Sender</h3>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">struct</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> my_schedule_sender</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  using</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> sender_concept</span><span style="color:#D73A49;--shiki-dark:#F97583"> =</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> stdexec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">sender_tag</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
 <span class="line"></span>
@@ -176,13 +238,13 @@
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  }</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">};</span></span></code></pre></div>
 <p>In the code above, the Sender returned by <code>schedule</code> has a completion signature of <code>set_value_t()</code> — an <strong>empty-argument</strong> success signal. This is the convention for all <code>schedule()</code> Senders: they only switch the execution context and carry no business data.</p>
-<h3 id="step-3-implement-schedule-via-tag_invoke">Step 3: Implement schedule via tag_invoke</h3>
+<h3 id="step-3-implement-schedule-via-tag_invoke"><a aria-hidden="true" tabindex="-1" href="#step-3-implement-schedule-via-tag_invoke"><span class="icon icon-link"></span></a>Step 3: Implement schedule via tag_invoke</h3>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">my_schedule_sender</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> tag_invoke</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">  stdexec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#005CC5;--shiki-dark:#79B8FF">tag_t</span><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#6F42C1;--shiki-dark:#B392F0">stdexec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">schedule</span><span style="color:#24292E;--shiki-dark:#E1E4E8">>, </span><span style="color:#D73A49;--shiki-dark:#F97583">const</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> my_scheduler</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x26;</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) {</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  return</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {};</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span></code></pre></div>
 <p>In the code above, <code>schedule</code> is a CPO (Customization Point Object), invoked through the <code>tag_invoke</code> mechanism. As long as you define <code>tag_invoke(schedule_t, my_scheduler)</code>, <code>schedule(my_scheduler)</code> will work correctly.</p>
-<h2 id="scheduler-responsibility-boundaries">Scheduler Responsibility Boundaries</h2>
+<h2 id="scheduler-responsibility-boundaries"><a aria-hidden="true" tabindex="-1" href="#scheduler-responsibility-boundaries"><span class="icon icon-link"></span></a>Scheduler Responsibility Boundaries</h2>
 <p>A scheduler <strong>does exactly one thing</strong>: provides the Sender returned by <code>schedule(sch)</code>, and guarantees that after <code>start()</code>, <code>set_value</code> will be called on the correct execution resource.</p>
 <p>A scheduler is <strong>not responsible for</strong>:</p>
 <ul>
@@ -197,14 +259,14 @@
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// continues_on decides "at which point to switch to that resource"</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">sender </span><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> on_pool </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> continues_on</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(work, pool.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">get_scheduler</span><span style="color:#24292E;--shiki-dark:#E1E4E8">());</span></span></code></pre></div>
 <p>In the code above, scheduler and adaptor each have their own role — the scheduler <strong>provides the resource</strong>, and the adaptor <strong>decides when to use it</strong>.</p>
-<h2 id="important-notes">Important Notes</h2>
+<h2 id="important-notes"><a aria-hidden="true" tabindex="-1" href="#important-notes"><span class="icon icon-link"></span></a>Important Notes</h2>
 <ol>
 <li><strong><code>forward_progress_guarantee</code> is a compile-time constant</strong> — it affects the framework’s optimization decisions and static checks, not runtime state</li>
 <li><strong>Schedulers should be lightweight value types</strong> — copying a Scheduler should be cheap, typically just a pointer to the execution resource</li>
 <li><strong><code>schedule(sch)</code> always sends <code>set_value()</code></strong> — this is a standard convention; don’t expect a schedule Sender to send other completion signals</li>
 <li><strong>Schedulers don’t handle cancellation</strong> — cancellation is handled by the stop token mechanism, covered in later chapters</li>
 </ol>
-<p>The next chapter introduces Operation State — to see what exactly gets produced when a Sender and Receiver are connected, and its strict lifecycle rules.</p></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/09-sender-concept/" data-astro-cid-ykvenys5>← 09 · Sender Concept</a><a href="/exec/tutorials/11-operation-state/" data-astro-cid-ykvenys5>11 · Operation State Lifecycle →</a></nav></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
+<p>The next chapter introduces Operation State — to see what exactly gets produced when a Sender and Receiver are connected, and its strict lifecycle rules.</p></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/09-sender-concept/" data-astro-cid-ykvenys5>← 09 · Sender Concept</a><a href="/exec/tutorials/11-operation-state/" data-astro-cid-ykvenys5>11 · Operation State Lifecycle →</a></nav></div></div></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
       (function() {
         const STORAGE_KEY = "exectutorial-theme";
 
@@ -237,5 +299,55 @@
           try { localStorage.setItem(STORAGE_KEY, next); } catch(e) {}
           setTheme(next);
         });
+      })();
+    </script><script>
+      (function() {
+        function buildToc(containerId, navId) {
+          var container = document.getElementById(containerId);
+          var nav = document.getElementById(navId);
+          if (!nav) return;
+          var headings = document.querySelectorAll(".article-content h2, .article-content h3");
+          if (headings.length === 0) { if (container) container.style.display = "none"; return; }
+
+          var ul = document.createElement("ul");
+          headings.forEach(function(h) {
+            if (!h.id) return;
+            var li = document.createElement("li");
+            var a = document.createElement("a");
+            a.href = "#" + h.id;
+            a.textContent = h.textContent.replace(/¶$/, "").trim();
+            a.className = "toc-" + h.tagName.toLowerCase();
+            li.appendChild(a);
+            ul.appendChild(li);
+          });
+          nav.appendChild(ul);
+        }
+
+        buildToc("tocSidebar", "tocNav");
+        buildToc(null, "tocNavMobile");
+
+        // active heading highlight
+        var tocLinks = document.querySelectorAll("#tocNav a, #tocNavMobile a");
+        if (tocLinks.length > 0) {
+          var headings = document.querySelectorAll(".article-content h2, .article-content h3");
+          function onScroll() {
+            var scrollY = window.scrollY + 80;
+            var active = null;
+            headings.forEach(function(h) {
+              if (h.offsetTop <= scrollY) active = h;
+            });
+            tocLinks.forEach(function(link) { link.classList.remove("active"); });
+            if (active) {
+              var id = active.id;
+              tocLinks.forEach(function(link) {
+                if (link.getAttribute("href") === "#" + id) {
+                  link.classList.add("active");
+                }
+              });
+            }
+          }
+          window.addEventListener("scroll", onScroll, { passive: true });
+          onScroll();
+        }
       })();
     </script></body></html>

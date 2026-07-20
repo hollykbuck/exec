@@ -5,12 +5,12 @@
         if(!s&&matchMedia("(prefers-color-scheme:light)").matches)theme="light";
         document.documentElement.setAttribute("data-theme",theme);
       })();
-    </script><link rel="stylesheet" href="/exec/_astro/01-why-stdexec.hXKgsPrw.css"></head><body data-astro-cid-ykvenys5><div class="container" data-astro-cid-ykvenys5><header data-astro-cid-ykvenys5><div class="title-area" data-astro-cid-ykvenys5><a href="/exec/tutorials/" style="color:var(--fg-muted);text-decoration:none;font-size:0.85rem;" data-astro-cid-ykvenys5>← Back to index</a><h1 data-astro-cid-ykvenys5>24 · write_env / unstoppable —— Modifying Environment Properties</h1></div><button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" data-astro-cid-ykvenys5>🌙</button></header><article class="article-content" data-astro-cid-ykvenys5>
-<h2 id="a-callback-to-chapter-14">A Callback to Chapter 14</h2>
+    </script><link rel="stylesheet" href="/exec/_astro/01-why-stdexec.YzjJ_D8W.css"></head><body data-astro-cid-ykvenys5><div class="layout-wrap" data-astro-cid-ykvenys5><aside class="toc-sidebar" id="tocSidebar" data-astro-cid-ykvenys5><div class="toc-label" data-astro-cid-ykvenys5>On this page</div><nav id="tocNav" data-astro-cid-ykvenys5></nav></aside><div class="layout-main" data-astro-cid-ykvenys5><div class="container" data-astro-cid-ykvenys5><header data-astro-cid-ykvenys5><div class="title-area" data-astro-cid-ykvenys5><a href="/exec/tutorials/" style="color:var(--fg-muted);text-decoration:none;font-size:0.85rem;" data-astro-cid-ykvenys5>← Back to index</a><h1 data-astro-cid-ykvenys5>24 · write_env / unstoppable —— Modifying Environment Properties</h1></div><button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" data-astro-cid-ykvenys5>🌙</button></header><details class="toc-mobile" id="tocMobile" data-astro-cid-ykvenys5><summary data-astro-cid-ykvenys5>On this page</summary><nav id="tocNavMobile" data-astro-cid-ykvenys5></nav></details><article class="article-content" data-astro-cid-ykvenys5>
+<h2 id="a-callback-to-chapter-14"><a aria-hidden="true" tabindex="-1" href="#a-callback-to-chapter-14"><span class="icon icon-link"></span></a>A Callback to Chapter 14</h2>
 <p>Chapter 14 taught us how to <em>read</em> environment information (<code>read_env</code>). This chapter covers how to <em>write</em> it (<code>write_env</code>). The two adaptors relate like C++ getters and setters, or like Unix shell environment variables:</p>
 <div class="code-block-wrap"><span class="code-lang">bash</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="bash"><code><span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">$</span><span style="color:#032F62;--shiki-dark:#9ECBFF"> env</span><span style="color:#032F62;--shiki-dark:#9ECBFF"> VAR=value</span><span style="color:#032F62;--shiki-dark:#9ECBFF"> command</span></span></code></pre></div>
 <p>You temporarily override an environment variable’s value, but only for that command — the global environment is untouched. <code>write_env</code> does exactly the same thing, scoped to the downstream of the current pipeline.</p>
-<h2 id="overview">Overview</h2>
+<h2 id="overview"><a aria-hidden="true" tabindex="-1" href="#overview"><span class="icon icon-link"></span></a>Overview</h2>
 <div class="table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch">
 
 
@@ -29,7 +29,7 @@
 
 
 <table><thead><tr><th>Adaptor</th><th>Effect</th></tr></thead><tbody><tr><td><code>write_env(sndr, props...)</code></td><td>Injects environment properties downstream</td></tr><tr><td><code>unstoppable(sndr)</code></td><td>Disables the stop token (ignores cancellation)</td></tr></tbody></table></div>
-<h2 id="write_env--injecting-environment-properties"><code>write_env</code> —— Injecting Environment Properties</h2>
+<h2 id="write_env--injecting-environment-properties"><a aria-hidden="true" tabindex="-1" href="#write_env--injecting-environment-properties"><span class="icon icon-link"></span></a><code>write_env</code> —— Injecting Environment Properties</h2>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">namespace</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> std</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">execution</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  inline</span><span style="color:#D73A49;--shiki-dark:#F97583"> constexpr</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> unspecified write_env{};</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span>
@@ -44,7 +44,7 @@
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">      })</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">);</span></span></code></pre></div>
 <p>The code above inserts an environment override between <code>just(42)</code> and <code>then</code>. The downstream <code>then</code> sees the scheduler as <code>my_scheduler</code> rather than the original.</p>
-<h3 id="setting-multiple-properties">Setting Multiple Properties</h3>
+<h3 id="setting-multiple-properties"><a aria-hidden="true" tabindex="-1" href="#setting-multiple-properties"><span class="icon icon-link"></span></a>Setting Multiple Properties</h3>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">sync_wait</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">  just</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">42</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    |</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> write_env</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span></span>
@@ -57,7 +57,7 @@
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">        return</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> x;</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">      })</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">);</span></span></code></pre></div>
-<h2 id="unstoppable--disabling-cancellation"><code>unstoppable</code> —— Disabling Cancellation</h2>
+<h2 id="unstoppable--disabling-cancellation"><a aria-hidden="true" tabindex="-1" href="#unstoppable--disabling-cancellation"><span class="icon icon-link"></span></a><code>unstoppable</code> —— Disabling Cancellation</h2>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">namespace</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> std</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">execution</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  inline</span><span style="color:#D73A49;--shiki-dark:#F97583"> constexpr</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> unspecified unstoppable{};</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span>
@@ -69,35 +69,35 @@
 <p><code>unstoppable</code> is actually a special case of <code>write_env</code> — it replaces the <code>get_stop_token</code> query result with <code>never_stop_token</code>:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Equivalent implementation of unstoppable</span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">write_env</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(sndr, prop{get_stop_token, never_stop_token{}})</span></span></code></pre></div>
-<h2 id="environment-property-override-rules">Environment Property Override Rules</h2>
+<h2 id="environment-property-override-rules"><a aria-hidden="true" tabindex="-1" href="#environment-property-override-rules"><span class="icon icon-link"></span></a>Environment Property Override Rules</h2>
 <p><code>write_env</code> uses <strong>override</strong> semantics. It doesn’t modify the upstream environment; it stacks a new property layer on top:</p>
 <pre class="mermaid">graph LR
   A["Existing env: {get_scheduler → A, get_stop_token → B}"]
   B["write_env(prop{get_scheduler → C})"]
   C["New env: {get_scheduler → C, get_stop_token → B}↑ Overridden"]
   A --> B --> C</pre>
-<h2 id="typical-use-cases">Typical Use Cases</h2>
-<h3 id="scenario-1-replacing-the-scheduler-in-tests">Scenario 1: Replacing the Scheduler in Tests</h3>
+<h2 id="typical-use-cases"><a aria-hidden="true" tabindex="-1" href="#typical-use-cases"><span class="icon icon-link"></span></a>Typical Use Cases</h2>
+<h3 id="scenario-1-replacing-the-scheduler-in-tests"><a aria-hidden="true" tabindex="-1" href="#scenario-1-replacing-the-scheduler-in-tests"><span class="icon icon-link"></span></a>Scenario 1: Replacing the Scheduler in Tests</h3>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Production code uses a thread pool</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> pipeline </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> just</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">42</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) </span><span style="color:#D73A49;--shiki-dark:#F97583">|</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> then</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(heavy_compute);</span></span>
 <span class="line"></span>
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Tests swap in inline_scheduler (synchronous, easier to debug)</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> test_pipeline </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> pipeline</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  |</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> write_env</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(prop{get_scheduler, </span><span style="color:#6F42C1;--shiki-dark:#B392F0">exec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::inline_scheduler{}});</span></span></code></pre></div>
-<h3 id="scenario-2-specifying-a-custom-allocator">Scenario 2: Specifying a Custom Allocator</h3>
+<h3 id="scenario-2-specifying-a-custom-allocator"><a aria-hidden="true" tabindex="-1" href="#scenario-2-specifying-a-custom-allocator"><span class="icon icon-link"></span></a>Scenario 2: Specifying a Custom Allocator</h3>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">custom_allocator alloc;</span></span>
 <span class="line"></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> pipeline </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> fetch_large_data</span><span style="color:#24292E;--shiki-dark:#E1E4E8">()</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  |</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> write_env</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(prop{get_allocator, alloc})</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  |</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> then</span><span style="color:#24292E;--shiki-dark:#E1E4E8">([](</span><span style="color:#6F42C1;--shiki-dark:#B392F0">data</span><span style="color:#E36209;--shiki-dark:#FFAB70"> d</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) {</span><span style="color:#6A737D;--shiki-dark:#6A737D"> /* this memory is allocated by alloc */</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> });</span></span></code></pre></div>
-<h3 id="scenario-3-protecting-non-cancellable-critical-operations">Scenario 3: Protecting Non-Cancellable Critical Operations</h3>
+<h3 id="scenario-3-protecting-non-cancellable-critical-operations"><a aria-hidden="true" tabindex="-1" href="#scenario-3-protecting-non-cancellable-critical-operations"><span class="icon icon-link"></span></a>Scenario 3: Protecting Non-Cancellable Critical Operations</h3>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">schedule</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(sch)</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  |</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> then</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(read_data)</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  |</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> unstoppable</span><span style="color:#6A737D;--shiki-dark:#6A737D">                // Non-cancellable from here onward</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  |</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> then</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(write_to_database)</span><span style="color:#6A737D;--shiki-dark:#6A737D">    // Database write must complete</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  |</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> upon_stopped</span><span style="color:#24292E;--shiki-dark:#E1E4E8">([] {</span><span style="color:#6A737D;--shiki-dark:#6A737D"> /* will never execute */</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> });</span></span></code></pre></div>
 <p>The code above uses <code>write_to_database</code> for a database transaction commit — an operation that must either not happen at all, or complete fully. <code>unstopped</code> ensures the write isn’t interrupted even if upstream sends a cancellation signal.</p>
-<h2 id="environment-propagation-chain">Environment Propagation Chain</h2>
+<h2 id="environment-propagation-chain"><a aria-hidden="true" tabindex="-1" href="#environment-propagation-chain"><span class="icon icon-link"></span></a>Environment Propagation Chain</h2>
 <pre class="mermaid">graph LR
   A["Outer receiver's environment"]
   A --> B["connect(sndr, outer_rcvr)"]
@@ -106,9 +106,9 @@
   D --> E["write_env can overlay properties"]
   E --> F["Final child receiver env = original + write_env overlays"]</pre>
 <p><code>write_env</code> creates an environment layer within the pipeline, affecting only the <strong>downstream</strong> senders and receivers.</p>
-<h2 id="limitations">Limitations</h2>
+<h2 id="limitations"><a aria-hidden="true" tabindex="-1" href="#limitations"><span class="icon icon-link"></span></a>Limitations</h2>
 <p><code>write_env</code> only affects its downstream receiver environment. If the pipeline forks (e.g., <code>when_all</code> splitting into multiple child senders), you need to carefully consider the scope of environment overrides — <code>write_env</code> covers the current linear chain, and different branches may see different environments.</p>
-<p><code>unstopped</code> forcibly ignores cancellation signals, which can cause resource leaks — if a downstream operation runs long and can’t be cancelled, callers may wait forever. Use it only in truly critical regions where the operation must complete and is guaranteed to finish promptly on its own.</p></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/23-spawn-ensure-started/" data-astro-cid-ykvenys5>← 23 · spawn / ensure_started —— Fire-and-Forget &amp; Eager Start</a><a href="/exec/tutorials/25-query-system-env/" data-astro-cid-ykvenys5>25 · Query System — Reading Properties from the Environment →</a></nav></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
+<p><code>unstopped</code> forcibly ignores cancellation signals, which can cause resource leaks — if a downstream operation runs long and can’t be cancelled, callers may wait forever. Use it only in truly critical regions where the operation must complete and is guaranteed to finish promptly on its own.</p></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/23-spawn-ensure-started/" data-astro-cid-ykvenys5>← 23 · spawn / ensure_started —— Fire-and-Forget &amp; Eager Start</a><a href="/exec/tutorials/25-query-system-env/" data-astro-cid-ykvenys5>25 · Query System — Reading Properties from the Environment →</a></nav></div></div></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
       (function() {
         const STORAGE_KEY = "exectutorial-theme";
 
@@ -141,5 +141,55 @@
           try { localStorage.setItem(STORAGE_KEY, next); } catch(e) {}
           setTheme(next);
         });
+      })();
+    </script><script>
+      (function() {
+        function buildToc(containerId, navId) {
+          var container = document.getElementById(containerId);
+          var nav = document.getElementById(navId);
+          if (!nav) return;
+          var headings = document.querySelectorAll(".article-content h2, .article-content h3");
+          if (headings.length === 0) { if (container) container.style.display = "none"; return; }
+
+          var ul = document.createElement("ul");
+          headings.forEach(function(h) {
+            if (!h.id) return;
+            var li = document.createElement("li");
+            var a = document.createElement("a");
+            a.href = "#" + h.id;
+            a.textContent = h.textContent.replace(/¶$/, "").trim();
+            a.className = "toc-" + h.tagName.toLowerCase();
+            li.appendChild(a);
+            ul.appendChild(li);
+          });
+          nav.appendChild(ul);
+        }
+
+        buildToc("tocSidebar", "tocNav");
+        buildToc(null, "tocNavMobile");
+
+        // active heading highlight
+        var tocLinks = document.querySelectorAll("#tocNav a, #tocNavMobile a");
+        if (tocLinks.length > 0) {
+          var headings = document.querySelectorAll(".article-content h2, .article-content h3");
+          function onScroll() {
+            var scrollY = window.scrollY + 80;
+            var active = null;
+            headings.forEach(function(h) {
+              if (h.offsetTop <= scrollY) active = h;
+            });
+            tocLinks.forEach(function(link) { link.classList.remove("active"); });
+            if (active) {
+              var id = active.id;
+              tocLinks.forEach(function(link) {
+                if (link.getAttribute("href") === "#" + id) {
+                  link.classList.add("active");
+                }
+              });
+            }
+          }
+          window.addEventListener("scroll", onScroll, { passive: true });
+          onScroll();
+        }
       })();
     </script></body></html>

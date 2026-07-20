@@ -5,7 +5,7 @@
         if(!s&&matchMedia("(prefers-color-scheme:light)").matches)theme="light";
         document.documentElement.setAttribute("data-theme",theme);
       })();
-    </script><link rel="stylesheet" href="/exec/_astro/01-why-stdexec.hXKgsPrw.css"></head><body data-astro-cid-ykvenys5><div class="container" data-astro-cid-ykvenys5><header data-astro-cid-ykvenys5><div class="title-area" data-astro-cid-ykvenys5><a href="/exec/tutorials/" style="color:var(--fg-muted);text-decoration:none;font-size:0.85rem;" data-astro-cid-ykvenys5>← Back to index</a><h1 data-astro-cid-ykvenys5>41 · Appendix: Porting libunifex Synchronization Primitives</h1></div><button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" data-astro-cid-ykvenys5>🌙</button></header><article class="article-content" data-astro-cid-ykvenys5>
+    </script><link rel="stylesheet" href="/exec/_astro/01-why-stdexec.YzjJ_D8W.css"></head><body data-astro-cid-ykvenys5><div class="layout-wrap" data-astro-cid-ykvenys5><aside class="toc-sidebar" id="tocSidebar" data-astro-cid-ykvenys5><div class="toc-label" data-astro-cid-ykvenys5>On this page</div><nav id="tocNav" data-astro-cid-ykvenys5></nav></aside><div class="layout-main" data-astro-cid-ykvenys5><div class="container" data-astro-cid-ykvenys5><header data-astro-cid-ykvenys5><div class="title-area" data-astro-cid-ykvenys5><a href="/exec/tutorials/" style="color:var(--fg-muted);text-decoration:none;font-size:0.85rem;" data-astro-cid-ykvenys5>← Back to index</a><h1 data-astro-cid-ykvenys5>41 · Appendix: Porting libunifex Synchronization Primitives</h1></div><button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" data-astro-cid-ykvenys5>🌙</button></header><details class="toc-mobile" id="tocMobile" data-astro-cid-ykvenys5><summary data-astro-cid-ykvenys5>On this page</summary><nav id="tocNavMobile" data-astro-cid-ykvenys5></nav></details><article class="article-content" data-astro-cid-ykvenys5>
 <blockquote>
 <p><strong>Standard Section</strong>: —
 <strong>stdexec Reference</strong>: <code>tests/test_async_mutex.cpp</code>, <code>tests/test_async_mutex_v2.cpp</code>,
@@ -14,7 +14,7 @@
 <code>include/unifex/v1/async_manual_reset_event.hpp</code>, <code>include/unifex/v2/async_manual_reset_event.hpp</code>,
 <code>include/unifex/async_pass.hpp</code></p>
 </blockquote>
-<h2 id="overview">Overview</h2>
+<h2 id="overview"><a aria-hidden="true" tabindex="-1" href="#overview"><span class="icon icon-link"></span></a>Overview</h2>
 <p>libunifex (Facebook/Meta) is the early reference implementation of C++26 std::execution, containing several useful synchronization primitives. This appendix demonstrates how to port these primitives to stdexec, focusing on:</p>
 <ul>
 <li><strong><code>async_mutex</code></strong> — Asynchronous mutex, supports <code>try_lock()</code> / <code>async_lock()</code> / <code>unlock()</code></li>
@@ -23,8 +23,8 @@
 <li><strong><code>async_pass</code></strong> — One-to-one synchronous channel (rendezvous), connecting caller and acceptor</li>
 </ul>
 <p>The first three primitives share v1’s tagged pointer / queue architecture plus v2’s stop token cancellation framework.</p>
-<h2 id="async_mutex">async_mutex</h2>
-<h3 id="core-design">Core Design</h3>
+<h2 id="async_mutex"><a aria-hidden="true" tabindex="-1" href="#async_mutex"><span class="icon icon-link"></span></a>async_mutex</h2>
+<h3 id="core-design"><a aria-hidden="true" tabindex="-1" href="#core-design"><span class="icon icon-link"></span></a>Core Design</h3>
 <p>The lock state and waiter stack of <code>async_mutex</code> are combined into a single atomic variable:</p>
 <pre class="mermaid">block
   columns 3
@@ -38,7 +38,7 @@
   r1["0b001"] u["Unlocked, no waiters"] id["idle"]
   r2["0b000"] ln["Locked, no waiters"] lk["locked"]
   r3["0bmm0"] lw["Locked, waiters queued"] ld["locked"]</pre>
-<h3 id="algorithm-flow">Algorithm Flow</h3>
+<h3 id="algorithm-flow"><a aria-hidden="true" tabindex="-1" href="#algorithm-flow"><span class="icon icon-link"></span></a>Algorithm Flow</h3>
 <p><strong><code>try_lock()</code></strong>: Single-step CAS — from <code>INACTIVE(1)</code> → <code>0</code>. Lock acquired on success.</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">bool</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> try_lock</span><span style="color:#24292E;--shiki-dark:#E1E4E8">() </span><span style="color:#D73A49;--shiki-dark:#F97583">noexcept</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  uintptr_t</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> expected </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> INACTIVE;</span></span>
@@ -87,7 +87,7 @@
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  pending_head_ </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> w->next_;</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  w-></span><span style="color:#6F42C1;--shiki-dark:#B392F0">resume_</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(w);</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span></code></pre></div>
-<h3 id="complete-implementation-stdexec">Complete Implementation (stdexec)</h3>
+<h3 id="complete-implementation-stdexec"><a aria-hidden="true" tabindex="-1" href="#complete-implementation-stdexec"><span class="icon icon-link"></span></a>Complete Implementation (stdexec)</h3>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> async_mutex</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  struct</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> waiter_base</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    waiter_base</span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> next_ </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> nullptr</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
@@ -218,7 +218,7 @@
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    async_mutex</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x26;</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> mutex_;</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  };</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">};</span></span></code></pre></div>
-<h3 id="usage-example">Usage Example</h3>
+<h3 id="usage-example"><a aria-hidden="true" tabindex="-1" href="#usage-example"><span class="icon icon-link"></span></a>Usage Example</h3>
 <p><strong>Two threads incrementing a shared counter</strong> (classic stress test):</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">exec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::static_thread_pool pool{</span><span style="color:#005CC5;--shiki-dark:#79B8FF">2</span><span style="color:#24292E;--shiki-dark:#E1E4E8">};</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> sch </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> pool.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">get_scheduler</span><span style="color:#24292E;--shiki-dark:#E1E4E8">();</span></span>
@@ -238,7 +238,7 @@
 <span class="line"></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">ex</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">sync_wait</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">ex</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">when_all</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">worker</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">), </span><span style="color:#6F42C1;--shiki-dark:#B392F0">worker</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">2</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)));</span></span>
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// shared == 20000</span></span></code></pre></div>
-<h3 id="differences-from-libunifex">Differences from libunifex</h3>
+<h3 id="differences-from-libunifex"><a aria-hidden="true" tabindex="-1" href="#differences-from-libunifex"><span class="icon icon-link"></span></a>Differences from libunifex</h3>
 <div class="table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch">
 
 
@@ -271,8 +271,8 @@
 
 <table><thead><tr><th>Feature</th><th>libunifex v1</th><th>This Implementation</th></tr></thead><tbody><tr><td>Lock state</td><td><code>(void*)&#x26;head_</code> as sentinel</td><td><code>bit 0</code> as flag</td></tr><tr><td>Completion signature declaration</td><td><code>value_types</code> / <code>error_types</code> / <code>sends_done</code></td><td><code>using completion_signatures = ...</code></td></tr><tr><td>connect dispatch</td><td><code>tag_invoke(connect_t, ...)</code></td><td>Member function <code>connect()</code></td></tr><tr><td>start dispatch</td><td><code>tag_invoke(start_t, ...)</code></td><td>Member function <code>start()</code></td></tr></tbody></table></div>
 <hr>
-<h2 id="async_pass">async_pass</h2>
-<h3 id="core-design-1">Core Design</h3>
+<h2 id="async_pass"><a aria-hidden="true" tabindex="-1" href="#async_pass"><span class="icon icon-link"></span></a>async_pass</h2>
+<h3 id="core-design-1"><a aria-hidden="true" tabindex="-1" href="#core-design-1"><span class="icon icon-link"></span></a>Core Design</h3>
 <p><code>async_pass</code> is a <strong>one-to-one synchronous channel</strong> (rendezvous). Two roles exchange data through it:</p>
 <ul>
 <li><strong>Caller</strong>: calls <code>async_call(args...)</code>, waits for acceptor to receive the parameters</li>
@@ -296,7 +296,7 @@
   c2["call()"] aw["acceptor waiting"] ren["rendezvous, both complete"]
   a1["accept()"] i2["idle"] sta["Store acceptor, suspend"]
   a2["accept()"] cw["caller waiting"] rb["rendezvous, both complete"]</pre>
-<h3 id="algorithm-flow-1">Algorithm Flow</h3>
+<h3 id="algorithm-flow-1"><a aria-hidden="true" tabindex="-1" href="#algorithm-flow-1"><span class="icon icon-link"></span></a>Algorithm Flow</h3>
 <p><strong><code>call_or_suspend(caller_ptr)</code></strong>:</p>
 <pre class="mermaid">graph TD
   A["Load state_"]
@@ -323,7 +323,7 @@
   C --> D["ex::set_value(acceptor_receiver, args...)"]
   A --> E["caller->resume_(caller)"]
   E --> F["ex::set_value(caller_receiver)"]</pre>
-<h3 id="complete-implementation-stdexec-1">Complete Implementation (stdexec)</h3>
+<h3 id="complete-implementation-stdexec-1"><a aria-hidden="true" tabindex="-1" href="#complete-implementation-stdexec-1"><span class="icon icon-link"></span></a>Complete Implementation (stdexec)</h3>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">template</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> &#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">typename</span><span style="color:#24292E;--shiki-dark:#E1E4E8">... </span><span style="color:#6F42C1;--shiki-dark:#B392F0">Args</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> async_pass</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  struct</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> acceptor_base</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
@@ -468,7 +468,7 @@
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    async_pass</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x26;</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> pass_;</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  };</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">};</span></span></code></pre></div>
-<h3 id="usage-example-1">Usage Example</h3>
+<h3 id="usage-example-1"><a aria-hidden="true" tabindex="-1" href="#usage-example-1"><span class="icon icon-link"></span></a>Usage Example</h3>
 <p><strong>Two-thread rendezvous — caller arrives first</strong>:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">exec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::static_thread_pool pool{</span><span style="color:#005CC5;--shiki-dark:#79B8FF">2</span><span style="color:#24292E;--shiki-dark:#E1E4E8">};</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> sch </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> pool.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">get_scheduler</span><span style="color:#24292E;--shiki-dark:#E1E4E8">();</span></span>
@@ -502,7 +502,7 @@
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">});</span></span>
 <span class="line"></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">acceptor.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">join</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(); caller.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">join</span><span style="color:#24292E;--shiki-dark:#E1E4E8">();</span></span></code></pre></div>
-<h3 id="state-machine-comparison">State Machine Comparison</h3>
+<h3 id="state-machine-comparison"><a aria-hidden="true" tabindex="-1" href="#state-machine-comparison"><span class="icon icon-link"></span></a>State Machine Comparison</h3>
 <div class="table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch">
 
 
@@ -532,8 +532,8 @@
   A["caller->invoke_(caller, acceptor)"] --> B["acceptor.set_value_(args...)"]
   C["caller->resume_(caller)"] --> D["caller completes (set_value)"]</pre>
 <hr>
-<h2 id="async_mutex-v2--with-cancellation-support">async_mutex (v2) — With Cancellation Support</h2>
-<h3 id="core-design-2">Core Design</h3>
+<h2 id="async_mutex-v2--with-cancellation-support"><a aria-hidden="true" tabindex="-1" href="#async_mutex-v2--with-cancellation-support"><span class="icon icon-link"></span></a>async_mutex (v2) — With Cancellation Support</h2>
+<h3 id="core-design-2"><a aria-hidden="true" tabindex="-1" href="#core-design-2"><span class="icon icon-link"></span></a>Core Design</h3>
 <p>v2 builds on v1 by adding <strong>cancellation support</strong> and the <strong>Dekker synchronization pattern</strong>. Key differences from v1:</p>
 <ul>
 <li>Lock flag <code>locked_</code> is separated from the waiter queue, decoupling state management</li>
@@ -578,7 +578,7 @@
     P_Check -->|NO| P_ReAcquire["re-acquire, continue"]
     P_ReAcquire --> P_Loop
   end</pre>
-<h3 id="complete-implementation-stdexec-2">Complete Implementation (stdexec)</h3>
+<h3 id="complete-implementation-stdexec-2"><a aria-hidden="true" tabindex="-1" href="#complete-implementation-stdexec-2"><span class="icon icon-link"></span></a>Complete Implementation (stdexec)</h3>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> async_mutex_v2</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  struct</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> waiter_base</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    waiter_base</span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> next_ </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> nullptr</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
@@ -724,7 +724,7 @@
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    async_mutex_v2</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x26;</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> mutex_;</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  };</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">};</span></span></code></pre></div>
-<h3 id="differences-from-v1">Differences from v1</h3>
+<h3 id="differences-from-v1"><a aria-hidden="true" tabindex="-1" href="#differences-from-v1"><span class="icon icon-link"></span></a>Differences from v1</h3>
 <div class="table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch">
 
 
@@ -777,8 +777,8 @@
 
 <table><thead><tr><th>Feature</th><th>v1</th><th>v2</th></tr></thead><tbody><tr><td>Lock flag</td><td><code>bit 0</code> of tagged ptr</td><td>Separate <code>std::atomic&#x3C;bool> locked_</code></td></tr><tr><td>Waiter queue</td><td>Lock-free stack (CAS loop)</td><td><code>std::mutex</code> + <code>std::deque</code></td></tr><tr><td>Completion signal</td><td>Only <code>set_value</code></td><td><code>set_value</code> / <code>set_stopped</code></td></tr><tr><td>Cancellation</td><td>❌</td><td>✅ <code>stop_callback</code> + <code>try_remove</code></td></tr><tr><td>Synchronization pattern</td><td>Atomic queue protocol</td><td>Dekker + <code>seq_cst fence</code></td></tr><tr><td><code>completed_</code> coordination</td><td>❌</td><td>✅ Atomic race, guarantees single completion</td></tr><tr><td>Basic test</td><td><code>sync_wait(mtx.async_lock())</code></td><td><code>sync_wait(mtx.async_lock())</code></td></tr><tr><td>Cancellation test</td><td>—</td><td><code>request_stop()</code> → <code>set_stopped</code></td></tr></tbody></table></div>
 <hr>
-<h2 id="async_manual_reset_event">async_manual_reset_event</h2>
-<h3 id="core-design-3">Core Design</h3>
+<h2 id="async_manual_reset_event"><a aria-hidden="true" tabindex="-1" href="#async_manual_reset_event"><span class="icon icon-link"></span></a>async_manual_reset_event</h2>
+<h3 id="core-design-3"><a aria-hidden="true" tabindex="-1" href="#core-design-3"><span class="icon icon-link"></span></a>Core Design</h3>
 <p><code>async_manual_reset_event</code> is a manual reset event:</p>
 <ul>
 <li><strong><code>set()</code></strong> → transitions to signalled state, <strong>wakes all</strong> waiters</li>
@@ -813,7 +813,7 @@
 
 
 <table><thead><tr><th></th><th>async_mutex</th><th>async_manual_reset_event</th></tr></thead><tbody><tr><td><code>unlock()</code> / <code>set()</code></td><td>Wakes one waiter</td><td>Wakes <strong>all</strong> waiters</td></tr><tr><td>State retention</td><td>Idle after lock release</td><td>Signalled until <code>reset()</code></td></tr><tr><td>New waiters</td><td>Must wait for unlock</td><td>Complete immediately if signalled</td></tr></tbody></table></div>
-<h3 id="cancellation-path">Cancellation Path</h3>
+<h3 id="cancellation-path"><a aria-hidden="true" tabindex="-1" href="#cancellation-path"><span class="icon icon-link"></span></a>Cancellation Path</h3>
 <p>Same cancellation framework as async_mutex v2:</p>
 <pre class="mermaid">graph TD
   A["StopsEarly"] --> B["token.stop_requested()"]
@@ -825,7 +825,7 @@
   I["resume_"] --> J["completed_ race"]
   J --> K["Check cancelled_"]
   K --> L["set_value / set_stopped"]</pre>
-<h3 id="complete-implementation-stdexec-3">Complete Implementation (stdexec)</h3>
+<h3 id="complete-implementation-stdexec-3"><a aria-hidden="true" tabindex="-1" href="#complete-implementation-stdexec-3"><span class="icon icon-link"></span></a>Complete Implementation (stdexec)</h3>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> async_manual_reset_event</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  struct</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> waiter_base</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    waiter_base</span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> next_ </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> nullptr</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
@@ -964,7 +964,7 @@
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    async_manual_reset_event</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x26;</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> evt_;</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  };</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">};</span></span></code></pre></div>
-<h3 id="usage-example-2">Usage Example</h3>
+<h3 id="usage-example-2"><a aria-hidden="true" tabindex="-1" href="#usage-example-2"><span class="icon icon-link"></span></a>Usage Example</h3>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">async_manual_reset_event evt;</span></span>
 <span class="line"></span>
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// === Signalled → immediate completion ===</span></span>
@@ -989,8 +989,8 @@
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">ex</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">start</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(op);</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">src.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">request_stop</span><span style="color:#24292E;--shiki-dark:#E1E4E8">();</span><span style="color:#6A737D;--shiki-dark:#6A737D">     // → completed via set_stopped</span></span></code></pre></div>
 <hr>
-<h2 id="summary">Summary</h2>
-<h3 id="common-patterns">Common Patterns</h3>
+<h2 id="summary"><a aria-hidden="true" tabindex="-1" href="#summary"><span class="icon icon-link"></span></a>Summary</h2>
+<h3 id="common-patterns"><a aria-hidden="true" tabindex="-1" href="#common-patterns"><span class="icon icon-link"></span></a>Common Patterns</h3>
 <p>Both primitives share the same design pattern:</p>
 <ol>
 <li><strong>Single atomic variable</strong> encodes all state (lock + waiters, or caller/acceptor)</li>
@@ -998,7 +998,7 @@
 <li><strong>Type-erased function pointers</strong> store resumption logic (<code>resume_</code> / <code>invoke_</code> / <code>set_value_</code>)</li>
 <li><strong>Inline completion</strong> on rendezvous synchronously calls <code>set_value</code>, reducing context switches</li>
 </ol>
-<h3 id="stdexec-sender-adaptation-checklist">stdexec Sender Adaptation Checklist</h3>
+<h3 id="stdexec-sender-adaptation-checklist"><a aria-hidden="true" tabindex="-1" href="#stdexec-sender-adaptation-checklist"><span class="icon icon-link"></span></a>stdexec Sender Adaptation Checklist</h3>
 <div class="table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch">
 
 
@@ -1039,7 +1039,7 @@
 
 
 
-<table><thead><tr><th>Requirement</th><th>Implementation</th><th>Notes</th></tr></thead><tbody><tr><td>Declare as sender</td><td><code>using sender_concept = ex::sender_tag;</code></td><td></td></tr><tr><td>Declare completion signatures</td><td><code>using completion_signatures = ex::completion_signatures&#x3C;...>;</code></td><td>Simplest approach, avoids ADL issues</td></tr><tr><td>connect</td><td>Member function <code>auto connect(R r) &#x26;&#x26; -> op&#x3C;R></code></td><td>stdexec prefers member function match</td></tr><tr><td>start</td><td>Member function <code>void start() &#x26; noexcept</code></td><td>tag_invoke is deprecated</td></tr><tr><td>get_env</td><td>Member function <code>auto get_env() const noexcept</code></td><td>Must be provided</td></tr><tr><td>Operation state</td><td><code>op(op&#x26;&#x26;) = delete;</code></td><td>Operation state is non-movable</td></tr></tbody></table></div></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/40-Boost-Beast-HTTP-Server/" data-astro-cid-ykvenys5>← 40 · Boost.Beast HTTP Server — Building a Network Service with Sender Pipeline</a><span class="disabled" data-astro-cid-ykvenys5>Next →</span></nav></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
+<table><thead><tr><th>Requirement</th><th>Implementation</th><th>Notes</th></tr></thead><tbody><tr><td>Declare as sender</td><td><code>using sender_concept = ex::sender_tag;</code></td><td></td></tr><tr><td>Declare completion signatures</td><td><code>using completion_signatures = ex::completion_signatures&#x3C;...>;</code></td><td>Simplest approach, avoids ADL issues</td></tr><tr><td>connect</td><td>Member function <code>auto connect(R r) &#x26;&#x26; -> op&#x3C;R></code></td><td>stdexec prefers member function match</td></tr><tr><td>start</td><td>Member function <code>void start() &#x26; noexcept</code></td><td>tag_invoke is deprecated</td></tr><tr><td>get_env</td><td>Member function <code>auto get_env() const noexcept</code></td><td>Must be provided</td></tr><tr><td>Operation state</td><td><code>op(op&#x26;&#x26;) = delete;</code></td><td>Operation state is non-movable</td></tr></tbody></table></div></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/40-Boost-Beast-HTTP-Server/" data-astro-cid-ykvenys5>← 40 · Boost.Beast HTTP Server — Building a Network Service with Sender Pipeline</a><span class="disabled" data-astro-cid-ykvenys5>Next →</span></nav></div></div></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
       (function() {
         const STORAGE_KEY = "exectutorial-theme";
 
@@ -1072,5 +1072,55 @@
           try { localStorage.setItem(STORAGE_KEY, next); } catch(e) {}
           setTheme(next);
         });
+      })();
+    </script><script>
+      (function() {
+        function buildToc(containerId, navId) {
+          var container = document.getElementById(containerId);
+          var nav = document.getElementById(navId);
+          if (!nav) return;
+          var headings = document.querySelectorAll(".article-content h2, .article-content h3");
+          if (headings.length === 0) { if (container) container.style.display = "none"; return; }
+
+          var ul = document.createElement("ul");
+          headings.forEach(function(h) {
+            if (!h.id) return;
+            var li = document.createElement("li");
+            var a = document.createElement("a");
+            a.href = "#" + h.id;
+            a.textContent = h.textContent.replace(/¶$/, "").trim();
+            a.className = "toc-" + h.tagName.toLowerCase();
+            li.appendChild(a);
+            ul.appendChild(li);
+          });
+          nav.appendChild(ul);
+        }
+
+        buildToc("tocSidebar", "tocNav");
+        buildToc(null, "tocNavMobile");
+
+        // active heading highlight
+        var tocLinks = document.querySelectorAll("#tocNav a, #tocNavMobile a");
+        if (tocLinks.length > 0) {
+          var headings = document.querySelectorAll(".article-content h2, .article-content h3");
+          function onScroll() {
+            var scrollY = window.scrollY + 80;
+            var active = null;
+            headings.forEach(function(h) {
+              if (h.offsetTop <= scrollY) active = h;
+            });
+            tocLinks.forEach(function(link) { link.classList.remove("active"); });
+            if (active) {
+              var id = active.id;
+              tocLinks.forEach(function(link) {
+                if (link.getAttribute("href") === "#" + id) {
+                  link.classList.add("active");
+                }
+              });
+            }
+          }
+          window.addEventListener("scroll", onScroll, { passive: true });
+          onScroll();
+        }
       })();
     </script></body></html>

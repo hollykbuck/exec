@@ -5,12 +5,12 @@
         if(!s&&matchMedia("(prefers-color-scheme:light)").matches)theme="light";
         document.documentElement.setAttribute("data-theme",theme);
       })();
-    </script><link rel="stylesheet" href="/exec/_astro/01-why-stdexec.hXKgsPrw.css"></head><body data-astro-cid-ykvenys5><div class="container" data-astro-cid-ykvenys5><header data-astro-cid-ykvenys5><div class="title-area" data-astro-cid-ykvenys5><a href="/exec/tutorials/" style="color:var(--fg-muted);text-decoration:none;font-size:0.85rem;" data-astro-cid-ykvenys5>← Back to index</a><h1 data-astro-cid-ykvenys5>15 · schedule — Creating a Sender from a Scheduler</h1></div><button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" data-astro-cid-ykvenys5>🌙</button></header><article class="article-content" data-astro-cid-ykvenys5>
-<h2 id="why-do-we-need-schedule">Why Do We Need schedule?</h2>
+    </script><link rel="stylesheet" href="/exec/_astro/01-why-stdexec.YzjJ_D8W.css"></head><body data-astro-cid-ykvenys5><div class="layout-wrap" data-astro-cid-ykvenys5><aside class="toc-sidebar" id="tocSidebar" data-astro-cid-ykvenys5><div class="toc-label" data-astro-cid-ykvenys5>On this page</div><nav id="tocNav" data-astro-cid-ykvenys5></nav></aside><div class="layout-main" data-astro-cid-ykvenys5><div class="container" data-astro-cid-ykvenys5><header data-astro-cid-ykvenys5><div class="title-area" data-astro-cid-ykvenys5><a href="/exec/tutorials/" style="color:var(--fg-muted);text-decoration:none;font-size:0.85rem;" data-astro-cid-ykvenys5>← Back to index</a><h1 data-astro-cid-ykvenys5>15 · schedule — Creating a Sender from a Scheduler</h1></div><button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" data-astro-cid-ykvenys5>🌙</button></header><details class="toc-mobile" id="tocMobile" data-astro-cid-ykvenys5><summary data-astro-cid-ykvenys5>On this page</summary><nav id="tocNavMobile" data-astro-cid-ykvenys5></nav></details><article class="article-content" data-astro-cid-ykvenys5>
+<h2 id="why-do-we-need-schedule"><a aria-hidden="true" tabindex="-1" href="#why-do-we-need-schedule"><span class="icon icon-link"></span></a>Why Do We Need schedule?</h2>
 <p>Every asynchronous operation must answer a fundamental question: “where do I run?”</p>
 <p>In a single-threaded world this question doesn’t exist. But modern programs run on thread pools, GPUs, and network IO threads. You need an explicit way to say “this sender pipeline starts on <em>that</em> scheduler’s resources.”</p>
 <p><code>schedule</code> is the answer. If schedulers are hotels, <code>schedule(sch)</code> is checking in at the front desk — once you’ve checked in, subsequent operations (<code>then</code>, etc.) know which room (thread) they’re supposed to be in.</p>
-<h2 id="basic-behavior">Basic Behavior</h2>
+<h2 id="basic-behavior"><a aria-hidden="true" tabindex="-1" href="#basic-behavior"><span class="icon icon-link"></span></a>Basic Behavior</h2>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">namespace</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> std</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">execution</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  template</span><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">scheduler</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Sch</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    using</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> schedule_result_t</span><span style="color:#D73A49;--shiki-dark:#F97583"> =</span><span style="color:#D73A49;--shiki-dark:#F97583"> decltype</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">schedule</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">declval</span><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#6F42C1;--shiki-dark:#B392F0">Sch</span><span style="color:#24292E;--shiki-dark:#E1E4E8">>()));</span></span>
@@ -32,14 +32,14 @@
 <span class="line"></span>
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Correct: use just for data, then starts_on to switch context</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> correct </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> starts_on</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(sch, </span><span style="color:#6F42C1;--shiki-dark:#B392F0">just</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">42</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)) </span><span style="color:#D73A49;--shiki-dark:#F97583">|</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> then</span><span style="color:#24292E;--shiki-dark:#E1E4E8">([](</span><span style="color:#D73A49;--shiki-dark:#F97583">int</span><span style="color:#E36209;--shiki-dark:#FFAB70"> x</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) {</span><span style="color:#6A737D;--shiki-dark:#6A737D"> /* OK */</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> });</span></span></code></pre></div>
-<h2 id="a-mandatory-property-of-the-schedule-sender">A Mandatory Property of the schedule Sender</h2>
+<h2 id="a-mandatory-property-of-the-schedule-sender"><a aria-hidden="true" tabindex="-1" href="#a-mandatory-property-of-the-schedule-sender"><span class="icon icon-link"></span></a>A Mandatory Property of the schedule Sender</h2>
 <p>The sender returned by <code>schedule</code> has an important guarantee: its value-completion scheduler is the very scheduler that created it:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">sender </span><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> s </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> schedule</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(sch);</span></span>
 <span class="line"></span>
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// get_completion_scheduler&#x3C;set_value_t>(get_env(s)) == sch</span></span>
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// This lets then and other adaptors know "where to run"</span></span></code></pre></div>
 <p>This is why <code>schedule(sch) | then(f)</code> works — the <code>then</code> adaptor queries the environment for <code>get_scheduler</code>, gets back <code>sch</code>, and schedules <code>f</code> on the right thread.</p>
-<h2 id="using-schedule-in-a-pipeline">Using schedule in a Pipeline</h2>
+<h2 id="using-schedule-in-a-pipeline"><a aria-hidden="true" tabindex="-1" href="#using-schedule-in-a-pipeline"><span class="icon icon-link"></span></a>Using schedule in a Pipeline</h2>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Simple: run a function on a thread pool</span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">schedule</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(pool.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">get_scheduler</span><span style="color:#24292E;--shiki-dark:#E1E4E8">())</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  |</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> then</span><span style="color:#24292E;--shiki-dark:#E1E4E8">([] { </span><span style="color:#6F42C1;--shiki-dark:#B392F0">std</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::cout </span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;&#x3C;</span><span style="color:#032F62;--shiki-dark:#9ECBFF"> "in pool</span><span style="color:#005CC5;--shiki-dark:#79B8FF">\n</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">; })</span></span>
@@ -51,7 +51,7 @@
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">  schedule</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(inline_scheduler{}) </span><span style="color:#D73A49;--shiki-dark:#F97583">|</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> then</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(light_work)</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">) </span><span style="color:#D73A49;--shiki-dark:#F97583">|</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> sync_wait;</span></span></code></pre></div>
 <p>In the code above, <code>heavy_work</code> runs on the thread pool while <code>light_work</code> runs inline (synchronously, on the current thread). They execute concurrently, and <code>when_all</code> waits for both to finish.</p>
-<h2 id="schedule-vs-starts_on"><code>schedule</code> vs <code>starts_on</code></h2>
+<h2 id="schedule-vs-starts_on"><a aria-hidden="true" tabindex="-1" href="#schedule-vs-starts_on"><span class="icon icon-link"></span></a><code>schedule</code> vs <code>starts_on</code></h2>
 <div class="table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch">
 
 
@@ -74,7 +74,7 @@
 
 
 <table><thead><tr><th>Expression</th><th>Effect</th></tr></thead><tbody><tr><td><code>schedule(sch) | then(f)</code></td><td>Execute <code>f</code> on <code>sch</code></td></tr><tr><td><code>starts_on(sch, just(42) | then(f))</code></td><td>The entire <code>42 | f</code> starts on <code>sch</code></td></tr><tr><td><code>starts_on(sch, sndr)</code></td><td><code>sndr</code> starts entirely on <code>sch</code></td></tr></tbody></table></div>
-<p><code>starts_on</code> is more flexible — it accepts any sender, while <code>schedule</code> only creates a no-argument start signal.</p></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/14-read-env/" data-astro-cid-ykvenys5>← 14 · read_env — Reading Properties from the Environment</a><a href="/exec/tutorials/16-then-upon/" data-astro-cid-ykvenys5>16 · then / upon_error / upon_stopped — Handling the Three Completion Signals →</a></nav></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
+<p><code>starts_on</code> is more flexible — it accepts any sender, while <code>schedule</code> only creates a no-argument start signal.</p></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/14-read-env/" data-astro-cid-ykvenys5>← 14 · read_env — Reading Properties from the Environment</a><a href="/exec/tutorials/16-then-upon/" data-astro-cid-ykvenys5>16 · then / upon_error / upon_stopped — Handling the Three Completion Signals →</a></nav></div></div></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
       (function() {
         const STORAGE_KEY = "exectutorial-theme";
 
@@ -107,5 +107,55 @@
           try { localStorage.setItem(STORAGE_KEY, next); } catch(e) {}
           setTheme(next);
         });
+      })();
+    </script><script>
+      (function() {
+        function buildToc(containerId, navId) {
+          var container = document.getElementById(containerId);
+          var nav = document.getElementById(navId);
+          if (!nav) return;
+          var headings = document.querySelectorAll(".article-content h2, .article-content h3");
+          if (headings.length === 0) { if (container) container.style.display = "none"; return; }
+
+          var ul = document.createElement("ul");
+          headings.forEach(function(h) {
+            if (!h.id) return;
+            var li = document.createElement("li");
+            var a = document.createElement("a");
+            a.href = "#" + h.id;
+            a.textContent = h.textContent.replace(/¶$/, "").trim();
+            a.className = "toc-" + h.tagName.toLowerCase();
+            li.appendChild(a);
+            ul.appendChild(li);
+          });
+          nav.appendChild(ul);
+        }
+
+        buildToc("tocSidebar", "tocNav");
+        buildToc(null, "tocNavMobile");
+
+        // active heading highlight
+        var tocLinks = document.querySelectorAll("#tocNav a, #tocNavMobile a");
+        if (tocLinks.length > 0) {
+          var headings = document.querySelectorAll(".article-content h2, .article-content h3");
+          function onScroll() {
+            var scrollY = window.scrollY + 80;
+            var active = null;
+            headings.forEach(function(h) {
+              if (h.offsetTop <= scrollY) active = h;
+            });
+            tocLinks.forEach(function(link) { link.classList.remove("active"); });
+            if (active) {
+              var id = active.id;
+              tocLinks.forEach(function(link) {
+                if (link.getAttribute("href") === "#" + id) {
+                  link.classList.add("active");
+                }
+              });
+            }
+          }
+          window.addEventListener("scroll", onScroll, { passive: true });
+          onScroll();
+        }
       })();
     </script></body></html>

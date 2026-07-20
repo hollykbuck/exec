@@ -5,8 +5,8 @@
         if(!s&&matchMedia("(prefers-color-scheme:light)").matches)theme="light";
         document.documentElement.setAttribute("data-theme",theme);
       })();
-    </script><link rel="stylesheet" href="/exec/_astro/01-why-stdexec.hXKgsPrw.css"></head><body data-astro-cid-ykvenys5><div class="container" data-astro-cid-ykvenys5><header data-astro-cid-ykvenys5><div class="title-area" data-astro-cid-ykvenys5><a href="/exec/tutorials/" style="color:var(--fg-muted);text-decoration:none;font-size:0.85rem;" data-astro-cid-ykvenys5>← Back to index</a><h1 data-astro-cid-ykvenys5>29 · Structured Concurrency — Giving Every Async Operation a Home</h1></div><button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" data-astro-cid-ykvenys5>🌙</button></header><article class="article-content" data-astro-cid-ykvenys5>
-<h2 id="traditional-multithreading-is-like-a-parking-lot-with-no-exit">Traditional Multithreading Is Like a Parking Lot With No Exit</h2>
+    </script><link rel="stylesheet" href="/exec/_astro/01-why-stdexec.YzjJ_D8W.css"></head><body data-astro-cid-ykvenys5><div class="layout-wrap" data-astro-cid-ykvenys5><aside class="toc-sidebar" id="tocSidebar" data-astro-cid-ykvenys5><div class="toc-label" data-astro-cid-ykvenys5>On this page</div><nav id="tocNav" data-astro-cid-ykvenys5></nav></aside><div class="layout-main" data-astro-cid-ykvenys5><div class="container" data-astro-cid-ykvenys5><header data-astro-cid-ykvenys5><div class="title-area" data-astro-cid-ykvenys5><a href="/exec/tutorials/" style="color:var(--fg-muted);text-decoration:none;font-size:0.85rem;" data-astro-cid-ykvenys5>← Back to index</a><h1 data-astro-cid-ykvenys5>29 · Structured Concurrency — Giving Every Async Operation a Home</h1></div><button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" data-astro-cid-ykvenys5>🌙</button></header><details class="toc-mobile" id="tocMobile" data-astro-cid-ykvenys5><summary data-astro-cid-ykvenys5>On this page</summary><nav id="tocNavMobile" data-astro-cid-ykvenys5></nav></details><article class="article-content" data-astro-cid-ykvenys5>
+<h2 id="traditional-multithreading-is-like-a-parking-lot-with-no-exit"><a aria-hidden="true" tabindex="-1" href="#traditional-multithreading-is-like-a-parking-lot-with-no-exit"><span class="icon icon-link"></span></a>Traditional Multithreading Is Like a Parking Lot With No Exit</h2>
 <p>Look at this code:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">void</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> bad</span><span style="color:#24292E;--shiki-dark:#E1E4E8">() {</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  int</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> local_data </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 42</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
@@ -21,8 +21,7 @@
 <p>Before a scope object is destroyed, every operation it manages has already completed (or been cancelled).</p>
 </blockquote>
 <p>In other words, every piece of async work has a clear “guardian.” The guardian won’t leave before every child has come home.</p>
-<hr>
-<h2 id="async_scope--stdexecs-structured-concurrency-solution"><code>async_scope</code> — stdexec’s Structured Concurrency Solution</h2>
+<h2 id="async_scope--stdexecs-structured-concurrency-solution"><a aria-hidden="true" tabindex="-1" href="#async_scope--stdexecs-structured-concurrency-solution"><span class="icon icon-link"></span></a><code>async_scope</code> — stdexec’s Structured Concurrency Solution</h2>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">namespace</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> exec</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> async_scope</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  public:</span></span>
@@ -34,8 +33,7 @@
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  };</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span></code></pre></div>
 <p>A scope is like a babysitter — it keeps track of every operation it has spawned. When the babysitter goes off duty (destructor), she first tells all the kids “come home” (<code>request_stop</code>), then stands at the door waiting for the last one to walk in (waiting for all operations to finish), and only then locks up.</p>
-<hr>
-<h2 id="spawn--order-takeout-leave-dont-wait"><code>spawn</code> — Order Takeout, Leave, Don’t Wait</h2>
+<h2 id="spawn--order-takeout-leave-dont-wait"><a aria-hidden="true" tabindex="-1" href="#spawn--order-takeout-leave-dont-wait"><span class="icon icon-link"></span></a><code>spawn</code> — Order Takeout, Leave, Don’t Wait</h2>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">exec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::async_scope scope;</span></span>
 <span class="line"></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">scope.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">spawn</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">schedule</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(sch) </span><span style="color:#D73A49;--shiki-dark:#F97583">|</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> then</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(work1));</span></span>
@@ -45,8 +43,7 @@
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">sync_wait</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(scope.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">on_empty</span><span style="color:#24292E;--shiki-dark:#E1E4E8">());</span></span></code></pre></div>
 <p><code>spawn</code> is the simplest — you toss work into the scope. The scope guarantees the work will finish before the scope itself is destroyed. The return value? <code>spawn</code> doesn’t care — it returns <code>void</code>. Errors? The default receiver for <code>spawn</code> does nothing with <code>set_error</code>; exceptions are silently swallowed.</p>
 <p>So <code>spawn</code> is for: <strong>you don’t care about the result, you only care about “is it done yet.”</strong> Think: printing a log line, flushing a cache, sending a heartbeat.</p>
-<hr>
-<h2 id="spawn_future--heres-your-order-number"><code>spawn_future</code> — Here’s Your Order Number</h2>
+<h2 id="spawn_future--heres-your-order-number"><a aria-hidden="true" tabindex="-1" href="#spawn_future--heres-your-order-number"><span class="icon icon-link"></span></a><code>spawn_future</code> — Here’s Your Order Number</h2>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">sender </span><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> future </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> scope.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">spawn_future</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">  schedule</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(sch) </span><span style="color:#D73A49;--shiki-dark:#F97583">|</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> then</span><span style="color:#24292E;--shiki-dark:#E1E4E8">([] { </span><span style="color:#D73A49;--shiki-dark:#F97583">return</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 42</span><span style="color:#24292E;--shiki-dark:#E1E4E8">; })</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">);</span></span>
@@ -82,22 +79,20 @@
 
 
 <table><thead><tr><th>Method</th><th>Analogy</th><th>Behavior</th></tr></thead><tbody><tr><td><code>sync_wait(sndr)</code></td><td>Stand at the kitchen door waiting, grab the dish as it comes out</td><td>Blocks, gets the result</td></tr><tr><td><code>scope.spawn(sndr)</code></td><td>Order and leave, the dish goes in the trash when done</td><td>Doesn’t block, doesn’t care about result</td></tr><tr><td><code>scope.spawn_future(sndr)</code></td><td>Order, get a number, pick it up when you want</td><td>Doesn’t block, result available later</td></tr></tbody></table></div>
-<hr>
-<h2 id="nest--put-your-address-on-file"><code>nest</code> — Put Your Address on File</h2>
+<h2 id="nest--put-your-address-on-file"><a aria-hidden="true" tabindex="-1" href="#nest--put-your-address-on-file"><span class="icon icon-link"></span></a><code>nest</code> — Put Your Address on File</h2>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">sender </span><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> nested </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> scope.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">nest</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">schedule</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(sch) </span><span style="color:#D73A49;--shiki-dark:#F97583">|</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> then</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(work));</span></span>
 <span class="line"></span>
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// nested can be passed around elsewhere</span></span>
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Its execution will complete under the scope's constraints</span></span></code></pre></div>
 <p><code>nest</code> neither starts execution nor returns a result — it does exactly one thing: <strong>binds a sender pipeline’s lifetime to the scope</strong>. If the scope is destroyed, this pipeline has either already finished or been cancelled. <code>nest</code> is for: you have a sender you want to pass to another function to start later, but you need a guarantee it will be done before the current scope ends.</p>
 <hr>
-<h2 id="scope-destruction-flow">Scope Destruction Flow</h2>
+<h2 id="scope-destruction-flow"><a aria-hidden="true" tabindex="-1" href="#scope-destruction-flow"><span class="icon icon-link"></span></a>Scope Destruction Flow</h2>
 <pre class="mermaid">graph TD
   A["scope destructor begins"] --> B["1. request_stop() — tell all children 'please stop'"]
   B --> C["2. Wait for all children to complete (or exit after cancellation)"]
   C --> D["3. All children are done — safe to destroy scope"]</pre>
 <p>This flow is deterministic and reliable. <strong>The scope destructor blocks</strong> until every child operation has ended. When destructing a scope, you never have to worry about work still “in the air.”</p>
-<hr>
-<h2 id="complete-example-parallel-work--collect-results">Complete Example: Parallel Work + Collect Results</h2>
+<h2 id="complete-example-parallel-work--collect-results"><a aria-hidden="true" tabindex="-1" href="#complete-example-parallel-work--collect-results"><span class="icon icon-link"></span></a>Complete Example: Parallel Work + Collect Results</h2>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">exec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::static_thread_pool ctx{</span><span style="color:#005CC5;--shiki-dark:#79B8FF">4</span><span style="color:#24292E;--shiki-dark:#E1E4E8">};</span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">exec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::async_scope scope;</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> sch </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> ctx.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">get_scheduler</span><span style="color:#24292E;--shiki-dark:#E1E4E8">();</span></span>
@@ -114,8 +109,7 @@
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  future </span><span style="color:#D73A49;--shiki-dark:#F97583">|</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> then</span><span style="color:#24292E;--shiki-dark:#E1E4E8">([](</span><span style="color:#D73A49;--shiki-dark:#F97583">int</span><span style="color:#E36209;--shiki-dark:#FFAB70"> x</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) { </span><span style="color:#6F42C1;--shiki-dark:#B392F0">printf</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"result: </span><span style="color:#005CC5;--shiki-dark:#79B8FF">%d\n</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, x); })</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">));</span></span></code></pre></div>
 <p>Above, <code>scope.on_empty()</code> only emits <code>set_value</code> after every <code>spawn</code>ed operation in the scope has finished. <code>when_all</code> waits for both “scope is empty” and “future has a result” conditions simultaneously.</p>
-<hr>
-<h2 id="quick-reference">Quick Reference</h2>
+<h2 id="quick-reference"><a aria-hidden="true" tabindex="-1" href="#quick-reference"><span class="icon icon-link"></span></a>Quick Reference</h2>
 <div class="table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch">
 
 
@@ -146,12 +140,9 @@
 
 
 <table><thead><tr><th>Scenario</th><th>Method</th></tr></thead><tbody><tr><td>Launch a background task, don’t care about the result</td><td><code>scope.spawn(sndr)</code></td></tr><tr><td>Launch a task, collect the result later</td><td><code>scope.spawn_future(sndr)</code></td></tr><tr><td>Bind an extra sender’s lifetime to the scope</td><td><code>scope.nest(sndr)</code></td></tr><tr><td>Wait for all scope work to complete</td><td><code>scope.on_empty()</code></td></tr><tr><td>Cancel all scope tasks early</td><td><code>scope.request_stop()</code></td></tr></tbody></table></div>
-<hr>
-<h2 id="limitations">Limitations</h2>
-<ol>
-<li><strong>A scope cannot be passed between threads</strong> — <code>simple_counting_scope</code> is immovable (move constructor is deleted). Its destructor calls <code>terminate()</code> if any operation associations remain, so you must ensure all spawned work completes before the scope goes out of scope.</li>
-<li><strong><code>spawn</code> discards errors</strong> — the standard draft’s <code>spawn_receiver</code> has no <code>set_error</code> handler; if the sender declares error completion signatures, <code>connect</code> fails at compile time. Ensure errors are handled upstream via <code>upon_error</code> before <code>spawn</code>.</li>
-</ol></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/28-stop-token-cancellation/" data-astro-cid-ykvenys5>← 28 · Stop Token — Cooperative Cancellation</a><a href="/exec/tutorials/30-run-loop/" data-astro-cid-ykvenys5>30 · run_loop — The Simplest Execution Context →</a></nav></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
+<!-- ## Notes -->
+<!-- 1. **A scope cannot be passed between threads** — `simple_counting_scope` is immovable (move constructor is deleted). Its destructor calls `terminate()` if any operation associations remain, so you must ensure all spawned work completes before the scope goes out of scope. -->
+<!-- **`spawn` discards errors** — the standard draft's `spawn_receiver` has no `set_error` handler; if the sender declares error completion signatures, `connect` fails at compile time. Ensure errors are handled upstream via `upon_error` before `spawn`. --></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/28-stop-token-cancellation/" data-astro-cid-ykvenys5>← 28 · Stop Token — Cooperative Cancellation</a><a href="/exec/tutorials/30-run-loop/" data-astro-cid-ykvenys5>30 · run_loop — The Simplest Execution Context →</a></nav></div></div></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
       (function() {
         const STORAGE_KEY = "exectutorial-theme";
 
@@ -184,5 +175,55 @@
           try { localStorage.setItem(STORAGE_KEY, next); } catch(e) {}
           setTheme(next);
         });
+      })();
+    </script><script>
+      (function() {
+        function buildToc(containerId, navId) {
+          var container = document.getElementById(containerId);
+          var nav = document.getElementById(navId);
+          if (!nav) return;
+          var headings = document.querySelectorAll(".article-content h2, .article-content h3");
+          if (headings.length === 0) { if (container) container.style.display = "none"; return; }
+
+          var ul = document.createElement("ul");
+          headings.forEach(function(h) {
+            if (!h.id) return;
+            var li = document.createElement("li");
+            var a = document.createElement("a");
+            a.href = "#" + h.id;
+            a.textContent = h.textContent.replace(/¶$/, "").trim();
+            a.className = "toc-" + h.tagName.toLowerCase();
+            li.appendChild(a);
+            ul.appendChild(li);
+          });
+          nav.appendChild(ul);
+        }
+
+        buildToc("tocSidebar", "tocNav");
+        buildToc(null, "tocNavMobile");
+
+        // active heading highlight
+        var tocLinks = document.querySelectorAll("#tocNav a, #tocNavMobile a");
+        if (tocLinks.length > 0) {
+          var headings = document.querySelectorAll(".article-content h2, .article-content h3");
+          function onScroll() {
+            var scrollY = window.scrollY + 80;
+            var active = null;
+            headings.forEach(function(h) {
+              if (h.offsetTop <= scrollY) active = h;
+            });
+            tocLinks.forEach(function(link) { link.classList.remove("active"); });
+            if (active) {
+              var id = active.id;
+              tocLinks.forEach(function(link) {
+                if (link.getAttribute("href") === "#" + id) {
+                  link.classList.add("active");
+                }
+              });
+            }
+          }
+          window.addEventListener("scroll", onScroll, { passive: true });
+          onScroll();
+        }
       })();
     </script></body></html>

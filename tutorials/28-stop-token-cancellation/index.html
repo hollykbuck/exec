@@ -5,15 +5,15 @@
         if(!s&&matchMedia("(prefers-color-scheme:light)").matches)theme="light";
         document.documentElement.setAttribute("data-theme",theme);
       })();
-    </script><link rel="stylesheet" href="/exec/_astro/01-why-stdexec.hXKgsPrw.css"></head><body data-astro-cid-ykvenys5><div class="container" data-astro-cid-ykvenys5><header data-astro-cid-ykvenys5><div class="title-area" data-astro-cid-ykvenys5><a href="/exec/tutorials/" style="color:var(--fg-muted);text-decoration:none;font-size:0.85rem;" data-astro-cid-ykvenys5>← Back to index</a><h1 data-astro-cid-ykvenys5>28 · Stop Token — Cooperative Cancellation</h1></div><button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" data-astro-cid-ykvenys5>🌙</button></header><article class="article-content" data-astro-cid-ykvenys5>
-<h2 id="the-hardest-problem-in-async-programming">The Hardest Problem in Async Programming</h2>
+    </script><link rel="stylesheet" href="/exec/_astro/01-why-stdexec.YzjJ_D8W.css"></head><body data-astro-cid-ykvenys5><div class="layout-wrap" data-astro-cid-ykvenys5><aside class="toc-sidebar" id="tocSidebar" data-astro-cid-ykvenys5><div class="toc-label" data-astro-cid-ykvenys5>On this page</div><nav id="tocNav" data-astro-cid-ykvenys5></nav></aside><div class="layout-main" data-astro-cid-ykvenys5><div class="container" data-astro-cid-ykvenys5><header data-astro-cid-ykvenys5><div class="title-area" data-astro-cid-ykvenys5><a href="/exec/tutorials/" style="color:var(--fg-muted);text-decoration:none;font-size:0.85rem;" data-astro-cid-ykvenys5>← Back to index</a><h1 data-astro-cid-ykvenys5>28 · Stop Token — Cooperative Cancellation</h1></div><button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" data-astro-cid-ykvenys5>🌙</button></header><details class="toc-mobile" id="tocMobile" data-astro-cid-ykvenys5><summary data-astro-cid-ykvenys5>On this page</summary><nav id="tocNavMobile" data-astro-cid-ykvenys5></nav></details><article class="article-content" data-astro-cid-ykvenys5>
+<h2 id="the-hardest-problem-in-async-programming"><a aria-hidden="true" tabindex="-1" href="#the-hardest-problem-in-async-programming"><span class="icon icon-link"></span></a>The Hardest Problem in Async Programming</h2>
 <p>You fire off a network request, wait 5 seconds, and it still hasn’t come back. You want to cancel it. Let’s look at what traditional C++ offers:</p>
 <p>(1) <strong>std::thread</strong> — you can only <code>.join()</code> (block until it finishes) or <code>.detach()</code> (walk away, leak resources). There’s no graceful “please stop.”</p>
 <p>(2) <strong>std::future</strong> — you can only <code>.get()</code> (block for the result) or <code>.wait_for()</code> (wait with timeout). There’s no <code>.cancel()</code> method.</p>
 <p>(3) <strong>OS signals</strong> — <code>pthread_cancel</code> exists, but it’s essentially a violent thread kill. Resources may not be properly released. It’s been labeled “not recommended.”</p>
 <p>C++26 std::execution’s approach is <strong>cooperative cancellation</strong> — you notify a sender “please stop,” and the sender decides where and how to stop. The key distinction: cancellation is a <strong>request</strong>, not a <strong>command</strong>. The sender chooses an appropriate checkpoint to end itself, guaranteeing resources are properly released.</p>
 <p>What is a <code>stop_token</code>, simply put? It’s the carrier of this “please stop” request — the sender reads the token’s state, and if a stop has been requested, it responds with <code>set_stopped</code>.</p>
-<h2 id="analogy-the-restaurant-call-button">Analogy: The Restaurant Call Button</h2>
+<h2 id="analogy-the-restaurant-call-button"><a aria-hidden="true" tabindex="-1" href="#analogy-the-restaurant-call-button"><span class="icon icon-link"></span></a>Analogy: The Restaurant Call Button</h2>
 <p>Think of a <code>stop_token</code> as the “call server” button on a restaurant table:</p>
 <ul>
 <li>You press the button — equivalent to <code>stop_source.request_stop()</code></li>
@@ -22,7 +22,7 @@
 </ul>
 <p>But — pressing the button doesn’t mean the server appears instantly. She might be serving another table. This “delay” reflects the essence of cooperative cancellation: <strong>the sender actively checks the token; it isn’t interrupted</strong>.</p>
 <hr>
-<h2 id="core-types">Core Types</h2>
+<h2 id="core-types"><a aria-hidden="true" tabindex="-1" href="#core-types"><span class="icon icon-link"></span></a>Core Types</h2>
 <div class="table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch">
 
 
@@ -45,7 +45,7 @@
 
 
 <table><thead><tr><th>Type</th><th>Role</th></tr></thead><tbody><tr><td><code>inplace_stop_source</code></td><td>The cancellation <strong>initiator</strong> — holds the “has been cancelled” state</td></tr><tr><td><code>inplace_stop_token</code></td><td>The cancellation <strong>reader</strong> — obtained from a source, read-only</td></tr><tr><td><code>never_stop_token</code></td><td>Compile-time guarantee “never cancels” — enables zero-overhead optimization</td></tr></tbody></table></div>
-<h3 id="basic-usage">Basic Usage</h3>
+<h3 id="basic-usage"><a aria-hidden="true" tabindex="-1" href="#basic-usage"><span class="icon icon-link"></span></a>Basic Usage</h3>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">stdexec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::inplace_stop_source source;</span><span style="color:#6A737D;--shiki-dark:#6A737D">       // The source of cancellation</span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">stdexec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::inplace_stop_token token </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> source.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">get_token</span><span style="color:#24292E;--shiki-dark:#E1E4E8">();</span><span style="color:#6A737D;--shiki-dark:#6A737D">  // Get a "reader" from the source</span></span>
 <span class="line"></span>
@@ -55,13 +55,13 @@
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Readers can check</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">bool</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> stopped </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> token.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">stop_requested</span><span style="color:#24292E;--shiki-dark:#E1E4E8">();</span><span style="color:#6A737D;--shiki-dark:#6A737D">  // true</span></span></code></pre></div>
 <p>Above, <code>source</code> and <code>token</code> are separate — the owner of <code>source</code> controls “whether to cancel,” while recipients of <code>token</code> can only “ask if cancelled.” This separation guarantees that token holders can’t cancel the source in reverse.</p>
-<h3 id="never_stop_token--compile-time-optimization"><code>never_stop_token</code> — Compile-Time Optimization</h3>
+<h3 id="never_stop_token--compile-time-optimization"><a aria-hidden="true" tabindex="-1" href="#never_stop_token--compile-time-optimization"><span class="icon icon-link"></span></a><code>never_stop_token</code> — Compile-Time Optimization</h3>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">stdexec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::never_stop_token token;</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">static_assert</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(token.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">stop_requested</span><span style="color:#24292E;--shiki-dark:#E1E4E8">() </span><span style="color:#D73A49;--shiki-dark:#F97583">==</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> false</span><span style="color:#24292E;--shiki-dark:#E1E4E8">);</span><span style="color:#6A737D;--shiki-dark:#6A737D">  // Always false</span></span></code></pre></div>
 <p>If a sender knows at compile time that its token is <code>never_stop_token</code>, it can skip every <code>stop_requested()</code> check entirely — zero runtime overhead.</p>
 <hr>
-<h2 id="using-in-a-pipeline">Using in a Pipeline</h2>
-<h3 id="reading-the-stop-token-from-the-environment">Reading the Stop Token from the Environment</h3>
+<h2 id="using-in-a-pipeline"><a aria-hidden="true" tabindex="-1" href="#using-in-a-pipeline"><span class="icon icon-link"></span></a>Using in a Pipeline</h2>
+<h3 id="reading-the-stop-token-from-the-environment"><a aria-hidden="true" tabindex="-1" href="#reading-the-stop-token-from-the-environment"><span class="icon icon-link"></span></a>Reading the Stop Token from the Environment</h3>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">sender </span><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> check_stop</span><span style="color:#24292E;--shiki-dark:#E1E4E8">() {</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  return</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> read_env</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(get_stop_token)</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">       |</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> then</span><span style="color:#24292E;--shiki-dark:#E1E4E8">([](</span><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#E36209;--shiki-dark:#FFAB70"> token</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) {</span></span>
@@ -72,7 +72,7 @@
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">         });</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span></code></pre></div>
 <p>Above, <code>read_env(get_stop_token)</code> pulls the current stop token from the receiver’s environment, then the callback checks whether a stop has been requested.</p>
-<h3 id="providing-a-stop-token-in-a-cancellable-pipeline">Providing a Stop Token in a Cancellable Pipeline</h3>
+<h3 id="providing-a-stop-token-in-a-cancellable-pipeline"><a aria-hidden="true" tabindex="-1" href="#providing-a-stop-token-in-a-cancellable-pipeline"><span class="icon icon-link"></span></a>Providing a Stop Token in a Cancellable Pipeline</h3>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">stdexec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::inplace_stop_source stop_source;</span></span>
 <span class="line"></span>
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// A receiver whose environment contains a stop token</span></span>
@@ -89,7 +89,7 @@
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">};</span></span></code></pre></div>
 <p>Above, the receiver exposes the stop token through <code>get_env()</code>. When another thread calls <code>stop_source.request_stop()</code>, the sender detects <code>token_.stop_requested() == true</code> at the next checkpoint and gracefully exits with <code>set_stopped</code>.</p>
 <hr>
-<h2 id="key-cancellation-checkpoints">Key Cancellation Checkpoints</h2>
+<h2 id="key-cancellation-checkpoints"><a aria-hidden="true" tabindex="-1" href="#key-cancellation-checkpoints"><span class="icon icon-link"></span></a>Key Cancellation Checkpoints</h2>
 <p>Sender algorithms should check the stop token at these points:</p>
 <p>(1) <strong>Before each iteration of a long loop</strong> — if your sender has an inner loop processing a million elements, check the token at the top of each iteration so you don’t waste cycles on work whose result is no longer needed.</p>
 <p>(2) <strong>Before starting child operations</strong> — <code>when_all</code> should glance at the token before launching each child sender: if already cancelled, don’t start new children, just <code>set_stopped</code> immediately.</p>
@@ -103,7 +103,7 @@
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">  // Proceed with actual work…</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span></code></pre></div>
 <hr>
-<h2 id="registering-a-stop-callback">Registering a Stop Callback</h2>
+<h2 id="registering-a-stop-callback"><a aria-hidden="true" tabindex="-1" href="#registering-a-stop-callback"><span class="icon icon-link"></span></a>Registering a Stop Callback</h2>
 <p>Beyond periodic polling, you can register a callback that fires immediately when cancellation occurs:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">struct</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> stop_callback</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">  stdexec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::inplace_stop_token token_;</span></span>
@@ -119,7 +119,7 @@
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> cb </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> token_.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">stop_callback</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(stop_callback{token_, </span><span style="color:#005CC5;--shiki-dark:#79B8FF">this</span><span style="color:#24292E;--shiki-dark:#E1E4E8">});</span></span></code></pre></div>
 <p>Above, <code>stop_callback</code> is an RAII object — it registers the callback with the token on construction and unregisters on destruction. Use it to respond to cancellation and perform urgent cleanup.</p>
 <hr>
-<h2 id="cooperation-with-async_scope">Cooperation with <code>async_scope</code></h2>
+<h2 id="cooperation-with-async_scope"><a aria-hidden="true" tabindex="-1" href="#cooperation-with-async_scope"><span class="icon icon-link"></span></a>Cooperation with <code>async_scope</code></h2>
 <p>When an <code>async_scope</code> is destroyed, it automatically requests all child operations to stop, then waits for them all to finish. This mechanism directly relies on stop tokens — the scope internally holds an <code>inplace_stop_source</code> and calls <code>request_stop()</code> in its destructor:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">{</span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">  exec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::async_scope scope;</span></span>
@@ -130,12 +130,12 @@
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span></code></pre></div>
 <p>This guarantees that even if <code>long_running_work</code> is “interrupted mid-flight,” the scope’s destruction won’t leak resources or leave dangling pointers.</p>
 <hr>
-<h2 id="limitations">Limitations</h2>
+<h2 id="limitations"><a aria-hidden="true" tabindex="-1" href="#limitations"><span class="icon icon-link"></span></a>Limitations</h2>
 <ol>
 <li><strong>Cooperative means it depends on the cancel-ee’s cooperation.</strong> If a sender contains an infinite loop that never checks <code>stop_token</code>, the cancellation request falls on deaf ears — the caller waits forever. This is not a “force termination” mechanism.</li>
 <li><strong>Thread safety</strong> — multiple threads concurrently calling <code>request_stop()</code> is safe, but there’s no strict memory ordering guarantee between <code>stop_requested()</code> and <code>request_stop()</code>. Token state changes may have some delay before other threads observe them.</li>
 <li><strong>One-shot</strong> — once <code>inplace_stop_source::request_stop()</code> is called, you can’t “un-cancel” it. If you need a resettable cancellation signal, you’ll need to wrap a new source at a higher level.</li>
-</ol></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/27-tag-invoke-cpo/" data-astro-cid-ykvenys5>← 27 · tag_invoke — Zero-Overhead Extension Points</a><a href="/exec/tutorials/29-structured-concurrency/" data-astro-cid-ykvenys5>29 · Structured Concurrency — Giving Every Async Operation a Home →</a></nav></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
+</ol></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/27-tag-invoke-cpo/" data-astro-cid-ykvenys5>← 27 · tag_invoke — Zero-Overhead Extension Points</a><a href="/exec/tutorials/29-structured-concurrency/" data-astro-cid-ykvenys5>29 · Structured Concurrency — Giving Every Async Operation a Home →</a></nav></div></div></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
       (function() {
         const STORAGE_KEY = "exectutorial-theme";
 
@@ -168,5 +168,55 @@
           try { localStorage.setItem(STORAGE_KEY, next); } catch(e) {}
           setTheme(next);
         });
+      })();
+    </script><script>
+      (function() {
+        function buildToc(containerId, navId) {
+          var container = document.getElementById(containerId);
+          var nav = document.getElementById(navId);
+          if (!nav) return;
+          var headings = document.querySelectorAll(".article-content h2, .article-content h3");
+          if (headings.length === 0) { if (container) container.style.display = "none"; return; }
+
+          var ul = document.createElement("ul");
+          headings.forEach(function(h) {
+            if (!h.id) return;
+            var li = document.createElement("li");
+            var a = document.createElement("a");
+            a.href = "#" + h.id;
+            a.textContent = h.textContent.replace(/¶$/, "").trim();
+            a.className = "toc-" + h.tagName.toLowerCase();
+            li.appendChild(a);
+            ul.appendChild(li);
+          });
+          nav.appendChild(ul);
+        }
+
+        buildToc("tocSidebar", "tocNav");
+        buildToc(null, "tocNavMobile");
+
+        // active heading highlight
+        var tocLinks = document.querySelectorAll("#tocNav a, #tocNavMobile a");
+        if (tocLinks.length > 0) {
+          var headings = document.querySelectorAll(".article-content h2, .article-content h3");
+          function onScroll() {
+            var scrollY = window.scrollY + 80;
+            var active = null;
+            headings.forEach(function(h) {
+              if (h.offsetTop <= scrollY) active = h;
+            });
+            tocLinks.forEach(function(link) { link.classList.remove("active"); });
+            if (active) {
+              var id = active.id;
+              tocLinks.forEach(function(link) {
+                if (link.getAttribute("href") === "#" + id) {
+                  link.classList.add("active");
+                }
+              });
+            }
+          }
+          window.addEventListener("scroll", onScroll, { passive: true });
+          onScroll();
+        }
       })();
     </script></body></html>

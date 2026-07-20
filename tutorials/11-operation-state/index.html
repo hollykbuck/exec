@@ -5,8 +5,8 @@
         if(!s&&matchMedia("(prefers-color-scheme:light)").matches)theme="light";
         document.documentElement.setAttribute("data-theme",theme);
       })();
-    </script><link rel="stylesheet" href="/exec/_astro/01-why-stdexec.hXKgsPrw.css"></head><body data-astro-cid-ykvenys5><div class="container" data-astro-cid-ykvenys5><header data-astro-cid-ykvenys5><div class="title-area" data-astro-cid-ykvenys5><a href="/exec/tutorials/" style="color:var(--fg-muted);text-decoration:none;font-size:0.85rem;" data-astro-cid-ykvenys5>← Back to index</a><h1 data-astro-cid-ykvenys5>11 · Operation State Lifecycle</h1></div><button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" data-astro-cid-ykvenys5>🌙</button></header><article class="article-content" data-astro-cid-ykvenys5>
-<h2 id="overview">Overview</h2>
+    </script><link rel="stylesheet" href="/exec/_astro/01-why-stdexec.YzjJ_D8W.css"></head><body data-astro-cid-ykvenys5><div class="layout-wrap" data-astro-cid-ykvenys5><aside class="toc-sidebar" id="tocSidebar" data-astro-cid-ykvenys5><div class="toc-label" data-astro-cid-ykvenys5>On this page</div><nav id="tocNav" data-astro-cid-ykvenys5></nav></aside><div class="layout-main" data-astro-cid-ykvenys5><div class="container" data-astro-cid-ykvenys5><header data-astro-cid-ykvenys5><div class="title-area" data-astro-cid-ykvenys5><a href="/exec/tutorials/" style="color:var(--fg-muted);text-decoration:none;font-size:0.85rem;" data-astro-cid-ykvenys5>← Back to index</a><h1 data-astro-cid-ykvenys5>11 · Operation State Lifecycle</h1></div><button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" data-astro-cid-ykvenys5>🌙</button></header><details class="toc-mobile" id="tocMobile" data-astro-cid-ykvenys5><summary data-astro-cid-ykvenys5>On this page</summary><nav id="tocNavMobile" data-astro-cid-ykvenys5></nav></details><article class="article-content" data-astro-cid-ykvenys5>
+<h2 id="overview"><a aria-hidden="true" tabindex="-1" href="#overview"><span class="icon icon-link"></span></a>Overview</h2>
 <p>What is an Operation State? In one sentence: it’s the <strong>actual async operation entity</strong> created by connecting a Sender and a Receiver.</p>
 <p>As we’ve seen, a Sender is a “job description” — it tells you <em>what</em> to do, but doesn’t do it itself. Only when a Sender is bound to a Receiver through <code>connect</code> is a real async operation object produced. That object is the Operation State:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">sender </span><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> work </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> just</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">42</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) </span><span style="color:#D73A49;--shiki-dark:#F97583">|</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> then</span><span style="color:#24292E;--shiki-dark:#E1E4E8">([](</span><span style="color:#D73A49;--shiki-dark:#F97583">int</span><span style="color:#E36209;--shiki-dark:#FFAB70"> x</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) { </span><span style="color:#D73A49;--shiki-dark:#F97583">return</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> x </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 2</span><span style="color:#24292E;--shiki-dark:#E1E4E8">; });</span></span>
@@ -28,7 +28,7 @@
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    };</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span></code></pre></div>
 <p>In the code above, the <code>operation_state</code> concept is remarkably concise — <strong>destructible, an object type, <code>start()</code> must be <code>noexcept</code></strong>. Nothing more.</p>
-<h2 id="the-four-lifecycle-stages">The Four Lifecycle Stages</h2>
+<h2 id="the-four-lifecycle-stages"><a aria-hidden="true" tabindex="-1" href="#the-four-lifecycle-stages"><span class="icon icon-link"></span></a>The Four Lifecycle Stages</h2>
 <p>Annotated with line comments, an Operation State’s lifecycle has exactly four stages:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// ① connect: create operation_state (may throw)</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> op </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> connect</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(sender, receiver);</span></span>
@@ -44,13 +44,13 @@
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// ④ after completion, op is immediately invalid. This is undefined behavior:</span></span>
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// start(op);  // UB! op is already dead</span></span></code></pre></div>
 <p>In the code above, the key point is that after <code>start()</code> is called, <code>op</code>’s fate depends entirely on when the async operation completes. If it completes synchronously (like <code>just()</code>), <code>op</code> is already invalid by the time <code>start()</code> returns.</p>
-<h2 id="three-strict-rules">Three Strict Rules</h2>
-<h3 id="rule-1-start-may-be-called-at-most-once">Rule 1: start() may be called at most once</h3>
+<h2 id="three-strict-rules"><a aria-hidden="true" tabindex="-1" href="#three-strict-rules"><span class="icon icon-link"></span></a>Three Strict Rules</h2>
+<h3 id="rule-1-start-may-be-called-at-most-once"><a aria-hidden="true" tabindex="-1" href="#rule-1-start-may-be-called-at-most-once"><span class="icon icon-link"></span></a>Rule 1: start() may be called at most once</h3>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> op </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> connect</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(my_sender, my_receiver);</span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">start</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(op);</span><span style="color:#6A737D;--shiki-dark:#6A737D">   // OK</span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">start</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(op);</span><span style="color:#6A737D;--shiki-dark:#6A737D">   // undefined behavior!</span></span></code></pre></div>
 <p>In the code above, you can see a common mistake — calling <code>start()</code> twice. An operation_state is one-shot by design: an async operation either succeeds, fails, or is cancelled. There is no “replay.” If you need retry, you must create a new operation_state.</p>
-<h3 id="rule-2-op-may-be-destroyed-during-completion-function-execution">Rule 2: op may be destroyed during completion function execution</h3>
+<h3 id="rule-2-op-may-be-destroyed-during-completion-function-execution"><a aria-hidden="true" tabindex="-1" href="#rule-2-op-may-be-destroyed-during-completion-function-execution"><span class="icon icon-link"></span></a>Rule 2: op may be destroyed during completion function execution</h3>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">struct</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> my_operation</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  R rcvr_;</span></span>
 <span class="line"></span>
@@ -62,14 +62,14 @@
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">};</span></span></code></pre></div>
 <p>In the code above, <code>set_value</code> may internally trigger the Receiver’s destruction logic (e.g. <code>sync_wait</code> releases the operation_state upon receiving the result). This means after <code>set_value</code> returns, <code>this</code> may already be invalid — you must not access any member variables.</p>
 <p>This is one of the most important safety rules in C++26 std::execution: <strong>the completion function is a firebreak — once you cross it, there’s no turning back</strong>.</p>
-<h3 id="rule-3-op-is-immediately-invalid-after-completion">Rule 3: op is immediately invalid after completion</h3>
+<h3 id="rule-3-op-is-immediately-invalid-after-completion"><a aria-hidden="true" tabindex="-1" href="#rule-3-op-is-immediately-invalid-after-completion"><span class="icon icon-link"></span></a>Rule 3: op is immediately invalid after completion</h3>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> op </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> connect</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(snd, rcvr);</span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">start</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(op);</span></span>
 <span class="line"></span>
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// If start() completed synchronously, op is already invalid</span></span>
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// do_something(op);  // undefined behavior!</span></span></code></pre></div>
 <p>In the code above, synchronously-completing Senders (like <code>just</code>) call the completion function before <code>start()</code> returns, meaning <code>op</code> is already in an invalid state when <code>start()</code> returns. Accessing a completed operation_state is undefined behavior.</p>
-<h2 id="internal-structure">Internal Structure</h2>
+<h2 id="internal-structure"><a aria-hidden="true" tabindex="-1" href="#internal-structure"><span class="icon icon-link"></span></a>Internal Structure</h2>
 <p>A typical operation_state holds copies of both Sender and Receiver:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">template</span><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> S</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> R</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">struct</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> my_operation</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
@@ -93,7 +93,7 @@
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  }</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">};</span></span></code></pre></div>
 <p>In the code above, the operation_state <strong>owns</strong> copies of the Sender and Receiver. Note that even if the business logic inside <code>start()</code> throws, it’s converted to a <code>set_error</code> call — <strong>an exception will never escape from <code>start()</code></strong>, because it’s marked <code>noexcept</code>.</p>
-<h2 id="the-connect-return-type">The connect Return Type</h2>
+<h2 id="the-connect-return-type"><a aria-hidden="true" tabindex="-1" href="#the-connect-return-type"><span class="icon icon-link"></span></a>The connect Return Type</h2>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">template</span><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Sndr</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Rcvr</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  requires</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> sender_to</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;</span><span style="color:#24292E;--shiki-dark:#E1E4E8">Sndr, Rcvr</span><span style="color:#D73A49;--shiki-dark:#F97583">></span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">using</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> connect_result_t</span><span style="color:#D73A49;--shiki-dark:#F97583"> =</span><span style="color:#D73A49;--shiki-dark:#F97583"> decltype</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">connect</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">declval</span><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#6F42C1;--shiki-dark:#B392F0">Sndr</span><span style="color:#24292E;--shiki-dark:#E1E4E8">>(), </span><span style="color:#6F42C1;--shiki-dark:#B392F0">declval</span><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#6F42C1;--shiki-dark:#B392F0">Rcvr</span><span style="color:#24292E;--shiki-dark:#E1E4E8">>()));</span></span>
@@ -102,7 +102,7 @@
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> op </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> stdexec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">connect</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">stdexec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">just</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">42</span><span style="color:#24292E;--shiki-dark:#E1E4E8">), my_receiver{});</span></span>
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// connect_result_t = some internal operation class</span></span></code></pre></div>
 <p>In the code above, <code>connect_result_t</code> is a compile-time deduced type — you typically don’t need to write it out manually because <code>auto</code> suffices. It’s mainly used in template metaprogramming scenarios, like reconstructing a new operation_state inside a <code>retry</code> algorithm.</p>
-<h2 id="the-retry-pattern-managing-re-creation-with-optional">The Retry Pattern: Managing Re-creation with optional</h2>
+<h2 id="the-retry-pattern-managing-re-creation-with-optional"><a aria-hidden="true" tabindex="-1" href="#the-retry-pattern-managing-re-creation-with-optional"><span class="icon icon-link"></span></a>The Retry Pattern: Managing Re-creation with optional</h2>
 <p>Since an operation_state is one-shot, retrying means <strong>destroy first, then reconstruct</strong>. The stdexec <code>retry</code> algorithm uses <code>std::optional</code> to implement this pattern:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// The wrong retry — directly calling start again</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> op </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> connect</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(snd, rcvr);</span></span>
@@ -135,7 +135,7 @@
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  }</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">};</span></span></code></pre></div>
 <p>In the code above, the <code>std::optional</code> <code>reset</code> + <code>emplace</code> pattern enables safe reconstruction of the operation_state. This pattern is very useful in scenarios requiring retry, looping, or any situation where you need to “connect the same Sender multiple times.”</p>
-<h2 id="why-start-must-be-noexcept">Why start() Must Be noexcept</h2>
+<h2 id="why-start-must-be-noexcept"><a aria-hidden="true" tabindex="-1" href="#why-start-must-be-noexcept"><span class="icon icon-link"></span></a>Why start() Must Be noexcept</h2>
 <p>The <code>noexcept</code> requirement on <code>start()</code> is not arbitrary — there are three design reasons behind it:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// connect phase: may throw, dynamic memory allocation allowed</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> op </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> connect</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(snd, rcvr);</span><span style="color:#6A737D;--shiki-dark:#6A737D">  // may throw std::bad_alloc</span></span>
@@ -152,7 +152,7 @@
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  }</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span></code></pre></div>
 <p>In the code above, <code>start()</code> may use try-catch internally to ensure exceptions never escape its call boundary. Business logic exceptions are uniformly converted to <code>set_error</code> delivery.</p>
-<h2 id="key-design-decisions">Key Design Decisions</h2>
+<h2 id="key-design-decisions"><a aria-hidden="true" tabindex="-1" href="#key-design-decisions"><span class="icon icon-link"></span></a>Key Design Decisions</h2>
 <div class="table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch">
 
 
@@ -180,14 +180,14 @@
 
 <table><thead><tr><th>Decision</th><th>Reason</th></tr></thead><tbody><tr><td><code>start()</code> is <code>noexcept</code></td><td>Resource allocation done in <code>connect()</code>; <code>start()</code> only launches</td></tr><tr><td><code>start()</code> may only be called once</td><td>Enforces a one-shot lifecycle; prevents reuse of a completed op</td></tr><tr><td>op may be destroyed during completion</td><td>Allows the Receiver to release resources immediately upon receiving the result</td></tr><tr><td><code>connect()</code> may throw</td><td>The connection phase may involve memory allocation and other fallible work</td></tr></tbody></table></div>
 <p>The table above summarizes the four core design decisions of Operation State. Understanding these rules means understanding C++26 std::execution’s resource management philosophy — <strong>separate allocation from launch, one-shot usage, firebreak pattern</strong>.</p>
-<h2 id="important-notes">Important Notes</h2>
+<h2 id="important-notes"><a aria-hidden="true" tabindex="-1" href="#important-notes"><span class="icon icon-link"></span></a>Important Notes</h2>
 <ol>
 <li><strong>Don’t use <code>op</code> after <code>start()</code></strong> — even if <code>start()</code> returns, it may have synchronously completed, leaving <code>op</code> invalid</li>
 <li><strong>Don’t write code after <code>set_value</code></strong> — the completion function may destroy <code>this</code>; once you cross the completion function call, no member access is safe</li>
 <li><strong><code>std::optional</code> is the standard tool for reconstructing operation_state</strong> — use <code>reset</code> + <code>emplace</code> for retry or looping</li>
 <li><strong>For type-erased operation_state, use <code>any_sender</code></strong> — if you need runtime polymorphism, use stdexec’s type erasure utilities</li>
 </ol>
-<p>The next chapter introduces Completion Signatures — to see how C++26 std::execution creates “type identity cards” for Senders at compile time.</p></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/10-scheduler-concept/" data-astro-cid-ykvenys5>← 10 · Scheduler Concept</a><a href="/exec/tutorials/12-Completion-Signatures/" data-astro-cid-ykvenys5>12 · Completion Signatures →</a></nav></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
+<p>The next chapter introduces Completion Signatures — to see how C++26 std::execution creates “type identity cards” for Senders at compile time.</p></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/10-scheduler-concept/" data-astro-cid-ykvenys5>← 10 · Scheduler Concept</a><a href="/exec/tutorials/12-Completion-Signatures/" data-astro-cid-ykvenys5>12 · Completion Signatures →</a></nav></div></div></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
       (function() {
         const STORAGE_KEY = "exectutorial-theme";
 
@@ -220,5 +220,55 @@
           try { localStorage.setItem(STORAGE_KEY, next); } catch(e) {}
           setTheme(next);
         });
+      })();
+    </script><script>
+      (function() {
+        function buildToc(containerId, navId) {
+          var container = document.getElementById(containerId);
+          var nav = document.getElementById(navId);
+          if (!nav) return;
+          var headings = document.querySelectorAll(".article-content h2, .article-content h3");
+          if (headings.length === 0) { if (container) container.style.display = "none"; return; }
+
+          var ul = document.createElement("ul");
+          headings.forEach(function(h) {
+            if (!h.id) return;
+            var li = document.createElement("li");
+            var a = document.createElement("a");
+            a.href = "#" + h.id;
+            a.textContent = h.textContent.replace(/¶$/, "").trim();
+            a.className = "toc-" + h.tagName.toLowerCase();
+            li.appendChild(a);
+            ul.appendChild(li);
+          });
+          nav.appendChild(ul);
+        }
+
+        buildToc("tocSidebar", "tocNav");
+        buildToc(null, "tocNavMobile");
+
+        // active heading highlight
+        var tocLinks = document.querySelectorAll("#tocNav a, #tocNavMobile a");
+        if (tocLinks.length > 0) {
+          var headings = document.querySelectorAll(".article-content h2, .article-content h3");
+          function onScroll() {
+            var scrollY = window.scrollY + 80;
+            var active = null;
+            headings.forEach(function(h) {
+              if (h.offsetTop <= scrollY) active = h;
+            });
+            tocLinks.forEach(function(link) { link.classList.remove("active"); });
+            if (active) {
+              var id = active.id;
+              tocLinks.forEach(function(link) {
+                if (link.getAttribute("href") === "#" + id) {
+                  link.classList.add("active");
+                }
+              });
+            }
+          }
+          window.addEventListener("scroll", onScroll, { passive: true });
+          onScroll();
+        }
       })();
     </script></body></html>

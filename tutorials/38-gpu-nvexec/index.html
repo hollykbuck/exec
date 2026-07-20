@@ -5,12 +5,12 @@
         if(!s&&matchMedia("(prefers-color-scheme:light)").matches)theme="light";
         document.documentElement.setAttribute("data-theme",theme);
       })();
-    </script><link rel="stylesheet" href="/exec/_astro/01-why-stdexec.hXKgsPrw.css"></head><body data-astro-cid-ykvenys5><div class="container" data-astro-cid-ykvenys5><header data-astro-cid-ykvenys5><div class="title-area" data-astro-cid-ykvenys5><a href="/exec/tutorials/" style="color:var(--fg-muted);text-decoration:none;font-size:0.85rem;" data-astro-cid-ykvenys5>← Back to index</a><h1 data-astro-cid-ykvenys5>38 · GPU Programming with nvexec</h1></div><button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" data-astro-cid-ykvenys5>🌙</button></header><article class="article-content" data-astro-cid-ykvenys5>
+    </script><link rel="stylesheet" href="/exec/_astro/01-why-stdexec.YzjJ_D8W.css"></head><body data-astro-cid-ykvenys5><div class="layout-wrap" data-astro-cid-ykvenys5><aside class="toc-sidebar" id="tocSidebar" data-astro-cid-ykvenys5><div class="toc-label" data-astro-cid-ykvenys5>On this page</div><nav id="tocNav" data-astro-cid-ykvenys5></nav></aside><div class="layout-main" data-astro-cid-ykvenys5><div class="container" data-astro-cid-ykvenys5><header data-astro-cid-ykvenys5><div class="title-area" data-astro-cid-ykvenys5><a href="/exec/tutorials/" style="color:var(--fg-muted);text-decoration:none;font-size:0.85rem;" data-astro-cid-ykvenys5>← Back to index</a><h1 data-astro-cid-ykvenys5>38 · GPU Programming with nvexec</h1></div><button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" data-astro-cid-ykvenys5>🌙</button></header><details class="toc-mobile" id="tocMobile" data-astro-cid-ykvenys5><summary data-astro-cid-ykvenys5>On this page</summary><nav id="tocNavMobile" data-astro-cid-ykvenys5></nav></details><article class="article-content" data-astro-cid-ykvenys5>
 <blockquote>
 <p><strong>Standard Section</strong>: —
 <strong>stdexec Reference</strong>: <code>nvexec/</code>, <code>examples/nvexec/</code></p>
 </blockquote>
-<h2 id="overview">Overview</h2>
+<h2 id="overview"><a aria-hidden="true" tabindex="-1" href="#overview"><span class="icon icon-link"></span></a>Overview</h2>
 <p><code>nvexec</code> is NVIDIA’s GPU backend, wrapping the CUDA programming model as a <code>std::execution</code> scheduler.</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">namespace</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> nvexec</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> stream_scheduler</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
@@ -23,7 +23,7 @@
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> multi_gpu_stream_scheduler</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> multi_gpu_context</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span></code></pre></div>
-<h2 id="basic-usage">Basic Usage</h2>
+<h2 id="basic-usage"><a aria-hidden="true" tabindex="-1" href="#basic-usage"><span class="icon icon-link"></span></a>Basic Usage</h2>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">#include</span><span style="color:#032F62;--shiki-dark:#9ECBFF"> &#x3C;nvexec/stream_context.cuh></span></span>
 <span class="line"></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">nvexec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::stream_context ctx;</span></span>
@@ -37,21 +37,21 @@
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  )</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">);</span></span>
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// result = 43</span></span></code></pre></div>
-<h2 id="gpu-algorithms">GPU Algorithms</h2>
+<h2 id="gpu-algorithms"><a aria-hidden="true" tabindex="-1" href="#gpu-algorithms"><span class="icon icon-link"></span></a>GPU Algorithms</h2>
 <p><code>nvexec</code> provides GPU-optimized algorithm implementations:</p>
-<h3 id="bulk"><code>bulk</code></h3>
+<h3 id="bulk"><a aria-hidden="true" tabindex="-1" href="#bulk"><span class="icon icon-link"></span></a><code>bulk</code></h3>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">starts_on</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(gpu_sch,</span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">  just</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(device_data)</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    |</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> nvexec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">bulk</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">1024</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, [] __device__(</span><span style="color:#D73A49;--shiki-dark:#F97583">int</span><span style="color:#E36209;--shiki-dark:#FFAB70"> idx</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#D73A49;--shiki-dark:#F97583">auto&#x26;</span><span style="color:#E36209;--shiki-dark:#FFAB70"> data</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) {</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        data[idx] </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> data[idx] </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 2</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">      })</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">);</span></span></code></pre></div>
-<h3 id="reduce"><code>reduce</code></h3>
+<h3 id="reduce"><a aria-hidden="true" tabindex="-1" href="#reduce"><span class="icon icon-link"></span></a><code>reduce</code></h3>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">starts_on</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(gpu_sch,</span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">  just</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(device_data)</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    |</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> nvexec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">reduce</span><span style="color:#24292E;--shiki-dark:#E1E4E8">([] __device__(</span><span style="color:#D73A49;--shiki-dark:#F97583">int</span><span style="color:#E36209;--shiki-dark:#FFAB70"> a</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#D73A49;--shiki-dark:#F97583">int</span><span style="color:#E36209;--shiki-dark:#FFAB70"> b</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) { </span><span style="color:#D73A49;--shiki-dark:#F97583">return</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> a </span><span style="color:#D73A49;--shiki-dark:#F97583">+</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> b; })</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">);</span></span></code></pre></div>
-<h3 id="when_all"><code>when_all</code></h3>
+<h3 id="when_all"><a aria-hidden="true" tabindex="-1" href="#when_all"><span class="icon icon-link"></span></a><code>when_all</code></h3>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">starts_on</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(gpu_sch,</span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">  when_all</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">    gpu_kernel_1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(),</span></span>
@@ -59,7 +59,7 @@
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">    gpu_kernel_3</span><span style="color:#24292E;--shiki-dark:#E1E4E8">()</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  )</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">);</span></span></code></pre></div>
-<h2 id="multi-gpu-support">Multi-GPU Support</h2>
+<h2 id="multi-gpu-support"><a aria-hidden="true" tabindex="-1" href="#multi-gpu-support"><span class="icon icon-link"></span></a>Multi-GPU Support</h2>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">nvexec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::multi_gpu_context ctx;</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> multi_gpu_sch </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> ctx.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">get_scheduler</span><span style="color:#24292E;--shiki-dark:#E1E4E8">();</span></span>
 <span class="line"></span>
@@ -71,7 +71,7 @@
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">    gpu_work</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">2</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span><span style="color:#6A737D;--shiki-dark:#6A737D">   // GPU 2</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  )</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">);</span></span></code></pre></div>
-<h2 id="cuda-stream-integration">CUDA Stream Integration</h2>
+<h2 id="cuda-stream-integration"><a aria-hidden="true" tabindex="-1" href="#cuda-stream-integration"><span class="icon icon-link"></span></a>CUDA Stream Integration</h2>
 <p>Each <code>stream_scheduler</code> is associated with a CUDA stream:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Default CUDA stream</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> gpu_sch </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> ctx.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">get_scheduler</span><span style="color:#24292E;--shiki-dark:#E1E4E8">();</span></span>
@@ -79,7 +79,7 @@
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Pass external CUDA stream</span></span>
 <span class="line"><span style="color:#005CC5;--shiki-dark:#79B8FF">cudaStream_t</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> my_stream;</span></span>
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// nvexec supports custom stream configuration</span></span></code></pre></div>
-<h2 id="maxwell-examples">Maxwell Examples</h2>
+<h2 id="maxwell-examples"><a aria-hidden="true" tabindex="-1" href="#maxwell-examples"><span class="icon icon-link"></span></a>Maxwell Examples</h2>
 <p>stdexec’s <code>examples/nvexec/</code> contains a series of Maxwell equation solver examples:</p>
 <div class="table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch">
 
@@ -111,17 +111,17 @@
 
 
 <table><thead><tr><th>Example</th><th>Description</th></tr></thead><tbody><tr><td><code>maxwell_cpu_st.cu</code></td><td>Single-thread CPU</td></tr><tr><td><code>maxwell_cpu_mt.cu</code></td><td>Multi-thread CPU</td></tr><tr><td><code>maxwell_gpu_s.cu</code></td><td>Single GPU</td></tr><tr><td><code>maxwell_gpu_m.cu</code></td><td>Multi GPU</td></tr><tr><td><code>maxwell_distributed.cu</code></td><td>Distributed MPI + GPU</td></tr></tbody></table></div>
-<h2 id="domain-mechanism--gpu">Domain Mechanism &#x26; GPU</h2>
+<h2 id="domain-mechanism--gpu"><a aria-hidden="true" tabindex="-1" href="#domain-mechanism--gpu"><span class="icon icon-link"></span></a>Domain Mechanism &#x26; GPU</h2>
 <p>The GPU scheduler uses the domain mechanism to replace standard algorithms with GPU-optimized versions:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Standard when_all</span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">when_all</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(gpu_work1, gpu_work2);</span></span>
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Under nvexec domain:</span></span>
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// → Automatically replaced with GPU version of when_all (using CUDA events for synchronization)</span></span></code></pre></div>
-<h2 id="build-requirements">Build Requirements</h2>
+<h2 id="build-requirements"><a aria-hidden="true" tabindex="-1" href="#build-requirements"><span class="icon icon-link"></span></a>Build Requirements</h2>
 <div class="code-block-wrap"><span class="code-lang">cmake</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cmake"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D"># CMake configuration</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">cmake -S . -B build -DSTDEXEC_ENABLE_CUDA=</span><span style="color:#D73A49;--shiki-dark:#F97583">ON</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">cmake --build build</span></span></code></pre></div>
-<p>Requires NVIDIA HPC SDK (nvc++) or a CUDA-capable Clang.</p></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/37-windows-thread-pool/" data-astro-cid-ykvenys5>← 37 · Windows Thread Pool</a><a href="/exec/tutorials/39-third-party-integration/" data-astro-cid-ykvenys5>39 · Third-party Framework Integration →</a></nav></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
+<p>Requires NVIDIA HPC SDK (nvc++) or a CUDA-capable Clang.</p></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/37-windows-thread-pool/" data-astro-cid-ykvenys5>← 37 · Windows Thread Pool</a><a href="/exec/tutorials/39-third-party-integration/" data-astro-cid-ykvenys5>39 · Third-party Framework Integration →</a></nav></div></div></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
       (function() {
         const STORAGE_KEY = "exectutorial-theme";
 
@@ -154,5 +154,55 @@
           try { localStorage.setItem(STORAGE_KEY, next); } catch(e) {}
           setTheme(next);
         });
+      })();
+    </script><script>
+      (function() {
+        function buildToc(containerId, navId) {
+          var container = document.getElementById(containerId);
+          var nav = document.getElementById(navId);
+          if (!nav) return;
+          var headings = document.querySelectorAll(".article-content h2, .article-content h3");
+          if (headings.length === 0) { if (container) container.style.display = "none"; return; }
+
+          var ul = document.createElement("ul");
+          headings.forEach(function(h) {
+            if (!h.id) return;
+            var li = document.createElement("li");
+            var a = document.createElement("a");
+            a.href = "#" + h.id;
+            a.textContent = h.textContent.replace(/¶$/, "").trim();
+            a.className = "toc-" + h.tagName.toLowerCase();
+            li.appendChild(a);
+            ul.appendChild(li);
+          });
+          nav.appendChild(ul);
+        }
+
+        buildToc("tocSidebar", "tocNav");
+        buildToc(null, "tocNavMobile");
+
+        // active heading highlight
+        var tocLinks = document.querySelectorAll("#tocNav a, #tocNavMobile a");
+        if (tocLinks.length > 0) {
+          var headings = document.querySelectorAll(".article-content h2, .article-content h3");
+          function onScroll() {
+            var scrollY = window.scrollY + 80;
+            var active = null;
+            headings.forEach(function(h) {
+              if (h.offsetTop <= scrollY) active = h;
+            });
+            tocLinks.forEach(function(link) { link.classList.remove("active"); });
+            if (active) {
+              var id = active.id;
+              tocLinks.forEach(function(link) {
+                if (link.getAttribute("href") === "#" + id) {
+                  link.classList.add("active");
+                }
+              });
+            }
+          }
+          window.addEventListener("scroll", onScroll, { passive: true });
+          onScroll();
+        }
       })();
     </script></body></html>

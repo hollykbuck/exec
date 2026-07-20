@@ -5,7 +5,7 @@
         if(!s&&matchMedia("(prefers-color-scheme:light)").matches)theme="light";
         document.documentElement.setAttribute("data-theme",theme);
       })();
-    </script><link rel="stylesheet" href="/exec/_astro/01-why-stdexec.hXKgsPrw.css"></head><body data-astro-cid-ykvenys5><div class="container" data-astro-cid-ykvenys5><header data-astro-cid-ykvenys5><div class="title-area" data-astro-cid-ykvenys5><a href="/exec/tutorials/" style="color:var(--fg-muted);text-decoration:none;font-size:0.85rem;" data-astro-cid-ykvenys5>← Back to index</a><h1 data-astro-cid-ykvenys5>07c · task&lt;T&gt; Internals and task_scheduler</h1></div><button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" data-astro-cid-ykvenys5>🌙</button></header><article class="article-content" data-astro-cid-ykvenys5><h2 id="the-task-class-template">The task Class Template</h2>
+    </script><link rel="stylesheet" href="/exec/_astro/01-why-stdexec.YzjJ_D8W.css"></head><body data-astro-cid-ykvenys5><div class="layout-wrap" data-astro-cid-ykvenys5><aside class="toc-sidebar" id="tocSidebar" data-astro-cid-ykvenys5><div class="toc-label" data-astro-cid-ykvenys5>On this page</div><nav id="tocNav" data-astro-cid-ykvenys5></nav></aside><div class="layout-main" data-astro-cid-ykvenys5><div class="container" data-astro-cid-ykvenys5><header data-astro-cid-ykvenys5><div class="title-area" data-astro-cid-ykvenys5><a href="/exec/tutorials/" style="color:var(--fg-muted);text-decoration:none;font-size:0.85rem;" data-astro-cid-ykvenys5>← Back to index</a><h1 data-astro-cid-ykvenys5>07c · task&lt;T&gt; Internals and task_scheduler</h1></div><button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" data-astro-cid-ykvenys5>🌙</button></header><details class="toc-mobile" id="tocMobile" data-astro-cid-ykvenys5><summary data-astro-cid-ykvenys5>On this page</summary><nav id="tocNavMobile" data-astro-cid-ykvenys5></nav></details><article class="article-content" data-astro-cid-ykvenys5><h2 id="the-task-class-template"><a aria-hidden="true" tabindex="-1" href="#the-task-class-template"><span class="icon icon-link"></span></a>The task Class Template</h2>
 <p><code>task&#x3C;T, Environment></code> is a sender that doubles as a coroutine return type. Chapter 07 showed usage; this chapter examines the type design.</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">namespace</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> std</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">execution</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  template</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> &#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> T</span><span style="color:#D73A49;--shiki-dark:#F97583"> =</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> void, </span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Environment</span><span style="color:#D73A49;--shiki-dark:#F97583"> =</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> env&#x3C;>></span></span>
@@ -30,7 +30,7 @@
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    coroutine_handle</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;</span><span style="color:#24292E;--shiki-dark:#E1E4E8">promise_type</span><span style="color:#D73A49;--shiki-dark:#F97583">></span><span style="color:#24292E;--shiki-dark:#E1E4E8"> handle;</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  };</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span></code></pre></div>
-<h2 id="the-environment-parameter">The Environment Parameter</h2>
+<h2 id="the-environment-parameter"><a aria-hidden="true" tabindex="-1" href="#the-environment-parameter"><span class="icon icon-link"></span></a>The Environment Parameter</h2>
 <p><code>task&#x3C;T, Environment></code> takes an <code>Environment</code> type that customizes every aspect of the coroutine:</p>
 <div class="table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch">
 
@@ -74,7 +74,7 @@
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">task</span><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">int</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#6F42C1;--shiki-dark:#B392F0">my_task_env</span><span style="color:#24292E;--shiki-dark:#E1E4E8">> </span><span style="color:#6F42C1;--shiki-dark:#B392F0">my_coro</span><span style="color:#24292E;--shiki-dark:#E1E4E8">() {</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  co_return</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 42</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span></code></pre></div>
-<h2 id="promise_type">promise_type</h2>
+<h2 id="promise_type"><a aria-hidden="true" tabindex="-1" href="#promise_type"><span class="icon icon-link"></span></a>promise_type</h2>
 <p>The promise type bridges C++ coroutine mechanics to the sender model:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> promise_type</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">public:</span></span>
@@ -100,9 +100,9 @@
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  void*</span><span style="color:#D73A49;--shiki-dark:#F97583"> operator</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> new</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#D73A49;--shiki-dark:#F97583">size_t</span><span style="color:#E36209;--shiki-dark:#FFAB70"> size</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#D73A49;--shiki-dark:#F97583">const</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> This</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x26;</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#005CC5;--shiki-dark:#79B8FF">allocator_arg_t</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#6F42C1;--shiki-dark:#B392F0">Alloc</span><span style="color:#E36209;--shiki-dark:#FFAB70"> alloc</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#6F42C1;--shiki-dark:#B392F0">Args</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x26;&#x26;</span><span style="color:#24292E;--shiki-dark:#E1E4E8">...);</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  void</span><span style="color:#D73A49;--shiki-dark:#F97583"> operator</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> delete</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#D73A49;--shiki-dark:#F97583">void*</span><span style="color:#E36209;--shiki-dark:#FFAB70"> pointer</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#D73A49;--shiki-dark:#F97583">size_t</span><span style="color:#E36209;--shiki-dark:#FFAB70"> size</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) </span><span style="color:#D73A49;--shiki-dark:#F97583">noexcept</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">};</span></span></code></pre></div>
-<h3 id="initial_suspend--always-suspended">initial_suspend — Always Suspended</h3>
+<h3 id="initial_suspend--always-suspended"><a aria-hidden="true" tabindex="-1" href="#initial_suspend--always-suspended"><span class="icon icon-link"></span></a>initial_suspend — Always Suspended</h3>
 <p><code>initial_suspend()</code> returns <code>suspend_always{}</code>. This means the coroutine does <strong>not</strong> start executing when called — it suspends immediately. The caller gets a <code>task</code> object with a suspended coroutine frame. Execution only begins when <code>connect</code> + <code>start</code> are called.</p>
-<h3 id="final_suspend--the-completion-event">final_suspend — The Completion Event</h3>
+<h3 id="final_suspend--the-completion-event"><a aria-hidden="true" tabindex="-1" href="#final_suspend--the-completion-event"><span class="icon icon-link"></span></a>final_suspend — The Completion Event</h3>
 <p><code>final_suspend()</code> returns an awaitable that, when awaited, destroys the coroutine frame and calls the completion function on the receiver:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Inside final_suspend's awaiter:</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> st </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> STATE</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#005CC5;--shiki-dark:#79B8FF">this</span><span style="color:#24292E;--shiki-dark:#E1E4E8">);</span><span style="color:#6A737D;--shiki-dark:#6A737D">  // reference to task::state</span></span>
@@ -115,7 +115,7 @@
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">else</span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">  set_value</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">move</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(st.rcvr), </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#6F42C1;--shiki-dark:#B392F0">move</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(st.result));</span></span></code></pre></div>
 <p>This is the moment the <code>task</code> completes as a sender — the coroutine frame is freed and the receiver’s completion handler fires.</p>
-<h3 id="await_transform--the-co_await-hook">await_transform — The co_await Hook</h3>
+<h3 id="await_transform--the-co_await-hook"><a aria-hidden="true" tabindex="-1" href="#await_transform--the-co_await-hook"><span class="icon icon-link"></span></a>await_transform — The co_await Hook</h3>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">template</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> &#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">sender</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Sender</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> await_transform</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">Sender</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x26;&#x26;</span><span style="color:#E36209;--shiki-dark:#FFAB70"> sndr</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) {</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  if</span><span style="color:#D73A49;--shiki-dark:#F97583"> constexpr</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (same_as</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;</span><span style="color:#24292E;--shiki-dark:#E1E4E8">inline_scheduler, start_scheduler_type</span><span style="color:#D73A49;--shiki-dark:#F97583">></span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
@@ -126,13 +126,13 @@
 <p>If the task uses <code>inline_scheduler</code>, <code>co_await sender</code> passes through directly. For any other scheduler, it wraps the sender in <code>affine</code> first — ensuring the awaited operation’s completion runs on the task’s scheduler.</p>
 <p><strong>This has an important practical consequence</strong>: <code>co_await schedule(pool_sch)</code> inside a coroutine <strong>does not</strong> switch the coroutine’s execution to the pool thread, even though <code>sync_wait(schedule(pool_sch) | then(...))</code> does. The <code>affine</code> wrapper inserts a <code>finally(sender, unstoppable(schedule(task_scheduler)))</code> that diverts the completion back to the task’s scheduler. When <code>sync_wait</code> drives the task, that scheduler is a <code>run_loop</code> that runs on the caller thread — undoing any thread switch the inner sender would have performed.</p>
 <p>To actually switch execution context with coroutines, use <code>continues_on(coro(), pool_sch)</code> or <code>starts_on(pool_sch, coro())</code> at the pipeline level, not <code>co_await schedule(pool_sch)</code> inside the coroutine.</p>
-<h3 id="allocation">Allocation</h3>
+<h3 id="allocation"><a aria-hidden="true" tabindex="-1" href="#allocation"><span class="icon icon-link"></span></a>Allocation</h3>
 <p><code>promise_type</code> provides custom <code>operator new</code>/<code>delete</code> for the coroutine frame. The allocator is obtained from:</p>
 <ol>
 <li>The receiver’s environment (via <code>get_allocator(get_env(rcvr))</code>)</li>
 <li>Falls back to <code>allocator_type()</code> (default <code>allocator&#x3C;byte></code>)</li>
 </ol>
-<h2 id="state--the-operation-state">state<rcvr> — The Operation State</rcvr></h2>
+<h2 id="state--the-operation-state"><a aria-hidden="true" tabindex="-1" href="#state--the-operation-state"><span class="icon icon-link"></span></a>state<rcvr> — The Operation State</rcvr></h2>
 <p><code>task::state&#x3C;Rcvr></code> is the operation state returned by <code>connect()</code>:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">template</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> &#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">receiver</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Rcvr</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> task</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">state</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
@@ -144,7 +144,7 @@
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  optional</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;</span><span style="color:#24292E;--shiki-dark:#E1E4E8">T</span><span style="color:#D73A49;--shiki-dark:#F97583">></span><span style="color:#24292E;--shiki-dark:#E1E4E8">                    result;</span><span style="color:#6A737D;--shiki-dark:#6A737D">    // if T is non-void</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  exception_ptr                  error;</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">};</span></span></code></pre></div>
-<h3 id="start--the-launch">start() — The Launch</h3>
+<h3 id="start--the-launch"><a aria-hidden="true" tabindex="-1" href="#start--the-launch"><span class="icon icon-link"></span></a>start() — The Launch</h3>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">void</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> start</span><span style="color:#24292E;--shiki-dark:#E1E4E8">() </span><span style="color:#D73A49;--shiki-dark:#F97583">&#x26;</span><span style="color:#D73A49;--shiki-dark:#F97583"> noexcept</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">  // 1. Associate promise with state, rcvr, and scheduler</span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">  STATE</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(prom) </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#D73A49;--shiki-dark:#F97583"> *</span><span style="color:#005CC5;--shiki-dark:#79B8FF">this</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
@@ -161,7 +161,7 @@
 <li><code>RCVR(prom)</code> — the promise knows which receiver to complete</li>
 <li><code>SCHED(prom)</code> — the promise knows which scheduler to use</li>
 </ul>
-<h3 id="get_stop_token--stop-token-bridging">get_stop_token() — Stop Token Bridging</h3>
+<h3 id="get_stop_token--stop-token-bridging"><a aria-hidden="true" tabindex="-1" href="#get_stop_token--stop-token-bridging"><span class="icon icon-link"></span></a>get_stop_token() — Stop Token Bridging</h3>
 <p>The stop token is bridged from the receiver’s environment into the coroutine:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">stop_token_type get</span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#24292E;--shiki-dark:#E1E4E8">stop</span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#6F42C1;--shiki-dark:#B392F0">token</span><span style="color:#24292E;--shiki-dark:#E1E4E8">() {</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  if</span><span style="color:#D73A49;--shiki-dark:#F97583"> constexpr</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (same_as</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;</span><span style="color:#24292E;--shiki-dark:#E1E4E8">stop_token_type,</span></span>
@@ -175,7 +175,7 @@
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  }</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span></code></pre></div>
 <p>If the receiver’s stop token type matches the task’s, it’s used directly. Otherwise, a local <code>inplace_stop_source</code> mirrors the receiver’s stop state.</p>
-<h2 id="task_scheduler">task_scheduler</h2>
+<h2 id="task_scheduler"><a aria-hidden="true" tabindex="-1" href="#task_scheduler"><span class="icon icon-link"></span></a>task_scheduler</h2>
 <p><code>task_scheduler</code> wraps any scheduler and adds:</p>
 <ol>
 <li>Type-erased storage via <code>shared_ptr&#x3C;parallel_scheduler_backend></code></li>
@@ -190,7 +190,7 @@
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  int</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> x </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#D73A49;--shiki-dark:#F97583"> co_await</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> some_sender</span><span style="color:#24292E;--shiki-dark:#E1E4E8">();</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  co_return</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> x </span><span style="color:#D73A49;--shiki-dark:#F97583">+</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span></code></pre></div>
-<p>The <code>ts-domain</code> is a <code>default_domain</code> subclass that intercepts <code>bulk_chunked</code> and <code>bulk_unchunked</code> algorithms, routing them through the backend’s virtual interface.</p></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/07b-as-awaitable/" data-astro-cid-ykvenys5>← 07b · as_awaitable and with_awaitable_senders — How co_await Sender Works Inside</a><a href="/exec/tutorials/07d-affine/" data-astro-cid-ykvenys5>07d · affine — Completing on the Receiver&#39;s Scheduler →</a></nav></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
+<p>The <code>ts-domain</code> is a <code>default_domain</code> subclass that intercepts <code>bulk_chunked</code> and <code>bulk_unchunked</code> algorithms, routing them through the backend’s virtual interface.</p></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/07b-as-awaitable/" data-astro-cid-ykvenys5>← 07b · as_awaitable and with_awaitable_senders — How co_await Sender Works Inside</a><a href="/exec/tutorials/07d-affine/" data-astro-cid-ykvenys5>07d · affine — Completing on the Receiver&#39;s Scheduler →</a></nav></div></div></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
       (function() {
         const STORAGE_KEY = "exectutorial-theme";
 
@@ -223,5 +223,55 @@
           try { localStorage.setItem(STORAGE_KEY, next); } catch(e) {}
           setTheme(next);
         });
+      })();
+    </script><script>
+      (function() {
+        function buildToc(containerId, navId) {
+          var container = document.getElementById(containerId);
+          var nav = document.getElementById(navId);
+          if (!nav) return;
+          var headings = document.querySelectorAll(".article-content h2, .article-content h3");
+          if (headings.length === 0) { if (container) container.style.display = "none"; return; }
+
+          var ul = document.createElement("ul");
+          headings.forEach(function(h) {
+            if (!h.id) return;
+            var li = document.createElement("li");
+            var a = document.createElement("a");
+            a.href = "#" + h.id;
+            a.textContent = h.textContent.replace(/¶$/, "").trim();
+            a.className = "toc-" + h.tagName.toLowerCase();
+            li.appendChild(a);
+            ul.appendChild(li);
+          });
+          nav.appendChild(ul);
+        }
+
+        buildToc("tocSidebar", "tocNav");
+        buildToc(null, "tocNavMobile");
+
+        // active heading highlight
+        var tocLinks = document.querySelectorAll("#tocNav a, #tocNavMobile a");
+        if (tocLinks.length > 0) {
+          var headings = document.querySelectorAll(".article-content h2, .article-content h3");
+          function onScroll() {
+            var scrollY = window.scrollY + 80;
+            var active = null;
+            headings.forEach(function(h) {
+              if (h.offsetTop <= scrollY) active = h;
+            });
+            tocLinks.forEach(function(link) { link.classList.remove("active"); });
+            if (active) {
+              var id = active.id;
+              tocLinks.forEach(function(link) {
+                if (link.getAttribute("href") === "#" + id) {
+                  link.classList.add("active");
+                }
+              });
+            }
+          }
+          window.addEventListener("scroll", onScroll, { passive: true });
+          onScroll();
+        }
       })();
     </script></body></html>

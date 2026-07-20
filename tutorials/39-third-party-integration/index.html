@@ -5,14 +5,14 @@
         if(!s&&matchMedia("(prefers-color-scheme:light)").matches)theme="light";
         document.documentElement.setAttribute("data-theme",theme);
       })();
-    </script><link rel="stylesheet" href="/exec/_astro/01-why-stdexec.hXKgsPrw.css"></head><body data-astro-cid-ykvenys5><div class="container" data-astro-cid-ykvenys5><header data-astro-cid-ykvenys5><div class="title-area" data-astro-cid-ykvenys5><a href="/exec/tutorials/" style="color:var(--fg-muted);text-decoration:none;font-size:0.85rem;" data-astro-cid-ykvenys5>← Back to index</a><h1 data-astro-cid-ykvenys5>39 · Third-party Framework Integration</h1></div><button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" data-astro-cid-ykvenys5>🌙</button></header><article class="article-content" data-astro-cid-ykvenys5>
+    </script><link rel="stylesheet" href="/exec/_astro/01-why-stdexec.YzjJ_D8W.css"></head><body data-astro-cid-ykvenys5><div class="layout-wrap" data-astro-cid-ykvenys5><aside class="toc-sidebar" id="tocSidebar" data-astro-cid-ykvenys5><div class="toc-label" data-astro-cid-ykvenys5>On this page</div><nav id="tocNav" data-astro-cid-ykvenys5></nav></aside><div class="layout-main" data-astro-cid-ykvenys5><div class="container" data-astro-cid-ykvenys5><header data-astro-cid-ykvenys5><div class="title-area" data-astro-cid-ykvenys5><a href="/exec/tutorials/" style="color:var(--fg-muted);text-decoration:none;font-size:0.85rem;" data-astro-cid-ykvenys5>← Back to index</a><h1 data-astro-cid-ykvenys5>39 · Third-party Framework Integration</h1></div><button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" data-astro-cid-ykvenys5>🌙</button></header><details class="toc-mobile" id="tocMobile" data-astro-cid-ykvenys5><summary data-astro-cid-ykvenys5>On this page</summary><nav id="tocNavMobile" data-astro-cid-ykvenys5></nav></details><article class="article-content" data-astro-cid-ykvenys5>
 <blockquote>
 <p><strong>Standard Section</strong>: —
 <strong>stdexec Reference</strong>: <code>execpools/</code>, <code>examples/benchmark/</code></p>
 </blockquote>
-<h2 id="overview">Overview</h2>
+<h2 id="overview"><a aria-hidden="true" tabindex="-1" href="#overview"><span class="icon icon-link"></span></a>Overview</h2>
 <p>stdexec provides adapters for several third-party frameworks, allowing you to use schedulers from ASIO, TBB, Taskflow, etc. as <code>std::execution</code> schedulers.</p>
-<h2 id="asio">ASIO</h2>
+<h2 id="asio"><a aria-hidden="true" tabindex="-1" href="#asio"><span class="icon icon-link"></span></a>ASIO</h2>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">#include</span><span style="color:#032F62;--shiki-dark:#9ECBFF"> &#x3C;asioexec/as_default_on.hpp></span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">#include</span><span style="color:#032F62;--shiki-dark:#9ECBFF"> &#x3C;asioexec/completion_token.hpp></span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">#include</span><span style="color:#032F62;--shiki-dark:#9ECBFF"> &#x3C;asioexec/executor_with_default.hpp></span></span>
@@ -26,7 +26,7 @@
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  |</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> continues_on</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">exec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::static_thread_pool{}.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">get_scheduler</span><span style="color:#24292E;--shiki-dark:#E1E4E8">())</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  |</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> then</span><span style="color:#24292E;--shiki-dark:#E1E4E8">([](</span><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#E36209;--shiki-dark:#FFAB70"> result</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) { </span><span style="color:#6F42C1;--shiki-dark:#B392F0">process</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(result); })</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">);</span></span></code></pre></div>
-<h2 id="tbb-intel-onetbb">TBB (Intel oneTBB)</h2>
+<h2 id="tbb-intel-onetbb"><a aria-hidden="true" tabindex="-1" href="#tbb-intel-onetbb"><span class="icon icon-link"></span></a>TBB (Intel oneTBB)</h2>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">#include</span><span style="color:#032F62;--shiki-dark:#9ECBFF"> &#x3C;execpools/tbb/tbb_thread_pool.hpp></span></span>
 <span class="line"></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">execpools</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::tbb_thread_pool pool;</span></span>
@@ -36,7 +36,7 @@
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">starts_on</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(sch,</span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">  bulk</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">1000</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, [](</span><span style="color:#D73A49;--shiki-dark:#F97583">int</span><span style="color:#E36209;--shiki-dark:#FFAB70"> idx</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) { </span><span style="color:#6F42C1;--shiki-dark:#B392F0">compute</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(idx); })</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">);</span></span></code></pre></div>
-<h2 id="taskflow">Taskflow</h2>
+<h2 id="taskflow"><a aria-hidden="true" tabindex="-1" href="#taskflow"><span class="icon icon-link"></span></a>Taskflow</h2>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">#include</span><span style="color:#032F62;--shiki-dark:#9ECBFF"> &#x3C;execpools/taskflow/taskflow_thread_pool.hpp></span></span>
 <span class="line"></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">execpools</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::taskflow_thread_pool pool;</span></span>
@@ -50,7 +50,7 @@
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">    task_c</span><span style="color:#24292E;--shiki-dark:#E1E4E8">()</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  )</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">);</span></span></code></pre></div>
-<h2 id="performance-benchmarks">Performance Benchmarks</h2>
+<h2 id="performance-benchmarks"><a aria-hidden="true" tabindex="-1" href="#performance-benchmarks"><span class="icon icon-link"></span></a>Performance Benchmarks</h2>
 <p><code>examples/benchmark/</code> contains performance comparisons across multiple backends:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// static_thread_pool benchmark</span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">benchmark</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">run</span><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#6F42C1;--shiki-dark:#B392F0">exec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">static_thread_pool</span><span style="color:#24292E;--shiki-dark:#E1E4E8">>();</span></span>
@@ -63,7 +63,7 @@
 <span class="line"></span>
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// ASIO benchmark</span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">benchmark</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">run</span><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#6F42C1;--shiki-dark:#B392F0">asioexec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">asio_thread_pool</span><span style="color:#24292E;--shiki-dark:#E1E4E8">>();</span></span></code></pre></div>
-<h2 id="backend-selection-guide">Backend Selection Guide</h2>
+<h2 id="backend-selection-guide"><a aria-hidden="true" tabindex="-1" href="#backend-selection-guide"><span class="icon icon-link"></span></a>Backend Selection Guide</h2>
 <div class="table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch">
 
 
@@ -100,14 +100,14 @@
 
 
 <table><thead><tr><th>Backend</th><th>Strength</th><th>Use Case</th></tr></thead><tbody><tr><td><code>static_thread_pool</code></td><td>Zero dependency, simple and reliable</td><td>General async work</td></tr><tr><td>TBB</td><td>Work-stealing, nested parallelism</td><td>CPU-intensive parallel computation</td></tr><tr><td>Taskflow</td><td>DAG task graph</td><td>Parallel tasks with complex dependencies</td></tr><tr><td>ASIO</td><td>Network I/O integration</td><td>Network servers, existing ASIO code</td></tr><tr><td><code>nvexec</code></td><td>GPU acceleration</td><td>GPU computing</td></tr></tbody></table></div>
-<h2 id="extension-interface">Extension Interface</h2>
+<h2 id="extension-interface"><a aria-hidden="true" tabindex="-1" href="#extension-interface"><span class="icon icon-link"></span></a>Extension Interface</h2>
 <p>To integrate your own framework, you need to implement:</p>
 <ol>
 <li><strong>Scheduler</strong> concept (<code>schedule</code>, <code>get_forward_progress_guarantee</code>)</li>
 <li><strong>Schedule sender</strong> (<code>connect</code> → operation state → <code>start</code>)</li>
 <li><strong>Execution context</strong> (manage thread/resource lifecycle)</li>
 </ol>
-<p>stdexec’s <code>execpools/thread_pool_base.hpp</code> provides a reference base class.</p></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/38-gpu-nvexec/" data-astro-cid-ykvenys5>← 38 · GPU Programming with nvexec</a><a href="/exec/tutorials/40-Boost-Beast-HTTP-Server/" data-astro-cid-ykvenys5>40 · Boost.Beast HTTP Server — Building a Network Service with Sender Pipeline →</a></nav></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
+<p>stdexec’s <code>execpools/thread_pool_base.hpp</code> provides a reference base class.</p></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/38-gpu-nvexec/" data-astro-cid-ykvenys5>← 38 · GPU Programming with nvexec</a><a href="/exec/tutorials/40-Boost-Beast-HTTP-Server/" data-astro-cid-ykvenys5>40 · Boost.Beast HTTP Server — Building a Network Service with Sender Pipeline →</a></nav></div></div></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
       (function() {
         const STORAGE_KEY = "exectutorial-theme";
 
@@ -140,5 +140,55 @@
           try { localStorage.setItem(STORAGE_KEY, next); } catch(e) {}
           setTheme(next);
         });
+      })();
+    </script><script>
+      (function() {
+        function buildToc(containerId, navId) {
+          var container = document.getElementById(containerId);
+          var nav = document.getElementById(navId);
+          if (!nav) return;
+          var headings = document.querySelectorAll(".article-content h2, .article-content h3");
+          if (headings.length === 0) { if (container) container.style.display = "none"; return; }
+
+          var ul = document.createElement("ul");
+          headings.forEach(function(h) {
+            if (!h.id) return;
+            var li = document.createElement("li");
+            var a = document.createElement("a");
+            a.href = "#" + h.id;
+            a.textContent = h.textContent.replace(/¶$/, "").trim();
+            a.className = "toc-" + h.tagName.toLowerCase();
+            li.appendChild(a);
+            ul.appendChild(li);
+          });
+          nav.appendChild(ul);
+        }
+
+        buildToc("tocSidebar", "tocNav");
+        buildToc(null, "tocNavMobile");
+
+        // active heading highlight
+        var tocLinks = document.querySelectorAll("#tocNav a, #tocNavMobile a");
+        if (tocLinks.length > 0) {
+          var headings = document.querySelectorAll(".article-content h2, .article-content h3");
+          function onScroll() {
+            var scrollY = window.scrollY + 80;
+            var active = null;
+            headings.forEach(function(h) {
+              if (h.offsetTop <= scrollY) active = h;
+            });
+            tocLinks.forEach(function(link) { link.classList.remove("active"); });
+            if (active) {
+              var id = active.id;
+              tocLinks.forEach(function(link) {
+                if (link.getAttribute("href") === "#" + id) {
+                  link.classList.add("active");
+                }
+              });
+            }
+          }
+          window.addEventListener("scroll", onScroll, { passive: true });
+          onScroll();
+        }
       })();
     </script></body></html>

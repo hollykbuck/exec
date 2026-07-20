@@ -5,12 +5,12 @@
         if(!s&&matchMedia("(prefers-color-scheme:light)").matches)theme="light";
         document.documentElement.setAttribute("data-theme",theme);
       })();
-    </script><link rel="stylesheet" href="/exec/_astro/01-why-stdexec.hXKgsPrw.css"></head><body data-astro-cid-ykvenys5><div class="container" data-astro-cid-ykvenys5><header data-astro-cid-ykvenys5><div class="title-area" data-astro-cid-ykvenys5><a href="/exec/tutorials/" style="color:var(--fg-muted);text-decoration:none;font-size:0.85rem;" data-astro-cid-ykvenys5>← Back to index</a><h1 data-astro-cid-ykvenys5>07d · affine — Completing on the Receiver&#39;s Scheduler</h1></div><button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" data-astro-cid-ykvenys5>🌙</button></header><article class="article-content" data-astro-cid-ykvenys5><!-- > **Standard Section**: `[exec.affine]` <br/> -->
+    </script><link rel="stylesheet" href="/exec/_astro/01-why-stdexec.YzjJ_D8W.css"></head><body data-astro-cid-ykvenys5><div class="layout-wrap" data-astro-cid-ykvenys5><aside class="toc-sidebar" id="tocSidebar" data-astro-cid-ykvenys5><div class="toc-label" data-astro-cid-ykvenys5>On this page</div><nav id="tocNav" data-astro-cid-ykvenys5></nav></aside><div class="layout-main" data-astro-cid-ykvenys5><div class="container" data-astro-cid-ykvenys5><header data-astro-cid-ykvenys5><div class="title-area" data-astro-cid-ykvenys5><a href="/exec/tutorials/" style="color:var(--fg-muted);text-decoration:none;font-size:0.85rem;" data-astro-cid-ykvenys5>← Back to index</a><h1 data-astro-cid-ykvenys5>07d · affine — Completing on the Receiver&#39;s Scheduler</h1></div><button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" data-astro-cid-ykvenys5>🌙</button></header><details class="toc-mobile" id="tocMobile" data-astro-cid-ykvenys5><summary data-astro-cid-ykvenys5>On this page</summary><nav id="tocNavMobile" data-astro-cid-ykvenys5></nav></details><article class="article-content" data-astro-cid-ykvenys5><!-- > **Standard Section**: `[exec.affine]` <br/> -->
 <!-- > **Draft Reference**: `exec.tex` lines 7299–7381 -->
-<h2 id="the-problem">The Problem</h2>
+<h2 id="the-problem"><a aria-hidden="true" tabindex="-1" href="#the-problem"><span class="icon icon-link"></span></a>The Problem</h2>
 <p>When you <code>co_await sender</code> inside a <code>task&#x3C;T></code>, the awaited sender might complete on a different execution resource than the task’s scheduler. Without an explicit <code>continues_on</code>, the coroutine resumes on whatever thread the sender happened to finish on.</p>
 <p><code>affine</code> solves this: it adapts a sender so that it <strong>completes on the receiver’s start scheduler</strong>.</p>
-<h2 id="how-it-works">How It Works</h2>
+<h2 id="how-it-works"><a aria-hidden="true" tabindex="-1" href="#how-it-works"><span class="icon icon-link"></span></a>How It Works</h2>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">namespace</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> std</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">execution</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  inline</span><span style="color:#D73A49;--shiki-dark:#F97583"> constexpr</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> unspecified affine </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6A737D;--shiki-dark:#6A737D"> /* pipeable sender adaptor */</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span>
@@ -38,9 +38,9 @@
 <p><strong>Fallback</strong> — Uses <code>continues_on(child, UNSTOPPABLE-SCHEDULER(get_start_scheduler(ev)))</code>. The <code>UNSTOPPABLE-SCHEDULER</code> wrapper prevents cancellation from interfering with the context switch.</p>
 </li>
 </ol>
-<h2 id="why-unstoppable-scheduler">Why unstoppable-scheduler?</h2>
+<h2 id="why-unstoppable-scheduler"><a aria-hidden="true" tabindex="-1" href="#why-unstoppable-scheduler"><span class="icon icon-link"></span></a>Why unstoppable-scheduler?</h2>
 <p><code>affine</code> wraps the scheduler in <code>UNSTOPPABLE-SCHEDULER</code>, which is equivalent to <code>unstoppable(schedule(sch))</code>. This means even if the operation is cancelled, the transfer to the task’s scheduler still happens. Without this, a <code>set_stopped</code> during the transfer would leave the coroutine in an inconsistent state on the wrong thread.</p>
-<h2 id="where-affine-is-used">Where affine Is Used</h2>
+<h2 id="where-affine-is-used"><a aria-hidden="true" tabindex="-1" href="#where-affine-is-used"><span class="icon icon-link"></span></a>Where affine Is Used</h2>
 <p><strong><code>task::promise_type::await_transform</code></strong> automatically wraps every <code>co_await sender</code> in <code>affine</code> when the task’s <code>start_scheduler_type</code> is not <code>inline_scheduler</code>:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">template</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> &#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">sender</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Sender</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> await_transform</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">Sender</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x26;&#x26;</span><span style="color:#E36209;--shiki-dark:#FFAB70"> sndr</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) {</span></span>
@@ -50,9 +50,9 @@
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    return</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> as_awaitable</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">affine</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">forward</span><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#6F42C1;--shiki-dark:#B392F0">Sender</span><span style="color:#24292E;--shiki-dark:#E1E4E8">>(sndr)), </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#005CC5;--shiki-dark:#79B8FF">this</span><span style="color:#24292E;--shiki-dark:#E1E4E8">);</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span></code></pre></div>
 <p>This means every <code>co_await</code> inside a non-inline task automatically returns to the task’s scheduler before the coroutine resumes.</p>
-<h2 id="when-you-need-it">When You Need It</h2>
+<h2 id="when-you-need-it"><a aria-hidden="true" tabindex="-1" href="#when-you-need-it"><span class="icon icon-link"></span></a>When You Need It</h2>
 <p>Outside of <code>task&#x3C;T></code>, you rarely need <code>affine</code> explicitly — <code>continues_on</code> or <code>on</code> serve the same purpose with explicit scheduler selection. Inside a coroutine, it’s the mechanism that keeps execution on the right resource without manual <code>continues_on</code> calls at every await point.</p>
-<h2 id="pitfall-affine-prevents-co_await-schedulepool-from-switching-threads">Pitfall: <code>affine</code> Prevents <code>co_await schedule(pool)</code> from Switching Threads</h2>
+<h2 id="pitfall-affine-prevents-co_await-schedulepool-from-switching-threads"><a aria-hidden="true" tabindex="-1" href="#pitfall-affine-prevents-co_await-schedulepool-from-switching-threads"><span class="icon icon-link"></span></a>Pitfall: <code>affine</code> Prevents <code>co_await schedule(pool)</code> from Switching Threads</h2>
 <p>A frequent surprise: <code>co_await schedule(pool_sch)</code> inside <code>task&#x3C;T></code> does <strong>not</strong> switch the coroutine to the pool thread, even though <code>sync_wait(schedule(pool_sch) | then(...))</code> with a plain sender pipeline does.</p>
 <p>The reason is <code>affine</code>. <code>await_transform</code> wraps the sender in <code>affine()</code>, which generates <code>finally(schedule(pool_sch), unstoppable(schedule(task_scheduler)))</code>. The <code>finally</code> runs <code>schedule(pool_sch)</code> to completion — which <strong>does</strong> execute on the pool thread — but then runs the <strong>cleanup</strong> sender (<code>unstoppable(schedule(task_scheduler))</code>), which schedules the coroutine’s resumption back onto the task’s scheduler. When <code>sync_wait</code> drives the task, that scheduler is its internal <code>run_loop</code>, which runs on the <strong>caller thread</strong>. The net result: the awaited sender executed on the pool, but the coroutine’s continuation resumes on the caller.</p>
 <pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="plaintext"><code><span class="line"><span>co_await schedule(pool_sch)</span></span>
@@ -60,7 +60,7 @@
 <span class="line"><span>  → schedule(pool_sch)  — runs on pool thread  ✓</span></span>
 <span class="line"><span>  → unstoppable(schedule(task_scheduler))  — schedules back to run_loop</span></span>
 <span class="line"><span>  → run_loop resumes coroutine on caller thread  ← ✗</span></span></code></pre>
-<p>If you need the coroutine to actually execute on a different scheduler, use <code>continues_on(coro(), pool_sch)</code> or <code>starts_on(pool_sch, coro())</code> at the pipeline level, wrapping the entire task.</p></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/07c-task-internals/" data-astro-cid-ykvenys5>← 07c · task&lt;T&gt; Internals and task_scheduler</a><a href="/exec/tutorials/08-receiver-concept/" data-astro-cid-ykvenys5>08 · Receiver Concept →</a></nav></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
+<p>If you need the coroutine to actually execute on a different scheduler, use <code>continues_on(coro(), pool_sch)</code> or <code>starts_on(pool_sch, coro())</code> at the pipeline level, wrapping the entire task.</p></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/07c-task-internals/" data-astro-cid-ykvenys5>← 07c · task&lt;T&gt; Internals and task_scheduler</a><a href="/exec/tutorials/08-receiver-concept/" data-astro-cid-ykvenys5>08 · Receiver Concept →</a></nav></div></div></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
       (function() {
         const STORAGE_KEY = "exectutorial-theme";
 
@@ -93,5 +93,55 @@
           try { localStorage.setItem(STORAGE_KEY, next); } catch(e) {}
           setTheme(next);
         });
+      })();
+    </script><script>
+      (function() {
+        function buildToc(containerId, navId) {
+          var container = document.getElementById(containerId);
+          var nav = document.getElementById(navId);
+          if (!nav) return;
+          var headings = document.querySelectorAll(".article-content h2, .article-content h3");
+          if (headings.length === 0) { if (container) container.style.display = "none"; return; }
+
+          var ul = document.createElement("ul");
+          headings.forEach(function(h) {
+            if (!h.id) return;
+            var li = document.createElement("li");
+            var a = document.createElement("a");
+            a.href = "#" + h.id;
+            a.textContent = h.textContent.replace(/¶$/, "").trim();
+            a.className = "toc-" + h.tagName.toLowerCase();
+            li.appendChild(a);
+            ul.appendChild(li);
+          });
+          nav.appendChild(ul);
+        }
+
+        buildToc("tocSidebar", "tocNav");
+        buildToc(null, "tocNavMobile");
+
+        // active heading highlight
+        var tocLinks = document.querySelectorAll("#tocNav a, #tocNavMobile a");
+        if (tocLinks.length > 0) {
+          var headings = document.querySelectorAll(".article-content h2, .article-content h3");
+          function onScroll() {
+            var scrollY = window.scrollY + 80;
+            var active = null;
+            headings.forEach(function(h) {
+              if (h.offsetTop <= scrollY) active = h;
+            });
+            tocLinks.forEach(function(link) { link.classList.remove("active"); });
+            if (active) {
+              var id = active.id;
+              tocLinks.forEach(function(link) {
+                if (link.getAttribute("href") === "#" + id) {
+                  link.classList.add("active");
+                }
+              });
+            }
+          }
+          window.addEventListener("scroll", onScroll, { passive: true });
+          onScroll();
+        }
       })();
     </script></body></html>

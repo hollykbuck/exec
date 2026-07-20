@@ -5,8 +5,8 @@
         if(!s&&matchMedia("(prefers-color-scheme:light)").matches)theme="light";
         document.documentElement.setAttribute("data-theme",theme);
       })();
-    </script><link rel="stylesheet" href="/exec/_astro/01-why-stdexec.hXKgsPrw.css"></head><body data-astro-cid-ykvenys5><div class="container" data-astro-cid-ykvenys5><header data-astro-cid-ykvenys5><div class="title-area" data-astro-cid-ykvenys5><a href="/exec/tutorials/" style="color:var(--fg-muted);text-decoration:none;font-size:0.85rem;" data-astro-cid-ykvenys5>← Back to index</a><h1 data-astro-cid-ykvenys5>12 · Completion Signatures</h1></div><button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" data-astro-cid-ykvenys5>🌙</button></header><article class="article-content" data-astro-cid-ykvenys5>
-<h2 id="overview">Overview</h2>
+    </script><link rel="stylesheet" href="/exec/_astro/01-why-stdexec.YzjJ_D8W.css"></head><body data-astro-cid-ykvenys5><div class="layout-wrap" data-astro-cid-ykvenys5><aside class="toc-sidebar" id="tocSidebar" data-astro-cid-ykvenys5><div class="toc-label" data-astro-cid-ykvenys5>On this page</div><nav id="tocNav" data-astro-cid-ykvenys5></nav></aside><div class="layout-main" data-astro-cid-ykvenys5><div class="container" data-astro-cid-ykvenys5><header data-astro-cid-ykvenys5><div class="title-area" data-astro-cid-ykvenys5><a href="/exec/tutorials/" style="color:var(--fg-muted);text-decoration:none;font-size:0.85rem;" data-astro-cid-ykvenys5>← Back to index</a><h1 data-astro-cid-ykvenys5>12 · Completion Signatures</h1></div><button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" data-astro-cid-ykvenys5>🌙</button></header><details class="toc-mobile" id="tocMobile" data-astro-cid-ykvenys5><summary data-astro-cid-ykvenys5>On this page</summary><nav id="tocNavMobile" data-astro-cid-ykvenys5></nav></details><article class="article-content" data-astro-cid-ykvenys5>
+<h2 id="overview"><a aria-hidden="true" tabindex="-1" href="#overview"><span class="icon icon-link"></span></a>Overview</h2>
 <p>What are Completion Signatures? In one sentence: they are a Sender’s <strong>compile-time type identity card</strong>.</p>
 <p>Every Sender has an “identity card” that states three things: what type it returns on success, what errors it might produce, and whether it can be cancelled. This identity card is established at compile time — no runtime information needed:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// just(42)'s "identity card"</span></span>
@@ -36,7 +36,7 @@
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  template</span><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;completion</span><span style="color:#D73A49;--shiki-dark:#F97583">-signature</span><span style="color:#24292E;--shiki-dark:#E1E4E8">... </span><span style="color:#6F42C1;--shiki-dark:#B392F0">Fns</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  struct</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> completion_signatures</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {};</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span></code></pre></div>
-<h2 id="why-compile-time-type-description">Why Compile-Time Type Description</h2>
+<h2 id="why-compile-time-type-description"><a aria-hidden="true" tabindex="-1" href="#why-compile-time-type-description"><span class="icon icon-link"></span></a>Why Compile-Time Type Description</h2>
 <p>You might wonder: why put completion information at compile time? Wouldn’t a runtime query suffice?</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// sync_wait's return type is deduced entirely at compile time</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">sender </span><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> work </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> stdexec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">just</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">42</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) </span><span style="color:#D73A49;--shiki-dark:#F97583">|</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> stdexec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">then</span><span style="color:#24292E;--shiki-dark:#E1E4E8">([](</span><span style="color:#D73A49;--shiki-dark:#F97583">int</span><span style="color:#E36209;--shiki-dark:#FFAB70"> x</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) {</span></span>
@@ -47,7 +47,7 @@
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// So sync_wait's return type is optional&#x3C;tuple&#x3C;string>> — at compile time</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> result </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> stdexec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">sync_wait</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(work);</span><span style="color:#6A737D;--shiki-dark:#6A737D">  // type already determined, zero overhead</span></span></code></pre></div>
 <p>In the code above, <code>sync_wait</code> needs no runtime type information. The compiler deduces that <code>work</code> completes with <code>string</code>, and the return type is <code>optional&#x3C;tuple&#x3C;string>></code>. If you used runtime types (like <code>std::any</code>), you’d pay for boxing and unboxing on every call — with enormous performance overhead.</p>
-<h3 id="sync_waits-deduction-chain">sync_wait’s Deduction Chain</h3>
+<h3 id="sync_waits-deduction-chain"><a aria-hidden="true" tabindex="-1" href="#sync_waits-deduction-chain"><span class="icon icon-link"></span></a>sync_wait’s Deduction Chain</h3>
 <p>Let’s trace how <code>sync_wait</code> deduces its return type step by step:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Step 1: get the completion signatures</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">using</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Sigs</span><span style="color:#D73A49;--shiki-dark:#F97583"> =</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> stdexec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#005CC5;--shiki-dark:#79B8FF">completion_signatures_of_t</span><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">decltype</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(work)>;</span></span>
@@ -60,7 +60,7 @@
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Step 3: sync_wait uses ValueTypes to determine the return type</span></span>
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Return type = optional&#x3C;tuple&#x3C;string>></span></span></code></pre></div>
 <p>In the code above, you can see three compile-time deduction steps. Each step is done via template metaprogramming at compile time, and the generated runtime code has zero type erasure overhead.</p>
-<h3 id="connects-type-check">connect’s Type Check</h3>
+<h3 id="connects-type-check"><a aria-hidden="true" tabindex="-1" href="#connects-type-check"><span class="icon icon-link"></span></a>connect’s Type Check</h3>
 <p>Completion Signatures also power <code>connect</code>’s compile-time safety check:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// just(42)'s completion signature: set_value_t(int)</span></span>
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Receiver must have set_value(int), or compilation fails</span></span>
@@ -71,7 +71,7 @@
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Compile error: Receiver lacks set_error</span></span>
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// auto op2 = connect(just_error(...), int_receiver{});</span></span></code></pre></div>
 <p>In the code above, the compiler checks <code>receiver_of&#x3C;R, completion_signatures_of_t&#x3C;Sndr>></code> at the <code>connect</code> call site. If the Receiver is missing any required completion function, compilation fails immediately — the error won’t be deferred to runtime.</p>
-<h2 id="querying-completion-signatures">Querying Completion Signatures</h2>
+<h2 id="querying-completion-signatures"><a aria-hidden="true" tabindex="-1" href="#querying-completion-signatures"><span class="icon icon-link"></span></a>Querying Completion Signatures</h2>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">template</span><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Sndr</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#24292E;--shiki-dark:#E1E4E8">... </span><span style="color:#6F42C1;--shiki-dark:#B392F0">Env</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  requires</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> sender_in</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;</span><span style="color:#24292E;--shiki-dark:#E1E4E8">Sndr, Env...</span><span style="color:#D73A49;--shiki-dark:#F97583">></span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">using</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> completion_signatures_of_t</span><span style="color:#D73A49;--shiki-dark:#F97583"> =</span></span>
@@ -113,9 +113,9 @@
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// error_types_of_t&#x3C;Failable> = variant&#x3C;>              (no longer fails)</span></span>
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// sends_stopped&#x3C;Failable>    = false</span></span></code></pre></div>
 <p>In the code above, you can see how <code>upon_error</code> transforms the completion signatures — it converts <code>set_error_t(exception_ptr)</code> into <code>set_value_t(int)</code>, “repairing” the error path into a success path. This is exactly the power of Completion Signatures as compile-time type identity cards: adaptors can <strong>rewrite</strong> their child Sender’s completion signatures.</p>
-<h2 id="declaring-completion-signatures-for-custom-senders">Declaring Completion Signatures for Custom Senders</h2>
+<h2 id="declaring-completion-signatures-for-custom-senders"><a aria-hidden="true" tabindex="-1" href="#declaring-completion-signatures-for-custom-senders"><span class="icon icon-link"></span></a>Declaring Completion Signatures for Custom Senders</h2>
 <p>Custom Senders can declare completion signatures in two ways.</p>
-<h3 id="way-1-static-member-type">Way 1: Static Member Type</h3>
+<h3 id="way-1-static-member-type"><a aria-hidden="true" tabindex="-1" href="#way-1-static-member-type"><span class="icon icon-link"></span></a>Way 1: Static Member Type</h3>
 <p>Suitable for simple Senders whose completion signatures don’t depend on the environment:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">struct</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> simple_sender</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  using</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> sender_concept</span><span style="color:#D73A49;--shiki-dark:#F97583"> =</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> stdexec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">sender_tag</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
@@ -128,7 +128,7 @@
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    ></span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">};</span></span></code></pre></div>
 <p>In the code above, <code>simple_sender</code>’s completion signatures are fixed — success returns int, failure returns exception_ptr. This is the simplest declaration method, suitable for most Sender factories and adaptors like <code>just</code>, <code>then</code>, etc.</p>
-<h3 id="way-2-get_completion_signatures-function-template">Way 2: get_completion_signatures Function Template</h3>
+<h3 id="way-2-get_completion_signatures-function-template"><a aria-hidden="true" tabindex="-1" href="#way-2-get_completion_signatures-function-template"><span class="icon icon-link"></span></a>Way 2: get_completion_signatures Function Template</h3>
 <p>Suitable for complex scenarios where completion signatures depend on the environment or the Sender’s value category:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">struct</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> env_dependent_sender</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  using</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> sender_concept</span><span style="color:#D73A49;--shiki-dark:#F97583"> =</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> stdexec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">sender_tag</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
@@ -155,7 +155,7 @@
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  return</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {};</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span></code></pre></div>
 <p>In the code above, <code>retry</code> first obtains the child Sender’s completion signatures via <code>completion_signatures_of_t&#x3C;S&#x26;, Env...></code>, then transforms them — converting all error paths to <code>set_error_t(exception_ptr)</code>. This demonstrates the flexibility of Completion Signatures as type-level functions.</p>
-<h2 id="transform_completion_signatures">transform_completion_signatures</h2>
+<h2 id="transform_completion_signatures"><a aria-hidden="true" tabindex="-1" href="#transform_completion_signatures"><span class="icon icon-link"></span></a>transform_completion_signatures</h2>
 <p>stdexec provides <code>__transform_completion_signatures_t</code> for transforming completion signatures:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">template</span><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Sigs</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span><span style="color:#6A737D;--shiki-dark:#6A737D">                    // input completion signatures</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">         class Default </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> completion_signatures&#x3C;>,</span></span>
@@ -170,7 +170,7 @@
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// ErrorFn:  pass through unchanged</span></span>
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Output:   completion_signatures&#x3C;set_value_t(string)></span></span></code></pre></div>
 <p>The comments above illustrate the basic logic of completion signature transformation — adaptors don’t alter error or cancellation paths, only the value path’s types. This compile-time type transformation is the core of C++26 std::execution’s type-safe composition.</p>
-<h2 id="completion-signatures-four-roles">Completion Signatures’ Four Roles</h2>
+<h2 id="completion-signatures-four-roles"><a aria-hidden="true" tabindex="-1" href="#completion-signatures-four-roles"><span class="icon icon-link"></span></a>Completion Signatures’ Four Roles</h2>
 <div class="table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch">
 
 
@@ -197,7 +197,7 @@
 
 
 <table><thead><tr><th>Role</th><th>Description</th></tr></thead><tbody><tr><td><strong>Compile-time validation</strong></td><td><code>connect()</code> checks <code>receiver_of&#x3C;R, Sigs></code> — is the Receiver compatible?</td></tr><tr><td><strong>Type deduction</strong></td><td><code>sync_wait</code> deduces its return type via <code>value_types_of_t</code></td></tr><tr><td><strong>Algorithm adaptation</strong></td><td><code>when_all</code> computes its own completion signatures from child Senders’ signatures</td></tr><tr><td><strong>Domain transformation</strong></td><td><code>transform_sender</code> selects an algorithm implementation based on completion signatures</td></tr></tbody></table></div>
-<h2 id="important-notes">Important Notes</h2>
+<h2 id="important-notes"><a aria-hidden="true" tabindex="-1" href="#important-notes"><span class="icon icon-link"></span></a>Important Notes</h2>
 <ol>
 <li><strong><code>completion_signatures_of_t</code> may require environment parameters</strong> — environment-dependent Senders must be provided with <code>Env</code> to query their completion signatures</li>
 <li><strong><code>sends_stopped</code> is a compile-time constant</strong> — use it in <code>if constexpr</code> branches, not runtime checks</li>
@@ -205,7 +205,7 @@
 <li><strong><code>consteval</code> functions guarantee compile-time evaluation</strong> — <code>get_completion_signatures</code> will never generate runtime code</li>
 <li><strong>Custom Senders must declare correct completion signatures</strong> — if the signatures are incomplete, <code>sync_wait</code> will deduce wrong return types, and <code>connect</code> may compile with the wrong Receiver</li>
 </ol>
-<p>Completion Signatures are the foundation of C++26 std::execution’s type system. In subsequent chapters, each time we learn a new Sender adaptor (<code>then</code>, <code>when_all</code>, <code>let_value</code>, etc.), we’ll see how it transforms the child Sender’s completion signatures.</p></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/11-operation-state/" data-astro-cid-ykvenys5>← 11 · Operation State Lifecycle</a><a href="/exec/tutorials/12b-completion-sig-metaprog/" data-astro-cid-ykvenys5>12b · Completion Signature Metaprogramming — gather-signatures and Friends →</a></nav></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
+<p>Completion Signatures are the foundation of C++26 std::execution’s type system. In subsequent chapters, each time we learn a new Sender adaptor (<code>then</code>, <code>when_all</code>, <code>let_value</code>, etc.), we’ll see how it transforms the child Sender’s completion signatures.</p></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/11-operation-state/" data-astro-cid-ykvenys5>← 11 · Operation State Lifecycle</a><a href="/exec/tutorials/12b-completion-sig-metaprog/" data-astro-cid-ykvenys5>12b · Completion Signature Metaprogramming — gather-signatures and Friends →</a></nav></div></div></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
       (function() {
         const STORAGE_KEY = "exectutorial-theme";
 
@@ -238,5 +238,55 @@
           try { localStorage.setItem(STORAGE_KEY, next); } catch(e) {}
           setTheme(next);
         });
+      })();
+    </script><script>
+      (function() {
+        function buildToc(containerId, navId) {
+          var container = document.getElementById(containerId);
+          var nav = document.getElementById(navId);
+          if (!nav) return;
+          var headings = document.querySelectorAll(".article-content h2, .article-content h3");
+          if (headings.length === 0) { if (container) container.style.display = "none"; return; }
+
+          var ul = document.createElement("ul");
+          headings.forEach(function(h) {
+            if (!h.id) return;
+            var li = document.createElement("li");
+            var a = document.createElement("a");
+            a.href = "#" + h.id;
+            a.textContent = h.textContent.replace(/¶$/, "").trim();
+            a.className = "toc-" + h.tagName.toLowerCase();
+            li.appendChild(a);
+            ul.appendChild(li);
+          });
+          nav.appendChild(ul);
+        }
+
+        buildToc("tocSidebar", "tocNav");
+        buildToc(null, "tocNavMobile");
+
+        // active heading highlight
+        var tocLinks = document.querySelectorAll("#tocNav a, #tocNavMobile a");
+        if (tocLinks.length > 0) {
+          var headings = document.querySelectorAll(".article-content h2, .article-content h3");
+          function onScroll() {
+            var scrollY = window.scrollY + 80;
+            var active = null;
+            headings.forEach(function(h) {
+              if (h.offsetTop <= scrollY) active = h;
+            });
+            tocLinks.forEach(function(link) { link.classList.remove("active"); });
+            if (active) {
+              var id = active.id;
+              tocLinks.forEach(function(link) {
+                if (link.getAttribute("href") === "#" + id) {
+                  link.classList.add("active");
+                }
+              });
+            }
+          }
+          window.addEventListener("scroll", onScroll, { passive: true });
+          onScroll();
+        }
       })();
     </script></body></html>

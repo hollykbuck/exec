@@ -5,8 +5,8 @@
         if(!s&&matchMedia("(prefers-color-scheme:light)").matches)theme="light";
         document.documentElement.setAttribute("data-theme",theme);
       })();
-    </script><link rel="stylesheet" href="/exec/_astro/01-why-stdexec.hXKgsPrw.css"></head><body data-astro-cid-ykvenys5><div class="container" data-astro-cid-ykvenys5><header data-astro-cid-ykvenys5><div class="title-area" data-astro-cid-ykvenys5><a href="/exec/tutorials/" style="color:var(--fg-muted);text-decoration:none;font-size:0.85rem;" data-astro-cid-ykvenys5>← Back to index</a><h1 data-astro-cid-ykvenys5>14 · read_env — Reading Properties from the Environment</h1></div><button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" data-astro-cid-ykvenys5>🌙</button></header><article class="article-content" data-astro-cid-ykvenys5>
-<h2 id="what-is-the-environment">What Is the “Environment”?</h2>
+    </script><link rel="stylesheet" href="/exec/_astro/01-why-stdexec.YzjJ_D8W.css"></head><body data-astro-cid-ykvenys5><div class="layout-wrap" data-astro-cid-ykvenys5><aside class="toc-sidebar" id="tocSidebar" data-astro-cid-ykvenys5><div class="toc-label" data-astro-cid-ykvenys5>On this page</div><nav id="tocNav" data-astro-cid-ykvenys5></nav></aside><div class="layout-main" data-astro-cid-ykvenys5><div class="container" data-astro-cid-ykvenys5><header data-astro-cid-ykvenys5><div class="title-area" data-astro-cid-ykvenys5><a href="/exec/tutorials/" style="color:var(--fg-muted);text-decoration:none;font-size:0.85rem;" data-astro-cid-ykvenys5>← Back to index</a><h1 data-astro-cid-ykvenys5>14 · read_env — Reading Properties from the Environment</h1></div><button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" data-astro-cid-ykvenys5>🌙</button></header><details class="toc-mobile" id="tocMobile" data-astro-cid-ykvenys5><summary data-astro-cid-ykvenys5>On this page</summary><nav id="tocNavMobile" data-astro-cid-ykvenys5></nav></details><article class="article-content" data-astro-cid-ykvenys5>
+<h2 id="what-is-the-environment"><a aria-hidden="true" tabindex="-1" href="#what-is-the-environment"><span class="icon icon-link"></span></a>What Is the “Environment”?</h2>
 <p>In the sender/receiver model, every receiver carries an <em>environment</em> alongside it. This environment acts like a backpack — it holds all the queryable context for the current execution:</p>
 <ul>
 <li>What <strong>scheduler</strong> am I running on? (<code>get_scheduler</code>)</li>
@@ -15,9 +15,9 @@
 </ul>
 <p>With this mechanism, you don’t need to pass schedulers and allocators down through layers of function calls — the receiver carries them for you.</p>
 <p><code>read_env</code> is how you pull information out of this environment.</p>
-<h2 id="why-do-we-need-read_env">Why Do We Need read_env?</h2>
+<h2 id="why-do-we-need-read_env"><a aria-hidden="true" tabindex="-1" href="#why-do-we-need-read_env"><span class="icon icon-link"></span></a>Why Do We Need read_env?</h2>
 <p>Suppose inside a <code>then</code> callback you need to know “which thread pool am I on right now?”, or you want to check the stop token to decide whether to bail out early. That information is already in the receiver’s environment — you just need <code>read_env</code> to read it.</p>
-<h2 id="basic-usage">Basic Usage</h2>
+<h2 id="basic-usage"><a aria-hidden="true" tabindex="-1" href="#basic-usage"><span class="icon icon-link"></span></a>Basic Usage</h2>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">namespace</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> std</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">execution</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  inline</span><span style="color:#D73A49;--shiki-dark:#F97583"> constexpr</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> unspecified read_env{};</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span></code></pre></div>
@@ -25,7 +25,7 @@
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">sender </span><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> s </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> read_env</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(get_scheduler);</span><span style="color:#6A737D;--shiki-dark:#6A737D">    // Read the scheduler from the environment</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">sender </span><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> s </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> read_env</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(get_stop_token);</span><span style="color:#6A737D;--shiki-dark:#6A737D">   // Read the stop token</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">sender </span><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> s </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> read_env</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(get_allocator);</span><span style="color:#6A737D;--shiki-dark:#6A737D">    // Read the allocator</span></span></code></pre></div>
-<h2 id="the-most-common-query-get_scheduler">The Most Common Query: <code>get_scheduler()</code></h2>
+<h2 id="the-most-common-query-get_scheduler"><a aria-hidden="true" tabindex="-1" href="#the-most-common-query-get_scheduler"><span class="icon icon-link"></span></a>The Most Common Query: <code>get_scheduler()</code></h2>
 <p>Retrieving the current scheduler from within a pipeline is the most common use of <code>read_env</code>:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">sync_wait</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">  schedule</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(sch)</span></span>
@@ -46,7 +46,7 @@
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  })</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">);</span></span></code></pre></div>
 <p>The code above reads the scheduler from the environment, then passes it to subsequent operations via <code>let_value</code>. The sender returned by <code>read_env</code> emits <code>set_value(the_query_result)</code>, so it plugs into a pipeline just like any other sender.</p>
-<h2 id="completion-signatures-of-read_env">Completion Signatures of <code>read_env</code></h2>
+<h2 id="completion-signatures-of-read_env"><a aria-hidden="true" tabindex="-1" href="#completion-signatures-of-read_env"><span class="icon icon-link"></span></a>Completion Signatures of <code>read_env</code></h2>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// read_env's completion signature depends on the query's return type in environment Env</span></span>
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Let T = decltype(q(declval&#x3C;Env>()))</span></span>
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Then: completion_signatures&#x3C;set_value_t(T)></span></span></code></pre></div>
@@ -57,10 +57,10 @@
 <span class="line"></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">using</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Sigs</span><span style="color:#D73A49;--shiki-dark:#F97583"> =</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> completion_signatures_of_t</span><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">decltype</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">read_env</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(get_scheduler)), </span><span style="color:#D73A49;--shiki-dark:#F97583">decltype</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(sync_wait_env)>;</span></span>
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Sigs = completion_signatures&#x3C;set_value_t(run_loop::scheduler)></span></span></code></pre></div>
-<h2 id="read_env-and-the-domain-system"><code>read_env</code> and the Domain System</h2>
+<h2 id="read_env-and-the-domain-system"><a aria-hidden="true" tabindex="-1" href="#read_env-and-the-domain-system"><span class="icon icon-link"></span></a><code>read_env</code> and the Domain System</h2>
 <p><code>read_env(get_domain)</code> plays a key role in the domain system:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> dom </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> sync_wait</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">read_env</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(get_domain)).</span><span style="color:#6F42C1;--shiki-dark:#B392F0">value</span><span style="color:#24292E;--shiki-dark:#E1E4E8">();</span></span></code></pre></div>
-<h2 id="custom-queries">Custom Queries</h2>
+<h2 id="custom-queries"><a aria-hidden="true" tabindex="-1" href="#custom-queries"><span class="icon icon-link"></span></a>Custom Queries</h2>
 <p>You can define your own query objects beyond the standard ones:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">struct</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> my_config_t</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  template</span><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Env</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
@@ -73,7 +73,7 @@
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> env_with_config </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> stdexec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::prop{my_config, </span><span style="color:#005CC5;--shiki-dark:#79B8FF">42</span><span style="color:#24292E;--shiki-dark:#E1E4E8">};</span></span>
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// When a receiver's environment contains my_config,</span></span>
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// read_env(my_config) will return 42</span></span></code></pre></div>
-<h2 id="relationship-with-write_env">Relationship with <code>write_env</code></h2>
+<h2 id="relationship-with-write_env"><a aria-hidden="true" tabindex="-1" href="#relationship-with-write_env"><span class="icon icon-link"></span></a>Relationship with <code>write_env</code></h2>
 <p>Chapter 24 covers <code>write_env</code>, which injects environment properties into a pipeline. <code>read_env</code> reads them back. Together they form an environment variable system for sender pipelines:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">sync_wait</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">  just</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">42</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
@@ -82,7 +82,7 @@
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">        // read_env(my_config) would return 99 here</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">        return</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> x;</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">      })</span></span>
-<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">);</span></span></code></pre></div></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/13-sender-factory-just/" data-astro-cid-ykvenys5>← 13 · Sender Factory: just / just_error / just_stopped</a><a href="/exec/tutorials/15-schedule/" data-astro-cid-ykvenys5>15 · schedule — Creating a Sender from a Scheduler →</a></nav></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">);</span></span></code></pre></div></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/13-sender-factory-just/" data-astro-cid-ykvenys5>← 13 · Sender Factory: just / just_error / just_stopped</a><a href="/exec/tutorials/15-schedule/" data-astro-cid-ykvenys5>15 · schedule — Creating a Sender from a Scheduler →</a></nav></div></div></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
       (function() {
         const STORAGE_KEY = "exectutorial-theme";
 
@@ -115,5 +115,55 @@
           try { localStorage.setItem(STORAGE_KEY, next); } catch(e) {}
           setTheme(next);
         });
+      })();
+    </script><script>
+      (function() {
+        function buildToc(containerId, navId) {
+          var container = document.getElementById(containerId);
+          var nav = document.getElementById(navId);
+          if (!nav) return;
+          var headings = document.querySelectorAll(".article-content h2, .article-content h3");
+          if (headings.length === 0) { if (container) container.style.display = "none"; return; }
+
+          var ul = document.createElement("ul");
+          headings.forEach(function(h) {
+            if (!h.id) return;
+            var li = document.createElement("li");
+            var a = document.createElement("a");
+            a.href = "#" + h.id;
+            a.textContent = h.textContent.replace(/¶$/, "").trim();
+            a.className = "toc-" + h.tagName.toLowerCase();
+            li.appendChild(a);
+            ul.appendChild(li);
+          });
+          nav.appendChild(ul);
+        }
+
+        buildToc("tocSidebar", "tocNav");
+        buildToc(null, "tocNavMobile");
+
+        // active heading highlight
+        var tocLinks = document.querySelectorAll("#tocNav a, #tocNavMobile a");
+        if (tocLinks.length > 0) {
+          var headings = document.querySelectorAll(".article-content h2, .article-content h3");
+          function onScroll() {
+            var scrollY = window.scrollY + 80;
+            var active = null;
+            headings.forEach(function(h) {
+              if (h.offsetTop <= scrollY) active = h;
+            });
+            tocLinks.forEach(function(link) { link.classList.remove("active"); });
+            if (active) {
+              var id = active.id;
+              tocLinks.forEach(function(link) {
+                if (link.getAttribute("href") === "#" + id) {
+                  link.classList.add("active");
+                }
+              });
+            }
+          }
+          window.addEventListener("scroll", onScroll, { passive: true });
+          onScroll();
+        }
       })();
     </script></body></html>

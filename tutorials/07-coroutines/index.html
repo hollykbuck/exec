@@ -5,11 +5,11 @@
         if(!s&&matchMedia("(prefers-color-scheme:light)").matches)theme="light";
         document.documentElement.setAttribute("data-theme",theme);
       })();
-    </script><link rel="stylesheet" href="/exec/_astro/01-why-stdexec.hXKgsPrw.css"></head><body data-astro-cid-ykvenys5><div class="container" data-astro-cid-ykvenys5><header data-astro-cid-ykvenys5><div class="title-area" data-astro-cid-ykvenys5><a href="/exec/tutorials/" style="color:var(--fg-muted);text-decoration:none;font-size:0.85rem;" data-astro-cid-ykvenys5>← Back to index</a><h1 data-astro-cid-ykvenys5>07 · Coroutine Integration — co_await sender in task&lt;T&gt;</h1></div><button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" data-astro-cid-ykvenys5>🌙</button></header><article class="article-content" data-astro-cid-ykvenys5>
+    </script><link rel="stylesheet" href="/exec/_astro/01-why-stdexec.YzjJ_D8W.css"></head><body data-astro-cid-ykvenys5><div class="layout-wrap" data-astro-cid-ykvenys5><aside class="toc-sidebar" id="tocSidebar" data-astro-cid-ykvenys5><div class="toc-label" data-astro-cid-ykvenys5>On this page</div><nav id="tocNav" data-astro-cid-ykvenys5></nav></aside><div class="layout-main" data-astro-cid-ykvenys5><div class="container" data-astro-cid-ykvenys5><header data-astro-cid-ykvenys5><div class="title-area" data-astro-cid-ykvenys5><a href="/exec/tutorials/" style="color:var(--fg-muted);text-decoration:none;font-size:0.85rem;" data-astro-cid-ykvenys5>← Back to index</a><h1 data-astro-cid-ykvenys5>07 · Coroutine Integration — co_await sender in task&lt;T&gt;</h1></div><button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" data-astro-cid-ykvenys5>🌙</button></header><details class="toc-mobile" id="tocMobile" data-astro-cid-ykvenys5><summary data-astro-cid-ykvenys5>On this page</summary><nav id="tocNavMobile" data-astro-cid-ykvenys5></nav></details><article class="article-content" data-astro-cid-ykvenys5>
 <blockquote>
 <p><strong>Related Tests</strong>: <code>tests/test_coroutine.cpp</code></p>
 </blockquote>
-<h2 id="two-async-styles">Two Async Styles</h2>
+<h2 id="two-async-styles"><a aria-hidden="true" tabindex="-1" href="#two-async-styles"><span class="icon icon-link"></span></a>Two Async Styles</h2>
 <p><code>std::execution</code> gives you two styles of async programming:</p>
 <ol>
 <li><strong>Sender pipelines</strong> — composed with <code>operator|</code>, great for fixed, high-performance paths</li>
@@ -23,7 +23,7 @@
 <li><strong>Sender is awaitable</strong>: you can <code>co_await sender</code> inside <code>stdexec::task&#x3C;T></code></li>
 <li><strong>Awaitable is sender</strong>: any awaitable can be used as a sender in a pipeline</li>
 </ul>
-<h2 id="co_await-sender-in-coroutines">co_await sender in Coroutines</h2>
+<h2 id="co_await-sender-in-coroutines"><a aria-hidden="true" tabindex="-1" href="#co_await-sender-in-coroutines"><span class="icon icon-link"></span></a>co_await sender in Coroutines</h2>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">#include</span><span style="color:#032F62;--shiki-dark:#9ECBFF"> &#x3C;stdexec/execution.hpp></span></span>
 <span class="line"></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">using</span><span style="color:#D73A49;--shiki-dark:#F97583"> namespace</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> stdexec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
@@ -47,7 +47,7 @@
 <li>Inside <code>task&#x3C;T></code>, <code>co_await sender</code> implicitly converts the sender into an awaitable</li>
 <li><code>task&#x3C;T></code> can be used anywhere a sender is expected (<code>sync_wait</code>, <code>then</code>, <code>when_all</code>…)</li>
 </ol>
-<h2 id="handling-cancellation">Handling Cancellation</h2>
+<h2 id="handling-cancellation"><a aria-hidden="true" tabindex="-1" href="#handling-cancellation"><span class="icon icon-link"></span></a>Handling Cancellation</h2>
 <p>How do you handle cancellation in a coroutine? Use <code>stopped_as_optional</code>:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">template</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> &#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">sender</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> S1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#D73A49;--shiki-dark:#F97583">sender</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> S2</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> async_add_opt</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">S1</span><span style="color:#E36209;--shiki-dark:#FFAB70"> s1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#6F42C1;--shiki-dark:#B392F0">S2</span><span style="color:#E36209;--shiki-dark:#FFAB70"> s2</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) -> </span><span style="color:#6F42C1;--shiki-dark:#B392F0">stdexec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">task</span><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#6F42C1;--shiki-dark:#B392F0">std</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">optional</span><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">int</span><span style="color:#24292E;--shiki-dark:#E1E4E8">>> {</span></span>
@@ -60,12 +60,12 @@
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">  std</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::cout </span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;&#x3C;</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> opt.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">value</span><span style="color:#24292E;--shiki-dark:#E1E4E8">() </span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;&#x3C;</span><span style="color:#032F62;--shiki-dark:#9ECBFF"> '</span><span style="color:#005CC5;--shiki-dark:#79B8FF">\n</span><span style="color:#032F62;--shiki-dark:#9ECBFF">'</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span></code></pre></div>
 <p>In the code above, <code>stopped_as_optional</code> converts the <code>set_stopped</code> signal into <code>std::nullopt</code>. You <strong>don’t need to write separate error handling for cancellation</strong> — just check if the optional has a value.</p>
-<h2 id="querying-the-environment-in-coroutines">Querying the Environment in Coroutines</h2>
+<h2 id="querying-the-environment-in-coroutines"><a aria-hidden="true" tabindex="-1" href="#querying-the-environment-in-coroutines"><span class="icon icon-link"></span></a>Querying the Environment in Coroutines</h2>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// tasks have an associated stop token</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> async_stop_token</span><span style="color:#24292E;--shiki-dark:#E1E4E8">() -> </span><span style="color:#6F42C1;--shiki-dark:#B392F0">stdexec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">task</span><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#6F42C1;--shiki-dark:#B392F0">std</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">optional</span><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#6F42C1;--shiki-dark:#B392F0">stdexec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">inplace_stop_token</span><span style="color:#24292E;--shiki-dark:#E1E4E8">>> {</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  co_return</span><span style="color:#D73A49;--shiki-dark:#F97583"> co_await</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> stopped_as_optional</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">get_stop_token</span><span style="color:#24292E;--shiki-dark:#E1E4E8">());</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span></code></pre></div>
-<h2 id="a-common-pitfall">A Common Pitfall</h2>
+<h2 id="a-common-pitfall"><a aria-hidden="true" tabindex="-1" href="#a-common-pitfall"><span class="icon icon-link"></span></a>A Common Pitfall</h2>
 <p>A frequent misunderstanding when first using <code>task&#x3C;T></code> is assuming that <code>co_await schedule(pool)</code> will switch the coroutine’s execution to the pool thread, just like <code>sync_wait(schedule(pool) | then(...))</code> does with plain sender pipelines. <strong>It won’t.</strong></p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">exec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::static_thread_pool pool{</span><span style="color:#005CC5;--shiki-dark:#79B8FF">1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">};</span></span>
 <span class="line"></span>
@@ -90,7 +90,7 @@
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// ✓ Or start the coroutine on the pool</span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">sync_wait</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">starts_on</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(pool.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">get_scheduler</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(), </span><span style="color:#6F42C1;--shiki-dark:#B392F0">coro</span><span style="color:#24292E;--shiki-dark:#E1E4E8">()));</span></span></code></pre></div>
 <p>For finer-grained control inside a coroutine, use <code>continues_on</code> to wrap a subsection of work, but understand the <code>affine</code> tax — the completion will bounce back to the task’s scheduler.</p>
-<h2 id="when-to-use-which">When to Use Which?</h2>
+<h2 id="when-to-use-which"><a aria-hidden="true" tabindex="-1" href="#when-to-use-which"><span class="icon icon-link"></span></a>When to Use Which?</h2>
 <div class="table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch">
 
 
@@ -127,7 +127,7 @@
 
 
 <table><thead><tr><th>Aspect</th><th>Sender Pipeline</th><th>Coroutines</th></tr></thead><tbody><tr><td>Composition</td><td><code>operator|</code></td><td><code>co_await</code></td></tr><tr><td>Control Flow</td><td>Linear (one adaptor per step)</td><td>Arbitrary (loops, branches, recursion)</td></tr><tr><td>Error Handling</td><td><code>upon_error</code> / <code>let_error</code></td><td><code>try</code>/<code>catch</code></td></tr><tr><td>Performance</td><td>Zero-overhead abstraction</td><td>Coroutine frame overhead</td></tr><tr><td>Use Case</td><td>Fixed pipelines, high performance</td><td>Complex control flow, state machines</td></tr></tbody></table></div>
-<h2 id="best-practices">Best Practices</h2>
+<h2 id="best-practices"><a aria-hidden="true" tabindex="-1" href="#best-practices"><span class="icon icon-link"></span></a>Best Practices</h2>
 <ol>
 <li>Use sender pipelines for <strong>static, performance-critical</strong> async workflows</li>
 <li>Use <code>task&#x3C;T></code> coroutines for <strong>dynamic, control-flow-complex</strong> async workflows</li>
@@ -150,7 +150,7 @@
 <p><strong>Deep dive</strong>: See <a href="07b-as-awaitable">Chapter 07b</a> for how <code>as_awaitable</code>, <code>with_awaitable_senders</code>, and <code>sender-awaitable</code> implement this bridge internally.
 See <a href="07c-task-internals">Chapter 07c</a> for the full <code>task&#x3C;T></code> type design, <code>task_scheduler</code>, and allocator customization.
 See <a href="07d-affine">Chapter 07d</a> for <code>affine</code> — the adaptor that keeps coroutine execution on the right scheduler.</p>
-</blockquote></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/06-pipe-operators/" data-astro-cid-ykvenys5>← 06 · Pipe Operators — How operator| Composes Senders</a><a href="/exec/tutorials/07b-as-awaitable/" data-astro-cid-ykvenys5>07b · as_awaitable and with_awaitable_senders — How co_await Sender Works Inside →</a></nav></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
+</blockquote></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/06-pipe-operators/" data-astro-cid-ykvenys5>← 06 · Pipe Operators — How operator| Composes Senders</a><a href="/exec/tutorials/07b-as-awaitable/" data-astro-cid-ykvenys5>07b · as_awaitable and with_awaitable_senders — How co_await Sender Works Inside →</a></nav></div></div></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
       (function() {
         const STORAGE_KEY = "exectutorial-theme";
 
@@ -183,5 +183,55 @@ See <a href="07d-affine">Chapter 07d</a> for <code>affine</code> — the adaptor
           try { localStorage.setItem(STORAGE_KEY, next); } catch(e) {}
           setTheme(next);
         });
+      })();
+    </script><script>
+      (function() {
+        function buildToc(containerId, navId) {
+          var container = document.getElementById(containerId);
+          var nav = document.getElementById(navId);
+          if (!nav) return;
+          var headings = document.querySelectorAll(".article-content h2, .article-content h3");
+          if (headings.length === 0) { if (container) container.style.display = "none"; return; }
+
+          var ul = document.createElement("ul");
+          headings.forEach(function(h) {
+            if (!h.id) return;
+            var li = document.createElement("li");
+            var a = document.createElement("a");
+            a.href = "#" + h.id;
+            a.textContent = h.textContent.replace(/¶$/, "").trim();
+            a.className = "toc-" + h.tagName.toLowerCase();
+            li.appendChild(a);
+            ul.appendChild(li);
+          });
+          nav.appendChild(ul);
+        }
+
+        buildToc("tocSidebar", "tocNav");
+        buildToc(null, "tocNavMobile");
+
+        // active heading highlight
+        var tocLinks = document.querySelectorAll("#tocNav a, #tocNavMobile a");
+        if (tocLinks.length > 0) {
+          var headings = document.querySelectorAll(".article-content h2, .article-content h3");
+          function onScroll() {
+            var scrollY = window.scrollY + 80;
+            var active = null;
+            headings.forEach(function(h) {
+              if (h.offsetTop <= scrollY) active = h;
+            });
+            tocLinks.forEach(function(link) { link.classList.remove("active"); });
+            if (active) {
+              var id = active.id;
+              tocLinks.forEach(function(link) {
+                if (link.getAttribute("href") === "#" + id) {
+                  link.classList.add("active");
+                }
+              });
+            }
+          }
+          window.addEventListener("scroll", onScroll, { passive: true });
+          onScroll();
+        }
       })();
     </script></body></html>

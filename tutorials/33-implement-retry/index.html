@@ -5,13 +5,13 @@
         if(!s&&matchMedia("(prefers-color-scheme:light)").matches)theme="light";
         document.documentElement.setAttribute("data-theme",theme);
       })();
-    </script><link rel="stylesheet" href="/exec/_astro/01-why-stdexec.hXKgsPrw.css"></head><body data-astro-cid-ykvenys5><div class="container" data-astro-cid-ykvenys5><header data-astro-cid-ykvenys5><div class="title-area" data-astro-cid-ykvenys5><a href="/exec/tutorials/" style="color:var(--fg-muted);text-decoration:none;font-size:0.85rem;" data-astro-cid-ykvenys5>← Back to index</a><h1 data-astro-cid-ykvenys5>33 · Implementing retry from Scratch — Error Recovery Pattern</h1></div><button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" data-astro-cid-ykvenys5>🌙</button></header><article class="article-content" data-astro-cid-ykvenys5>
-<h2 id="why-do-we-need-retry">Why Do We Need retry?</h2>
+    </script><link rel="stylesheet" href="/exec/_astro/01-why-stdexec.YzjJ_D8W.css"></head><body data-astro-cid-ykvenys5><div class="layout-wrap" data-astro-cid-ykvenys5><aside class="toc-sidebar" id="tocSidebar" data-astro-cid-ykvenys5><div class="toc-label" data-astro-cid-ykvenys5>On this page</div><nav id="tocNav" data-astro-cid-ykvenys5></nav></aside><div class="layout-main" data-astro-cid-ykvenys5><div class="container" data-astro-cid-ykvenys5><header data-astro-cid-ykvenys5><div class="title-area" data-astro-cid-ykvenys5><a href="/exec/tutorials/" style="color:var(--fg-muted);text-decoration:none;font-size:0.85rem;" data-astro-cid-ykvenys5>← Back to index</a><h1 data-astro-cid-ykvenys5>33 · Implementing retry from Scratch — Error Recovery Pattern</h1></div><button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" data-astro-cid-ykvenys5>🌙</button></header><details class="toc-mobile" id="tocMobile" data-astro-cid-ykvenys5><summary data-astro-cid-ykvenys5>On this page</summary><nav id="tocNavMobile" data-astro-cid-ykvenys5></nav></details><article class="article-content" data-astro-cid-ykvenys5>
+<h2 id="why-do-we-need-retry"><a aria-hidden="true" tabindex="-1" href="#why-do-we-need-retry"><span class="icon icon-link"></span></a>Why Do We Need retry?</h2>
 <p>You send a message on your phone. Bad signal — it fails. What does your phone do? Retry automatically. This is a fundamental requirement for virtually all networked applications.</p>
 <p>In network programming, transient failures (network jitter, temporary service unavailability, timeouts) are the norm, not the exception. The core idea of the retry pattern is simple — if the failure might be temporary, try again.</p>
 <p>How do we implement this in the sender world? The most intuitive idea: upon receiving <code>set_error</code>, run the same sender again. But there’s a technical snag — once a sender has been <code>connect</code>ed, it’s bound to a receiver. To retry, you need to <strong>tear down the old connection and build a new one</strong>. <code>std::optional + emplace</code> is the tool for this job.</p>
 <hr>
-<h2 id="step-1-define-a-sometimes-fails-sender">Step 1: Define a “Sometimes Fails” Sender</h2>
+<h2 id="step-1-define-a-sometimes-fails-sender"><a aria-hidden="true" tabindex="-1" href="#step-1-define-a-sometimes-fails-sender"><span class="icon icon-link"></span></a>Step 1: Define a “Sometimes Fails” Sender</h2>
 <p>For testing, write a sender that fails the first N times and succeeds afterwards:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">struct</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> fail_some</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  using</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> sender_concept</span><span style="color:#D73A49;--shiki-dark:#F97583"> =</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> ex</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">sender_tag</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
@@ -41,7 +41,7 @@
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">};</span></span></code></pre></div>
 <p>Above, <code>failure_count_</code> decrements — the first two invocations return <code>set_error</code>, the third returns <code>set_value(42)</code>. This is the ideal input for testing retry logic.</p>
 <hr>
-<h2 id="step-2-the-foundation--upon_error-turns-error-into-success">Step 2: The Foundation — upon_error Turns Error Into Success</h2>
+<h2 id="step-2-the-foundation--upon_error-turns-error-into-success"><a aria-hidden="true" tabindex="-1" href="#step-2-the-foundation--upon_error-turns-error-into-success"><span class="icon icon-link"></span></a>Step 2: The Foundation — upon_error Turns Error Into Success</h2>
 <p><code>upon_error</code> is the foundation of retry: it converts the <code>set_error</code> signal into <code>set_value</code>, so downstream sees “all good” no matter how many times the upstream failed:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> [v] </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> ex</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">sync_wait</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">  ex</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">just_error</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">std</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">make_exception_ptr</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">std</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::runtime_error{</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"fail"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">}))</span></span>
@@ -49,7 +49,7 @@
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">).</span><span style="color:#6F42C1;--shiki-dark:#B392F0">value</span><span style="color:#24292E;--shiki-dark:#E1E4E8">();</span></span>
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// v == 42  —— the error was "swallowed", downstream only sees set_value</span></span></code></pre></div>
 <hr>
-<h2 id="step-3-receiver_adaptor--hijack-only-the-signal-i-care-about">Step 3: <code>receiver_adaptor</code> — Hijack Only the Signal I Care About</h2>
+<h2 id="step-3-receiver_adaptor--hijack-only-the-signal-i-care-about"><a aria-hidden="true" tabindex="-1" href="#step-3-receiver_adaptor--hijack-only-the-signal-i-care-about"><span class="icon icon-link"></span></a>Step 3: <code>receiver_adaptor</code> — Hijack Only the Signal I Care About</h2>
 <p><code>receiver_adaptor</code> is like a “signal relay station.” By default, it forwards <code>set_value</code>, <code>set_error</code>, and <code>set_stopped</code> straight through to the downstream. You can choose to <strong>hijack only one signal</strong> — for example, hijack only <code>set_error</code>: instead of forwarding it, trigger a retry:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">struct</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> _retry_receiver</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> : exec::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">receiver_adaptor</span><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#6F42C1;--shiki-dark:#B392F0">_retry_receiver</span><span style="color:#24292E;--shiki-dark:#E1E4E8">> {</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  _op</span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> o_;</span></span>
@@ -63,7 +63,7 @@
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">};</span></span></code></pre></div>
 <p>Above, we only override <code>set_error</code>. <code>set_value</code> and <code>set_stopped</code> are untouched — they flow through <code>receiver_adaptor</code>’s default behavior, forwarding to <code>base()</code> (the external receiver).</p>
 <hr>
-<h2 id="step-4-stdoptional--emplace--rebuild-the-child-operation-state">Step 4: <code>std::optional + emplace</code> — Rebuild the Child Operation State</h2>
+<h2 id="step-4-stdoptional--emplace--rebuild-the-child-operation-state"><a aria-hidden="true" tabindex="-1" href="#step-4-stdoptional--emplace--rebuild-the-child-operation-state"><span class="icon icon-link"></span></a>Step 4: <code>std::optional + emplace</code> — Rebuild the Child Operation State</h2>
 <p>This is the most crucial step in retry — when <code>_retry()</code> is called, destruct the old operation state and construct a new one in-place inside the <code>std::optional</code>:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">struct</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> _op</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">  std</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::optional</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;</span><span style="color:#005CC5;--shiki-dark:#79B8FF">connect_result_t</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;</span><span style="color:#24292E;--shiki-dark:#E1E4E8">S</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x26;</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, _retry_receiver</span><span style="color:#D73A49;--shiki-dark:#F97583">>></span><span style="color:#24292E;--shiki-dark:#E1E4E8"> o_;</span></span>
@@ -82,7 +82,7 @@
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">};</span></span></code></pre></div>
 <p>The cleverness above is that <code>emplace</code> destructs the old state and constructs the new state <strong>in-place</strong> inside the optional — just like “closing the old connection and opening a new one.” If even <code>connect</code> fails (e.g., the child sender’s constructor throws), that’s a genuinely unrecoverable error — forward <code>set_error</code> directly.</p>
 <hr>
-<h2 id="complete-retry-flow">Complete retry Flow</h2>
+<h2 id="complete-retry-flow"><a aria-hidden="true" tabindex="-1" href="#complete-retry-flow"><span class="icon icon-link"></span></a>Complete retry Flow</h2>
 <pre class="mermaid">graph TD
   A["start() → launch child sender"]
   A --> B["Child sender executing…"]
@@ -94,7 +94,7 @@
   B --> G["set_value(42) → forward to external receiver ✓"]
   B -.->|retry loop| C</pre>
 <hr>
-<h2 id="bounded-retry">Bounded Retry</h2>
+<h2 id="bounded-retry"><a aria-hidden="true" tabindex="-1" href="#bounded-retry"><span class="icon icon-link"></span></a>Bounded Retry</h2>
 <p>The implementation above retries infinitely — if the error is permanent (e.g., missing configuration), it loops forever. Production code needs a retry cap:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">struct</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> retry_with_limit</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  int</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> max_retries_;</span></span>
@@ -110,7 +110,7 @@
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  }</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">};</span></span></code></pre></div>
 <hr>
-<h2 id="key-takeaways">Key Takeaways</h2>
+<h2 id="key-takeaways"><a aria-hidden="true" tabindex="-1" href="#key-takeaways"><span class="icon icon-link"></span></a>Key Takeaways</h2>
 <ol>
 <li><strong><code>upon_error</code> is the cornerstone of retry</strong> — it recovers errors onto the normal value path</li>
 <li><strong><code>std::optional + emplace</code></strong> — rebuilds the child connection within the operation state’s lifetime without reallocation</li>
@@ -121,12 +121,12 @@
 <p>stdexec’s <code>examples/algorithms/retry.hpp</code> contains the full reference implementation.</p>
 </blockquote>
 <hr>
-<h2 id="limitations">Limitations</h2>
+<h2 id="limitations"><a aria-hidden="true" tabindex="-1" href="#limitations"><span class="icon icon-link"></span></a>Limitations</h2>
 <ol>
 <li><strong>No discrimination of permanent vs transient errors</strong> — retry can’t distinguish “transient failure” (network jitter) from “permanent failure” (permission denied). Production code must decide whether to retry based on error type, or risk infinite looping on permanent errors.</li>
 <li><strong>Child sender must be reconnectable</strong> — retry assumes that every <code>connect(sender, receiver)</code> call is valid. If the child sender is one-shot (e.g., <code>just(std::move(unique_resource))</code>), retrying is impossible.</li>
 <li><strong>No backoff strategy</strong> — the educational retry retries immediately. Production environments typically need exponential backoff between retries to avoid congestion.</li>
-</ol></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/32-implement-then/" data-astro-cid-ykvenys5>← 32 · Implementing then from Scratch — Custom Sender + Receiver + Operation State</a><a href="/exec/tutorials/34-custom-scheduler/" data-astro-cid-ykvenys5>34 · Writing a Custom Scheduler →</a></nav></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
+</ol></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/32-implement-then/" data-astro-cid-ykvenys5>← 32 · Implementing then from Scratch — Custom Sender + Receiver + Operation State</a><a href="/exec/tutorials/34-custom-scheduler/" data-astro-cid-ykvenys5>34 · Writing a Custom Scheduler →</a></nav></div></div></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
       (function() {
         const STORAGE_KEY = "exectutorial-theme";
 
@@ -159,5 +159,55 @@
           try { localStorage.setItem(STORAGE_KEY, next); } catch(e) {}
           setTheme(next);
         });
+      })();
+    </script><script>
+      (function() {
+        function buildToc(containerId, navId) {
+          var container = document.getElementById(containerId);
+          var nav = document.getElementById(navId);
+          if (!nav) return;
+          var headings = document.querySelectorAll(".article-content h2, .article-content h3");
+          if (headings.length === 0) { if (container) container.style.display = "none"; return; }
+
+          var ul = document.createElement("ul");
+          headings.forEach(function(h) {
+            if (!h.id) return;
+            var li = document.createElement("li");
+            var a = document.createElement("a");
+            a.href = "#" + h.id;
+            a.textContent = h.textContent.replace(/¶$/, "").trim();
+            a.className = "toc-" + h.tagName.toLowerCase();
+            li.appendChild(a);
+            ul.appendChild(li);
+          });
+          nav.appendChild(ul);
+        }
+
+        buildToc("tocSidebar", "tocNav");
+        buildToc(null, "tocNavMobile");
+
+        // active heading highlight
+        var tocLinks = document.querySelectorAll("#tocNav a, #tocNavMobile a");
+        if (tocLinks.length > 0) {
+          var headings = document.querySelectorAll(".article-content h2, .article-content h3");
+          function onScroll() {
+            var scrollY = window.scrollY + 80;
+            var active = null;
+            headings.forEach(function(h) {
+              if (h.offsetTop <= scrollY) active = h;
+            });
+            tocLinks.forEach(function(link) { link.classList.remove("active"); });
+            if (active) {
+              var id = active.id;
+              tocLinks.forEach(function(link) {
+                if (link.getAttribute("href") === "#" + id) {
+                  link.classList.add("active");
+                }
+              });
+            }
+          }
+          window.addEventListener("scroll", onScroll, { passive: true });
+          onScroll();
+        }
       })();
     </script></body></html>

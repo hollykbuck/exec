@@ -5,8 +5,8 @@
         if(!s&&matchMedia("(prefers-color-scheme:light)").matches)theme="light";
         document.documentElement.setAttribute("data-theme",theme);
       })();
-    </script><link rel="stylesheet" href="/exec/_astro/01-why-stdexec.hXKgsPrw.css"></head><body data-astro-cid-ykvenys5><div class="container" data-astro-cid-ykvenys5><header data-astro-cid-ykvenys5><div class="title-area" data-astro-cid-ykvenys5><a href="/exec/tutorials/" style="color:var(--fg-muted);text-decoration:none;font-size:0.85rem;" data-astro-cid-ykvenys5>← Back to index</a><h1 data-astro-cid-ykvenys5>36 · Linux io_uring — True Async File I/O</h1></div><button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" data-astro-cid-ykvenys5>🌙</button></header><article class="article-content" data-astro-cid-ykvenys5>
-<h2 id="what-epoll-cant-handle">What epoll Can’t Handle</h2>
+    </script><link rel="stylesheet" href="/exec/_astro/01-why-stdexec.YzjJ_D8W.css"></head><body data-astro-cid-ykvenys5><div class="layout-wrap" data-astro-cid-ykvenys5><aside class="toc-sidebar" id="tocSidebar" data-astro-cid-ykvenys5><div class="toc-label" data-astro-cid-ykvenys5>On this page</div><nav id="tocNav" data-astro-cid-ykvenys5></nav></aside><div class="layout-main" data-astro-cid-ykvenys5><div class="container" data-astro-cid-ykvenys5><header data-astro-cid-ykvenys5><div class="title-area" data-astro-cid-ykvenys5><a href="/exec/tutorials/" style="color:var(--fg-muted);text-decoration:none;font-size:0.85rem;" data-astro-cid-ykvenys5>← Back to index</a><h1 data-astro-cid-ykvenys5>36 · Linux io_uring — True Async File I/O</h1></div><button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" data-astro-cid-ykvenys5>🌙</button></header><details class="toc-mobile" id="tocMobile" data-astro-cid-ykvenys5><summary data-astro-cid-ykvenys5>On this page</summary><nav id="tocNavMobile" data-astro-cid-ykvenys5></nav></details><article class="article-content" data-astro-cid-ykvenys5>
+<h2 id="what-epoll-cant-handle"><a aria-hidden="true" tabindex="-1" href="#what-epoll-cant-handle"><span class="icon icon-link"></span></a>What epoll Can’t Handle</h2>
 <p>On Linux, <code>epoll</code> is great for high-performance network services — it can monitor thousands of sockets simultaneously and notify you when any has data. But it has a fundamental blind spot: <strong>epoll only manages network sockets, not disk files</strong>.</p>
 <p>When you call <code>read()</code> on a file and the data isn’t in the page cache, the kernel has to fetch it from disk — a process that can take milliseconds or even tens of milliseconds. In the traditional synchronous I/O model, the thread calling <code>read()</code> just sits there waiting.</p>
 <p>The common “solution” is to use a thread pool to fake async file I/O — spawn a thread to read the file, then notify the main thread when done:</p>
@@ -21,7 +21,7 @@
 <p>Platform restriction: <code>io_uring</code> is a Linux 5.1+ feature. It doesn’t work on macOS, Windows, or older Linux.
 Also io_uring is a rapidly evolving kernel feature. Different kernel versions may support different operation types and have different performance characteristics.</p>
 </blockquote>
-<h2 id="how-io_uring-works">How io_uring Works</h2>
+<h2 id="how-io_uring-works"><a aria-hidden="true" tabindex="-1" href="#how-io_uring-works"><span class="icon icon-link"></span></a>How io_uring Works</h2>
 <p>A traditional I/O call is like a “synchronous phone call” — you dial, wait for the other side to pick up, talk, hang up. Every step forces you to wait:</p>
 <pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="plaintext"><code><span class="line"><span>Traditional read():  app → syscall → kernel processing → wait for disk → return data → app continues (a 'phone call')</span></span></code></pre>
 <p><code>io_uring</code> is more like “text messaging” — you write your request into a ring buffer (send it), the kernel processes it in the background, and marks the result in another ring buffer when done (you got a reply). Between sending and receiving, you’re free to do anything else:</p>
@@ -34,7 +34,7 @@ Also io_uring is a rapidly evolving kernel feature. Different kernel versions ma
 <li><strong>CQ (Completion Queue)</strong> — the kernel writes I/O results here; the app polls or waits for notifications</li>
 </ul>
 <p>Because these two queues live in shared memory, most operations don’t need a syscall — you write to SQ in user space, the kernel reads from the other side, zero-copy all the way.</p>
-<h2 id="stdexecs-io_uring_context">stdexec’s <code>io_uring_context</code></h2>
+<h2 id="stdexecs-io_uring_context"><a aria-hidden="true" tabindex="-1" href="#stdexecs-io_uring_context"><span class="icon icon-link"></span></a>stdexec’s <code>io_uring_context</code></h2>
 <p><code>exec::io_uring_context</code> wraps an entire io_uring instance as a scheduler:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">namespace</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> exec</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> io_uring_context</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
@@ -63,7 +63,7 @@ Also io_uring is a rapidly evolving kernel feature. Different kernel versions ma
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">ctx.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">request_stop</span><span style="color:#24292E;--shiki-dark:#E1E4E8">();</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">worker.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">join</span><span style="color:#24292E;--shiki-dark:#E1E4E8">();</span></span></code></pre></div>
 <hr>
-<h2 id="supported-operations">Supported Operations</h2>
+<h2 id="supported-operations"><a aria-hidden="true" tabindex="-1" href="#supported-operations"><span class="icon icon-link"></span></a>Supported Operations</h2>
 <div class="table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch">
 
 
@@ -111,7 +111,7 @@ Also io_uring is a rapidly evolving kernel feature. Different kernel versions ma
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">  schedule_at</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(io_sched, </span><span style="color:#005CC5;--shiki-dark:#79B8FF">100</span><span style="color:#D73A49;--shiki-dark:#F97583">ms</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) </span><span style="color:#D73A49;--shiki-dark:#F97583">|</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> then</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(t2),</span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">  schedule_at</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(io_sched, </span><span style="color:#005CC5;--shiki-dark:#79B8FF">150</span><span style="color:#D73A49;--shiki-dark:#F97583">ms</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) </span><span style="color:#D73A49;--shiki-dark:#F97583">|</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> then</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(t3)</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">));</span></span></code></pre></div>
-<h2 id="combining-with-a-thread-pool">Combining with a Thread Pool</h2>
+<h2 id="combining-with-a-thread-pool"><a aria-hidden="true" tabindex="-1" href="#combining-with-a-thread-pool"><span class="icon icon-link"></span></a>Combining with a Thread Pool</h2>
 <p>A common high-performance I/O architecture combines io_uring with a CPU thread pool:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">exec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::io_uring_context io_ctx;</span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">exec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::static_thread_pool cpu_pool{</span><span style="color:#005CC5;--shiki-dark:#79B8FF">4</span><span style="color:#24292E;--shiki-dark:#E1E4E8">};</span></span>
@@ -126,7 +126,7 @@ Also io_uring is a rapidly evolving kernel feature. Different kernel versions ma
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">);</span></span></code></pre></div>
 <p>Above, <code>starts_on</code> launches the whole pipeline on io_uring, reading the file (async). After the read completes, <code>continues_on</code> switches to the CPU thread pool for computation. Once processing is done, it switches back to io_uring to write the response. Each switch is handled automatically by the scheduler affinity mechanism — no manual thread management.</p>
 <p>This “I/O thread + CPU thread pool” separation is the classic pattern for high-performance network services — io_uring focuses on non-blocking I/O, the thread pool on CPU-intensive computation.</p>
-<h2 id="lifecycle">Lifecycle</h2>
+<h2 id="lifecycle"><a aria-hidden="true" tabindex="-1" href="#lifecycle"><span class="icon icon-link"></span></a>Lifecycle</h2>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">exec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::io_uring_context ctx;</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> sched </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> ctx.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">get_scheduler</span><span style="color:#24292E;--shiki-dark:#E1E4E8">();</span></span>
 <span class="line"></span>
@@ -140,7 +140,7 @@ Also io_uring is a rapidly evolving kernel feature. Different kernel versions ma
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">worker.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">join</span><span style="color:#24292E;--shiki-dark:#E1E4E8">();</span><span style="color:#6A737D;--shiki-dark:#6A737D">       // 2. Wait for run_until_stopped() to return</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">ctx.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">reset</span><span style="color:#24292E;--shiki-dark:#E1E4E8">();</span><span style="color:#6A737D;--shiki-dark:#6A737D">         // 3. Reset the context (if you want to reuse it)</span></span></code></pre></div>
 <p>The difference between <code>request_stop()</code> and <code>finish()</code>: <code>request_stop()</code> initiates a stop request, still giving in-flight operations some time to complete. After calling <code>reset()</code>, the context can be reused — call <code>run_until_stopped()</code> again to start a fresh event loop.</p>
-<h3 id="common-pitfall-forgetting-to-stop-before-join">Common Pitfall: Forgetting to Stop Before Join</h3>
+<h3 id="common-pitfall-forgetting-to-stop-before-join"><a aria-hidden="true" tabindex="-1" href="#common-pitfall-forgetting-to-stop-before-join"><span class="icon icon-link"></span></a>Common Pitfall: Forgetting to Stop Before Join</h3>
 <p><code>run_until_stopped()</code> is a <strong>persistent event loop</strong> — unlike <code>run_until_empty()</code>, it does not exit on its own. The wakeup operation inside the context perpetually re-queues itself to keep the loop alive. Calling <code>worker.join()</code> without first calling <code>request_stop()</code> will <strong>deadlock</strong>:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">std</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::thread worker{[</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x26;</span><span style="color:#24292E;--shiki-dark:#E1E4E8">] { ctx.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">run_until_stopped</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(); }};</span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">sync_wait</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">schedule</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(sched) </span><span style="color:#D73A49;--shiki-dark:#F97583">|</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> then</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(work));</span></span>
@@ -163,8 +163,8 @@ Also io_uring is a rapidly evolving kernel feature. Different kernel versions ma
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">  schedule</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(sched) </span><span style="color:#D73A49;--shiki-dark:#F97583">|</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> then</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(work),</span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">  just</span><span style="color:#24292E;--shiki-dark:#E1E4E8">() </span><span style="color:#D73A49;--shiki-dark:#F97583">|</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> then</span><span style="color:#24292E;--shiki-dark:#E1E4E8">([</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x26;</span><span style="color:#24292E;--shiki-dark:#E1E4E8">] { ctx.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">run_until_empty</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(); })</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">));</span><span style="color:#6A737D;--shiki-dark:#6A737D">  // No need to request_stop — context stops itself when empty</span></span></code></pre></div>
-<h2 id="notice">Notice</h2>
-<p><code>io_uring_context</code> is designed to be exclusively driven by one thread (the caller of <code>run_until_stopped()</code> or <code>run_until_empty()</code>). For multi-threaded I/O handling, you need multiple context instances. Context cannot be shared across threads.</p></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/35-impls-for/" data-astro-cid-ykvenys5>← 35 · The impls-for System — For Library Authors</a><a href="/exec/tutorials/37-windows-thread-pool/" data-astro-cid-ykvenys5>37 · Windows Thread Pool →</a></nav></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
+<h2 id="notice"><a aria-hidden="true" tabindex="-1" href="#notice"><span class="icon icon-link"></span></a>Notice</h2>
+<p><code>io_uring_context</code> is designed to be exclusively driven by one thread (the caller of <code>run_until_stopped()</code> or <code>run_until_empty()</code>). For multi-threaded I/O handling, you need multiple context instances. Context cannot be shared across threads.</p></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/35-impls-for/" data-astro-cid-ykvenys5>← 35 · The impls-for System — For Library Authors</a><a href="/exec/tutorials/37-windows-thread-pool/" data-astro-cid-ykvenys5>37 · Windows Thread Pool →</a></nav></div></div></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
       (function() {
         const STORAGE_KEY = "exectutorial-theme";
 
@@ -197,5 +197,55 @@ Also io_uring is a rapidly evolving kernel feature. Different kernel versions ma
           try { localStorage.setItem(STORAGE_KEY, next); } catch(e) {}
           setTheme(next);
         });
+      })();
+    </script><script>
+      (function() {
+        function buildToc(containerId, navId) {
+          var container = document.getElementById(containerId);
+          var nav = document.getElementById(navId);
+          if (!nav) return;
+          var headings = document.querySelectorAll(".article-content h2, .article-content h3");
+          if (headings.length === 0) { if (container) container.style.display = "none"; return; }
+
+          var ul = document.createElement("ul");
+          headings.forEach(function(h) {
+            if (!h.id) return;
+            var li = document.createElement("li");
+            var a = document.createElement("a");
+            a.href = "#" + h.id;
+            a.textContent = h.textContent.replace(/¶$/, "").trim();
+            a.className = "toc-" + h.tagName.toLowerCase();
+            li.appendChild(a);
+            ul.appendChild(li);
+          });
+          nav.appendChild(ul);
+        }
+
+        buildToc("tocSidebar", "tocNav");
+        buildToc(null, "tocNavMobile");
+
+        // active heading highlight
+        var tocLinks = document.querySelectorAll("#tocNav a, #tocNavMobile a");
+        if (tocLinks.length > 0) {
+          var headings = document.querySelectorAll(".article-content h2, .article-content h3");
+          function onScroll() {
+            var scrollY = window.scrollY + 80;
+            var active = null;
+            headings.forEach(function(h) {
+              if (h.offsetTop <= scrollY) active = h;
+            });
+            tocLinks.forEach(function(link) { link.classList.remove("active"); });
+            if (active) {
+              var id = active.id;
+              tocLinks.forEach(function(link) {
+                if (link.getAttribute("href") === "#" + id) {
+                  link.classList.add("active");
+                }
+              });
+            }
+          }
+          window.addEventListener("scroll", onScroll, { passive: true });
+          onScroll();
+        }
       })();
     </script></body></html>

@@ -5,8 +5,8 @@
         if(!s&&matchMedia("(prefers-color-scheme:light)").matches)theme="light";
         document.documentElement.setAttribute("data-theme",theme);
       })();
-    </script><link rel="stylesheet" href="/exec/_astro/01-why-stdexec.hXKgsPrw.css"></head><body data-astro-cid-ykvenys5><div class="container" data-astro-cid-ykvenys5><header data-astro-cid-ykvenys5><div class="title-area" data-astro-cid-ykvenys5><a href="/exec/tutorials/" style="color:var(--fg-muted);text-decoration:none;font-size:0.85rem;" data-astro-cid-ykvenys5>← Back to index</a><h1 data-astro-cid-ykvenys5>09 · Sender Concept</h1></div><button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" data-astro-cid-ykvenys5>🌙</button></header><article class="article-content" data-astro-cid-ykvenys5>
-<h2 id="overview">Overview</h2>
+    </script><link rel="stylesheet" href="/exec/_astro/01-why-stdexec.YzjJ_D8W.css"></head><body data-astro-cid-ykvenys5><div class="layout-wrap" data-astro-cid-ykvenys5><aside class="toc-sidebar" id="tocSidebar" data-astro-cid-ykvenys5><div class="toc-label" data-astro-cid-ykvenys5>On this page</div><nav id="tocNav" data-astro-cid-ykvenys5></nav></aside><div class="layout-main" data-astro-cid-ykvenys5><div class="container" data-astro-cid-ykvenys5><header data-astro-cid-ykvenys5><div class="title-area" data-astro-cid-ykvenys5><a href="/exec/tutorials/" style="color:var(--fg-muted);text-decoration:none;font-size:0.85rem;" data-astro-cid-ykvenys5>← Back to index</a><h1 data-astro-cid-ykvenys5>09 · Sender Concept</h1></div><button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" data-astro-cid-ykvenys5>🌙</button></header><details class="toc-mobile" id="tocMobile" data-astro-cid-ykvenys5><summary data-astro-cid-ykvenys5>On this page</summary><nav id="tocNavMobile" data-astro-cid-ykvenys5></nav></details><article class="article-content" data-astro-cid-ykvenys5>
+<h2 id="overview"><a aria-hidden="true" tabindex="-1" href="#overview"><span class="icon icon-link"></span></a>Overview</h2>
 <p>What is a Sender? In one sentence: it’s a <strong>factory for asynchronous operations</strong>.</p>
 <p>With traditional async APIs, each call executes immediately:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">thread_pool.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">submit</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(work);</span><span style="color:#6A737D;--shiki-dark:#6A737D">   // called and executed — no composability</span></span></code></pre></div>
@@ -34,7 +34,7 @@
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    };</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span></code></pre></div>
 <p>In the code above, the <code>sender</code> concept requires a type to have <strong><code>enable_sender</code> enabled</strong> and to be <strong>able to provide environment queries</strong>. Note that <code>sender</code> itself does not require <code>connect</code> — that requirement lives in the <code>sender_to</code> concept, checked together with the Receiver.</p>
-<h2 id="enable_sender">enable_sender</h2>
+<h2 id="enable_sender"><a aria-hidden="true" tabindex="-1" href="#enable_sender"><span class="icon icon-link"></span></a>enable_sender</h2>
 <p>For a type to be a Sender, you must <strong>explicitly enable</strong> <code>enable_sender</code>. The standard offers several ways:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Way 1: specialize enable_sender (most direct)</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">template</span><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;></span></span>
@@ -51,7 +51,7 @@
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">  // ...</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">};</span></span></code></pre></div>
 <p>In the code above, way two is the most common approach in stdexec — declaring <code>sender_concept</code> causes stdexec’s trait system to automatically specialize <code>enable_sender</code> for you. Way three is used for implementing the pipe operator <code>|</code> adaptors, which will be covered in later chapters.</p>
-<h2 id="how-a-sender-is-activated">How a Sender Is “Activated”</h2>
+<h2 id="how-a-sender-is-activated"><a aria-hidden="true" tabindex="-1" href="#how-a-sender-is-activated"><span class="icon icon-link"></span></a>How a Sender Is “Activated”</h2>
 <p>A Sender is lazy by nature. It requires two stages before execution:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// ① connect: bind Sender and Receiver, create operation_state</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> op </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> stdexec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">connect</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(some_sender, some_receiver);</span></span>
@@ -62,16 +62,16 @@
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// After the async operation completes, one of the Receiver's</span></span>
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// set_value / set_error / set_stopped will be called</span></span></code></pre></div>
 <p>In the code above, you can see the two-stage activation model of Sender. <code>connect()</code> may throw (e.g. memory allocation failure), but <code>start()</code> must be <code>noexcept</code> — all potentially-failing work should be done during <code>connect()</code>.</p>
-<h2 id="three-roles-of-sender">Three Roles of Sender</h2>
+<h2 id="three-roles-of-sender"><a aria-hidden="true" tabindex="-1" href="#three-roles-of-sender"><span class="icon icon-link"></span></a>Three Roles of Sender</h2>
 <p>C++26 std::execution classifies Senders into three categories by function:</p>
-<h3 id="factory">Factory</h3>
+<h3 id="factory"><a aria-hidden="true" tabindex="-1" href="#factory"><span class="icon icon-link"></span></a>Factory</h3>
 <p>Factories create new async operations from non-Sender arguments:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">sender </span><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> s1 </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> stdexec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">just</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">42</span><span style="color:#24292E;--shiki-dark:#E1E4E8">);</span><span style="color:#6A737D;--shiki-dark:#6A737D">                    // immediately produce value 42</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">sender </span><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> s2 </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> stdexec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">just_error</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(ex_ptr);</span><span style="color:#6A737D;--shiki-dark:#6A737D">           // immediately produce error</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">sender </span><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> s3 </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> stdexec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">schedule</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(sch);</span><span style="color:#6A737D;--shiki-dark:#6A737D">                // no-op on a scheduler</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">sender </span><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> s4 </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> stdexec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">read_env</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(get_scheduler);</span><span style="color:#6A737D;--shiki-dark:#6A737D">      // read scheduler from env</span></span></code></pre></div>
 <p>In the code above, <code>just(42)</code> is the simplest factory — when <code>start()</code> is called, it synchronously sends <code>set_value(42)</code>. <code>schedule(sch)</code> sends an empty <code>set_value()</code> on the scheduler’s execution agent.</p>
-<h3 id="adaptor">Adaptor</h3>
+<h3 id="adaptor"><a aria-hidden="true" tabindex="-1" href="#adaptor"><span class="icon icon-link"></span></a>Adaptor</h3>
 <p>Adaptors take one or more Senders and return a new Sender:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">sender </span><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> s5 </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> stdexec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">then</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(s1, [](</span><span style="color:#D73A49;--shiki-dark:#F97583">int</span><span style="color:#E36209;--shiki-dark:#FFAB70"> x</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) {</span><span style="color:#6A737D;--shiki-dark:#6A737D">        // value transformation</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  return</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> x </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 2</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
@@ -81,12 +81,12 @@
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">});</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">sender </span><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> s7 </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> stdexec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">when_all</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(s1, s3);</span><span style="color:#6A737D;--shiki-dark:#6A737D">           // concurrent wait</span></span></code></pre></div>
 <p>In the code above, <code>then</code> passes the child Sender’s result to the callback; <code>upon_error</code> recovers from failure; <code>when_all</code> waits for all child Senders to complete and merges results.</p>
-<h3 id="consumer">Consumer</h3>
+<h3 id="consumer"><a aria-hidden="true" tabindex="-1" href="#consumer"><span class="icon icon-link"></span></a>Consumer</h3>
 <p>Consumers consume a Sender and return a non-Sender type:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> result </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> stdexec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">sync_wait</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(s5);</span><span style="color:#6A737D;--shiki-dark:#6A737D">      // synchronous wait, returns optional&#x3C;tuple&#x3C;...>></span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">stdexec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">spawn</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(s5);</span><span style="color:#6A737D;--shiki-dark:#6A737D">                        // fire-and-forget, returns immediately</span></span></code></pre></div>
 <p>In the code above, <code>sync_wait</code> blocks the current thread until the Sender completes and returns the result. <code>spawn</code> launches the Sender asynchronously and returns immediately — suitable for “fire and forget” scenarios.</p>
-<h2 id="environment-dependency">Environment Dependency</h2>
+<h2 id="environment-dependency"><a aria-hidden="true" tabindex="-1" href="#environment-dependency"><span class="icon icon-link"></span></a>Environment Dependency</h2>
 <p>Most Senders have completion signatures that are known at compile time, without needing runtime environment information:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">using</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> CS</span><span style="color:#D73A49;--shiki-dark:#F97583"> =</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> stdexec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#005CC5;--shiki-dark:#79B8FF">completion_signatures_of_t</span><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#6F42C1;--shiki-dark:#B392F0">stdexec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">just</span><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#005CC5;--shiki-dark:#79B8FF">42</span><span style="color:#24292E;--shiki-dark:#E1E4E8">>>;</span></span>
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// CS = completion_signatures&#x3C;set_value_t(int)></span></span>
@@ -103,9 +103,9 @@
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">        -></span><span style="color:#24292E;--shiki-dark:#E1E4E8"> valid</span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#24292E;--shiki-dark:#E1E4E8">completion</span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#24292E;--shiki-dark:#E1E4E8">signatures;</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  };</span></span></code></pre></div>
 <p>In the code above, if <code>sender_in&#x3C;Sndr, Env></code> holds, it means that given environment <code>Env</code>, you can determine <code>Sndr</code>’s completion signatures. A Sender that satisfies <code>sender_in</code> without any environment is a <strong>non-dependent Sender</strong> (the most common category).</p>
-<h2 id="sender-concepts-reference">Sender Concepts Reference</h2>
+<h2 id="sender-concepts-reference"><a aria-hidden="true" tabindex="-1" href="#sender-concepts-reference"><span class="icon icon-link"></span></a>Sender Concepts Reference</h2>
 <p>Beyond <code>sender</code> and <code>sender_in</code>, the standard defines several more sender concepts used throughout the framework.</p>
-<h3 id="sender_to--connectability">sender_to — Connectability</h3>
+<h3 id="sender_to--connectability"><a aria-hidden="true" tabindex="-1" href="#sender_to--connectability"><span class="icon icon-link"></span></a>sender_to — Connectability</h3>
 <p>A sender is connectable to a receiver if it satisfies <code>sender_to</code>:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">template</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> &#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Sndr</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Rcvr</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">concept</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> sender_to </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span></span>
@@ -120,7 +120,7 @@
 <li>The receiver can handle all those signatures (<code>receiver_of</code>)</li>
 <li><code>connect(sndr, rcvr)</code> is a valid expression</li>
 </ol>
-<h3 id="single-sender--exactly-one-value-type">single-sender — Exactly One Value Type</h3>
+<h3 id="single-sender--exactly-one-value-type"><a aria-hidden="true" tabindex="-1" href="#single-sender--exactly-one-value-type"><span class="icon icon-link"></span></a>single-sender — Exactly One Value Type</h3>
 <p>A sender that produces exactly one set of value types:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">template</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> &#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Sndr</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#24292E;--shiki-dark:#E1E4E8">... </span><span style="color:#6F42C1;--shiki-dark:#B392F0">Env</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">concept</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> single</span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#24292E;--shiki-dark:#E1E4E8">sender </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> sender_in</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;</span><span style="color:#24292E;--shiki-dark:#E1E4E8">Sndr, Env...</span><span style="color:#D73A49;--shiki-dark:#F97583">></span><span style="color:#D73A49;--shiki-dark:#F97583"> &#x26;&#x26;</span></span>
@@ -135,14 +135,14 @@
 <li>Otherwise, ill-formed</li>
 </ul>
 <p>This is what powers <code>co_await sender</code> in coroutines — <code>awaitable-sender</code> (from Chapter 07b) requires <code>single-sender</code>. A sender like <code>when_all(just(1), just(2))</code> has two value types and is not a <code>single-sender</code>, so it cannot be directly <code>co_await</code>-ed.</p>
-<h3 id="sender-in-of--sender-of--constrained-value-completion">sender-in-of / sender-of — Constrained Value Completion</h3>
+<h3 id="sender-in-of--sender-of--constrained-value-completion"><a aria-hidden="true" tabindex="-1" href="#sender-in-of--sender-of--constrained-value-completion"><span class="icon icon-link"></span></a>sender-in-of / sender-of — Constrained Value Completion</h3>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">template</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> &#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Sndr</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Env</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#24292E;--shiki-dark:#E1E4E8">... </span><span style="color:#6F42C1;--shiki-dark:#B392F0">Values</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">concept</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> sender</span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#24292E;--shiki-dark:#E1E4E8">in</span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#24292E;--shiki-dark:#E1E4E8">of </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> sender</span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#24292E;--shiki-dark:#E1E4E8">in</span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#24292E;--shiki-dark:#E1E4E8">of</span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#24292E;--shiki-dark:#E1E4E8">impl</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;</span><span style="color:#24292E;--shiki-dark:#E1E4E8">Sndr, </span><span style="color:#005CC5;--shiki-dark:#79B8FF">set_value_t</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(Values...), Env</span><span style="color:#D73A49;--shiki-dark:#F97583">></span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
 <span class="line"></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">template</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> &#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Sndr</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#24292E;--shiki-dark:#E1E4E8">... </span><span style="color:#6F42C1;--shiki-dark:#B392F0">Values</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">concept</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> sender</span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#24292E;--shiki-dark:#E1E4E8">of </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> sender</span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#24292E;--shiki-dark:#E1E4E8">in</span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#24292E;--shiki-dark:#E1E4E8">of</span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#24292E;--shiki-dark:#E1E4E8">impl</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;</span><span style="color:#24292E;--shiki-dark:#E1E4E8">Sndr, </span><span style="color:#005CC5;--shiki-dark:#79B8FF">set_value_t</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(Values...)</span><span style="color:#D73A49;--shiki-dark:#F97583">></span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span></code></pre></div>
 <p><code>sender-of&#x3C;Sndr, int></code> is true if <code>Sndr</code> completes with value type <code>int</code> (and no other value signatures). These are exposition-only concepts used internally for constraints.</p>
-<h3 id="sender-for--tag_of_t--algorithm-tag-lookup">sender-for / tag_of_t — Algorithm Tag Lookup</h3>
+<h3 id="sender-for--tag_of_t--algorithm-tag-lookup"><a aria-hidden="true" tabindex="-1" href="#sender-for--tag_of_t--algorithm-tag-lookup"><span class="icon icon-link"></span></a>sender-for / tag_of_t — Algorithm Tag Lookup</h3>
 <p>Every sender created by an algorithm carries its algorithm’s tag:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">template</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> &#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">sender</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Sndr</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">using</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> tag_of_t</span><span style="color:#D73A49;--shiki-dark:#F97583"> =</span><span style="color:#D73A49;--shiki-dark:#F97583"> decltype</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(tag));</span><span style="color:#6A737D;--shiki-dark:#6A737D">  // from structured binding auto&#x26;&#x26; [tag, data, ...children] = sndr</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
@@ -155,7 +155,7 @@
 <li><strong>Completion signatures</strong>: <code>get_completion_signatures</code> dispatches to the right <code>impls-for</code> specialization</li>
 <li><strong>Structured binding</strong>: <code>auto&#x26;&#x26; [tag, data, ...children] = sndr</code> decomposes any sender</li>
 </ul>
-<h3 id="connect--awaitable-integration">Connect + Awaitable Integration</h3>
+<h3 id="connect--awaitable-integration"><a aria-hidden="true" tabindex="-1" href="#connect--awaitable-integration"><span class="icon icon-link"></span></a>Connect + Awaitable Integration</h3>
 <p>The <code>connect</code> CPO handles <strong>two</strong> kinds of connectable objects:</p>
 <ol>
 <li><strong>Senders</strong>: types that model <code>sender_to</code> — the normal case</li>
@@ -199,7 +199,7 @@
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">sender </span><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> s </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> some_awaitable_operation</span><span style="color:#24292E;--shiki-dark:#E1E4E8">();</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> [result] </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> sync_wait</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(s).</span><span style="color:#6F42C1;--shiki-dark:#B392F0">value</span><span style="color:#24292E;--shiki-dark:#E1E4E8">();</span></span></code></pre></div>
 <p>The reverse direction (sender → awaitable) is handled by <code>as_awaitable</code> from Chapter 07b.</p>
-<h2 id="implementing-a-minimal-sender">Implementing a Minimal Sender</h2>
+<h2 id="implementing-a-minimal-sender"><a aria-hidden="true" tabindex="-1" href="#implementing-a-minimal-sender"><span class="icon icon-link"></span></a>Implementing a Minimal Sender</h2>
 <p>Here is a complete minimal Sender implementation — it can be consumed normally by <code>sync_wait</code>:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">struct</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> my_sender</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  using</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> sender_concept</span><span style="color:#D73A49;--shiki-dark:#F97583"> =</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> stdexec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">sender_tag</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
@@ -233,7 +233,7 @@
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  }</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">};</span></span></code></pre></div>
 <p>In the code above, we’ve defined a minimal Sender. Its <code>connect</code> creates an operation_state, and <code>start</code> synchronously calls <code>set_value(rcvr_, 42)</code>. Simple as it is, it contains all three core components of a Sender: <code>completion_signatures</code> (type identity), <code>connect</code> (bind to Receiver), and <code>get_env</code> (environment query).</p>
-<h2 id="sender-attributes-and-tag_of_t">Sender Attributes and tag_of_t</h2>
+<h2 id="sender-attributes-and-tag_of_t"><a aria-hidden="true" tabindex="-1" href="#sender-attributes-and-tag_of_t"><span class="icon icon-link"></span></a>Sender Attributes and tag_of_t</h2>
 <p>Every Sender also has an associated <strong>tag type</strong> identifying which Sender algorithm it belongs to:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">template</span><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">sender</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Sndr</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">using</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> tag_of_t</span><span style="color:#D73A49;--shiki-dark:#F97583"> =</span><span style="color:#6A737D;--shiki-dark:#6A737D"> /* ... */</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
@@ -242,14 +242,14 @@
 <span class="line"><span style="color:#005CC5;--shiki-dark:#79B8FF">tag_of_t</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;</span><span style="color:#6F42C1;--shiki-dark:#B392F0">stdexec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#005CC5;--shiki-dark:#79B8FF">then_t</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, Sndr, F</span><span style="color:#D73A49;--shiki-dark:#F97583">></span><span style="color:#6A737D;--shiki-dark:#6A737D">       // → then_t</span></span>
 <span class="line"><span style="color:#005CC5;--shiki-dark:#79B8FF">tag_of_t</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;</span><span style="color:#6F42C1;--shiki-dark:#B392F0">stdexec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#005CC5;--shiki-dark:#79B8FF">schedule_t</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, Sch</span><span style="color:#D73A49;--shiki-dark:#F97583">></span><span style="color:#6A737D;--shiki-dark:#6A737D">       // → schedule_t</span></span></code></pre></div>
 <p>This tag is used in the <code>domain</code> mechanism — the framework uses <code>tag_of_t</code> to decide which domain should handle a Sender’s transformation. Ordinary users generally don’t need to worry about it, but understanding it helps when learning about the <code>transform_sender</code> customization point later.</p>
-<h2 id="important-notes">Important Notes</h2>
+<h2 id="important-notes"><a aria-hidden="true" tabindex="-1" href="#important-notes"><span class="icon icon-link"></span></a>Important Notes</h2>
 <ol>
 <li><strong>Sender ≠ async operation</strong> — a Sender is just a factory. The same Sender can be <code>connect</code>-ed multiple times, each producing a brand-new operation_state</li>
 <li><strong>Senders are lazy</strong> — without <code>connect</code> + <code>start</code>, no code ever runs</li>
 <li><strong><code>enable_sender</code> must be explicitly enabled</strong> — defining a random class does not make it a Sender; you must specialize <code>enable_sender</code> or declare <code>sender_concept</code></li>
 <li><strong>Completion signatures are determined at compile time</strong> — this means <code>sync_wait</code>’s return type is deduced at compile time with zero RTTI overhead</li>
 </ol>
-<p>The next chapter introduces the Scheduler — the abstraction of execution resources — to see how to make Senders run on different threads.</p></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/08-receiver-concept/" data-astro-cid-ykvenys5>← 08 · Receiver Concept</a><a href="/exec/tutorials/10-scheduler-concept/" data-astro-cid-ykvenys5>10 · Scheduler Concept →</a></nav></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
+<p>The next chapter introduces the Scheduler — the abstraction of execution resources — to see how to make Senders run on different threads.</p></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/08-receiver-concept/" data-astro-cid-ykvenys5>← 08 · Receiver Concept</a><a href="/exec/tutorials/10-scheduler-concept/" data-astro-cid-ykvenys5>10 · Scheduler Concept →</a></nav></div></div></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
       (function() {
         const STORAGE_KEY = "exectutorial-theme";
 
@@ -282,5 +282,55 @@
           try { localStorage.setItem(STORAGE_KEY, next); } catch(e) {}
           setTheme(next);
         });
+      })();
+    </script><script>
+      (function() {
+        function buildToc(containerId, navId) {
+          var container = document.getElementById(containerId);
+          var nav = document.getElementById(navId);
+          if (!nav) return;
+          var headings = document.querySelectorAll(".article-content h2, .article-content h3");
+          if (headings.length === 0) { if (container) container.style.display = "none"; return; }
+
+          var ul = document.createElement("ul");
+          headings.forEach(function(h) {
+            if (!h.id) return;
+            var li = document.createElement("li");
+            var a = document.createElement("a");
+            a.href = "#" + h.id;
+            a.textContent = h.textContent.replace(/¶$/, "").trim();
+            a.className = "toc-" + h.tagName.toLowerCase();
+            li.appendChild(a);
+            ul.appendChild(li);
+          });
+          nav.appendChild(ul);
+        }
+
+        buildToc("tocSidebar", "tocNav");
+        buildToc(null, "tocNavMobile");
+
+        // active heading highlight
+        var tocLinks = document.querySelectorAll("#tocNav a, #tocNavMobile a");
+        if (tocLinks.length > 0) {
+          var headings = document.querySelectorAll(".article-content h2, .article-content h3");
+          function onScroll() {
+            var scrollY = window.scrollY + 80;
+            var active = null;
+            headings.forEach(function(h) {
+              if (h.offsetTop <= scrollY) active = h;
+            });
+            tocLinks.forEach(function(link) { link.classList.remove("active"); });
+            if (active) {
+              var id = active.id;
+              tocLinks.forEach(function(link) {
+                if (link.getAttribute("href") === "#" + id) {
+                  link.classList.add("active");
+                }
+              });
+            }
+          }
+          window.addEventListener("scroll", onScroll, { passive: true });
+          onScroll();
+        }
       })();
     </script></body></html>

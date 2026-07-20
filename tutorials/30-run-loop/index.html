@@ -5,8 +5,8 @@
         if(!s&&matchMedia("(prefers-color-scheme:light)").matches)theme="light";
         document.documentElement.setAttribute("data-theme",theme);
       })();
-    </script><link rel="stylesheet" href="/exec/_astro/01-why-stdexec.hXKgsPrw.css"></head><body data-astro-cid-ykvenys5><div class="container" data-astro-cid-ykvenys5><header data-astro-cid-ykvenys5><div class="title-area" data-astro-cid-ykvenys5><a href="/exec/tutorials/" style="color:var(--fg-muted);text-decoration:none;font-size:0.85rem;" data-astro-cid-ykvenys5>← Back to index</a><h1 data-astro-cid-ykvenys5>30 · run_loop — The Simplest Execution Context</h1></div><button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" data-astro-cid-ykvenys5>🌙</button></header><article class="article-content" data-astro-cid-ykvenys5>
-<h2 id="why-do-we-need-run_loop">Why Do We Need run_loop?</h2>
+    </script><link rel="stylesheet" href="/exec/_astro/01-why-stdexec.YzjJ_D8W.css"></head><body data-astro-cid-ykvenys5><div class="layout-wrap" data-astro-cid-ykvenys5><aside class="toc-sidebar" id="tocSidebar" data-astro-cid-ykvenys5><div class="toc-label" data-astro-cid-ykvenys5>On this page</div><nav id="tocNav" data-astro-cid-ykvenys5></nav></aside><div class="layout-main" data-astro-cid-ykvenys5><div class="container" data-astro-cid-ykvenys5><header data-astro-cid-ykvenys5><div class="title-area" data-astro-cid-ykvenys5><a href="/exec/tutorials/" style="color:var(--fg-muted);text-decoration:none;font-size:0.85rem;" data-astro-cid-ykvenys5>← Back to index</a><h1 data-astro-cid-ykvenys5>30 · run_loop — The Simplest Execution Context</h1></div><button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" data-astro-cid-ykvenys5>🌙</button></header><details class="toc-mobile" id="tocMobile" data-astro-cid-ykvenys5><summary data-astro-cid-ykvenys5>On this page</summary><nav id="tocNavMobile" data-astro-cid-ykvenys5></nav></details><article class="article-content" data-astro-cid-ykvenys5>
+<h2 id="why-do-we-need-run_loop"><a aria-hidden="true" tabindex="-1" href="#why-do-we-need-run_loop"><span class="icon icon-link"></span></a>Why Do We Need run_loop?</h2>
 <p>What’s the most painful thing about debugging async code? You set a breakpoint to trace a sender’s execution, but the work runs on another thread and your breakpoint never hits.</p>
 <p><code>run_loop</code> exists to pull async back into sync — it concentrates all sender execution onto a <strong>single thread</strong> that you drive manually. With <code>run_loop</code> you can:</p>
 <ul>
@@ -16,7 +16,7 @@
 </ul>
 <p>This also explains why <code>sync_wait</code> uses <code>run_loop</code> internally — <code>sync_wait</code> creates a temporary <code>run_loop</code>, runs the entire sender pipeline on it, and returns the result.</p>
 <hr>
-<h2 id="basic-usage">Basic Usage</h2>
+<h2 id="basic-usage"><a aria-hidden="true" tabindex="-1" href="#basic-usage"><span class="icon icon-link"></span></a>Basic Usage</h2>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">stdexec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::run_loop loop;</span></span>
 <span class="line"></span>
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Run the event loop on a background thread</span></span>
@@ -33,7 +33,7 @@
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">worker.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">join</span><span style="color:#24292E;--shiki-dark:#E1E4E8">();</span><span style="color:#6A737D;--shiki-dark:#6A737D">   // Wait for the background thread to finish</span></span></code></pre></div>
 <p>Three steps: create the loop → get the scheduler and submit work → call <code>finish()</code> to exit.</p>
 <hr>
-<h2 id="architecture-overview-four-layers">Architecture Overview: Four Layers</h2>
+<h2 id="architecture-overview-four-layers"><a aria-hidden="true" tabindex="-1" href="#architecture-overview-four-layers"><span class="icon icon-link"></span></a>Architecture Overview: Four Layers</h2>
 <p><code>run_loop</code>’s internals are organized into four layers, each with a single responsibility:</p>
 <pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="plaintext"><code><span class="line"><span>Layer 4: __scheduler_t     ← User-visible scheduler, provides schedule()</span></span>
 <span class="line"><span>Layer 3: __sndr_t          ← Sender returned by schedule(), provides connect() / get_env()</span></span>
@@ -41,7 +41,7 @@
 <span class="line"><span>Layer 1: __task            ← Type-erased work unit, hanging on the lock-free queue</span></span></code></pre>
 <p>Let’s look from the bottom up.</p>
 <hr>
-<h2 id="layer-1-__task--function-pointers-instead-of-virtual-functions">Layer 1: <code>__task</code> — Function Pointers Instead of Virtual Functions</h2>
+<h2 id="layer-1-__task--function-pointers-instead-of-virtual-functions"><a aria-hidden="true" tabindex="-1" href="#layer-1-__task--function-pointers-instead-of-virtual-functions"><span class="icon icon-link"></span></a>Layer 1: <code>__task</code> — Function Pointers Instead of Virtual Functions</h2>
 <p>Every operation scheduled on <code>run_loop</code> becomes a <code>__task</code> hanging on a queue:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">struct</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> __task</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  using</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> __execute_fn_t</span><span style="color:#D73A49;--shiki-dark:#F97583"> =</span><span style="color:#D73A49;--shiki-dark:#F97583"> void</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(__task</span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) </span><span style="color:#D73A49;--shiki-dark:#F97583">noexcept</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
@@ -55,7 +55,7 @@
 <p>The key design decision above: <strong>why a function pointer instead of a virtual function?</strong></p>
 <p>Because <code>__execute</code> needs <code>noexcept</code> (the standard requires <code>start()</code> not to throw), and virtual functions are unavailable in GPU (CUDA) environments. Function pointers + <code>static</code> member function templates are the most portable, zero-overhead “late binding” solution. Each <code>__opstate_t&#x3C;Rcvr></code> specialization provides its own <code>__execute_impl</code> static function, and the function pointer is set to point to it.</p>
 <hr>
-<h2 id="layer-2-__opstate_trcvr--what-connect-produces">Layer 2: <code>__opstate_t&#x3C;Rcvr></code> — What connect Produces</h2>
+<h2 id="layer-2-__opstate_trcvr--what-connect-produces"><a aria-hidden="true" tabindex="-1" href="#layer-2-__opstate_trcvr--what-connect-produces"><span class="icon icon-link"></span></a>Layer 2: <code>__opstate_t&#x3C;Rcvr></code> — What connect Produces</h2>
 <p>When <code>connect(sndr, rcvr)</code> is called, it produces an <code>__opstate_t</code> that inherits from <code>__task</code>:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">template</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> &#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Rcvr</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">struct</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> __opstate_t</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> : __task {</span></span>
@@ -84,7 +84,7 @@
 </ul>
 <p><strong>Zero-overhead optimization</strong>: if the receiver’s environment has <code>never_stop_token</code> (compile-time known to never cancel), the <code>stop_requested()</code> check is optimized out at compile time.</p>
 <hr>
-<h2 id="layer-3-__sndr_t--the-sender-returned-by-schedule">Layer 3: <code>__sndr_t</code> — The Sender Returned by schedule</h2>
+<h2 id="layer-3-__sndr_t--the-sender-returned-by-schedule"><a aria-hidden="true" tabindex="-1" href="#layer-3-__sndr_t--the-sender-returned-by-schedule"><span class="icon icon-link"></span></a>Layer 3: <code>__sndr_t</code> — The Sender Returned by schedule</h2>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">struct</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> __sndr_t</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">  // connect: directly constructs __opstate_t, no heap allocation</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  template</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> &#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Rcvr</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
@@ -103,7 +103,7 @@
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">};</span></span></code></pre></div>
 <p><code>connect</code> directly constructs the operation state — no heap allocation, all state lives inside the operation state object. <code>get_completion_signatures</code> decides at compile time whether to declare <code>set_stopped</code> based on the receiver’s stop token type, enabling dead code elimination downstream.</p>
 <hr>
-<h2 id="mpsc-lock-free-queue-treiber-stack">MPSC Lock-Free Queue: Treiber Stack</h2>
+<h2 id="mpsc-lock-free-queue-treiber-stack"><a aria-hidden="true" tabindex="-1" href="#mpsc-lock-free-queue-treiber-stack"><span class="icon icon-link"></span></a>MPSC Lock-Free Queue: Treiber Stack</h2>
 <p>The core data structure of <code>run_loop</code> is a multi-producer, single-consumer lock-free queue:</p>
 <pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="plaintext"><code><span class="line"><span>push(node):                     pop_all():</span></span>
 <span class="line"><span>  CAS write to stack head         atomic exchange the whole linked list</span></span>
@@ -112,8 +112,8 @@
 <p>Why a stack-and-reverse instead of a double-ended queue? Because a Treiber Stack’s <code>push</code> only needs to CAS one atomic variable (<code>head</code>) — simple and efficient. <code>pop_all</code> grabs everything at once in a batch and reverses, amortizing the reversal cost.</p>
 <p><code>alignas(64)</code> ensures <code>head</code> occupies its own cache line, avoiding false sharing.</p>
 <hr>
-<h2 id="the-dance-of-run-and-finish">The Dance of <code>run()</code> and <code>finish()</code></h2>
-<h3 id="run--the-event-loop"><code>run()</code> — The Event Loop</h3>
+<h2 id="the-dance-of-run-and-finish"><a aria-hidden="true" tabindex="-1" href="#the-dance-of-run-and-finish"><span class="icon icon-link"></span></a>The Dance of <code>run()</code> and <code>finish()</code></h2>
+<h3 id="run--the-event-loop"><a aria-hidden="true" tabindex="-1" href="#run--the-event-loop"><span class="icon icon-link"></span></a><code>run()</code> — The Event Loop</h3>
 <pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="plaintext"><code><span class="line"><span>while (!finishing) {</span></span>
 <span class="line"><span>  queue.wait_for_item();    // Block until new tasks arrive (atomic::wait)</span></span>
 <span class="line"><span>  execute_all();            // Batch-execute all queued tasks</span></span>
@@ -126,7 +126,7 @@
 <li><strong>Phase 1 (normal operation)</strong>: block waiting for new tasks → batch-dequeue everything → execute one by one → back to waiting</li>
 <li><strong>Phase 2 (cleanup)</strong>: <code>finish()</code> has been called, drain the remaining queue, wait until every in-flight task has ended</li>
 </ul>
-<h3 id="finish--request-exit"><code>finish()</code> — Request Exit</h3>
+<h3 id="finish--request-exit"><a aria-hidden="true" tabindex="-1" href="#finish--request-exit"><span class="icon icon-link"></span></a><code>finish()</code> — Request Exit</h3>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">void</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> finish</span><span style="color:#24292E;--shiki-dark:#E1E4E8">() </span><span style="color:#D73A49;--shiki-dark:#F97583">noexcept</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  __task_count_.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">fetch_add</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">2</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#6F42C1;--shiki-dark:#B392F0">std</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::memory_order_release);</span><span style="color:#6A737D;--shiki-dark:#6A737D">  // Protect self from early run() exit</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  if</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (</span><span style="color:#D73A49;--shiki-dark:#F97583">!</span><span style="color:#24292E;--shiki-dark:#E1E4E8">__finishing_.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">exchange</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">true</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)) {</span></span>
@@ -137,7 +137,7 @@
 <p>The net effect of <code>+2 -1 = +1</code> is to prevent <code>run()</code> from exiting and freeing the loop object before <code>finish()</code> has completed — a clever lifetime protection trick.</p>
 <p>The batch execution loop also has a subtle iteration order: <strong>advance the iterator first, then execute the task</strong>. Executing a task may destroy the current node (the receiver’s <code>set_value</code> could free the operation state), but the iterator has already moved to the next node, so the access is safe.</p>
 <hr>
-<h2 id="how-sync_wait-uses-run_loop">How <code>sync_wait</code> Uses <code>run_loop</code></h2>
+<h2 id="how-sync_wait-uses-run_loop"><a aria-hidden="true" tabindex="-1" href="#how-sync_wait-uses-run_loop"><span class="icon icon-link"></span></a>How <code>sync_wait</code> Uses <code>run_loop</code></h2>
 <pre class="mermaid">graph TD
   A["sync_wait(sndr)"] --> B["Create run_loop"]
   B --> C["connect(sndr, internal receiver)"]
@@ -149,7 +149,7 @@
 <p>This is the secret of how <code>sync_wait</code> turns async into sync — it creates a <code>run_loop</code> internally, then stands on <code>loop.run()</code> blocking until the sender pipeline completes and calls <code>finish()</code>.</p>
 <p>This also explains why <code>sync_wait(get_scheduler())</code> returns <code>run_loop::scheduler</code> — the <code>sync_wait</code> internal receiver’s environment has its <code>get_scheduler</code> query pointing to this internal run_loop’s scheduler.</p>
 <hr>
-<h2 id="wrapping-run_loop-as-your-own-event-loop">Wrapping run_loop as Your Own Event Loop</h2>
+<h2 id="wrapping-run_loop-as-your-own-event-loop"><a aria-hidden="true" tabindex="-1" href="#wrapping-run_loop-as-your-own-event-loop"><span class="icon icon-link"></span></a>Wrapping run_loop as Your Own Event Loop</h2>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> my_event_loop</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">  stdexec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::run_loop loop_;</span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">  std</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::thread worker_;</span></span>
@@ -167,7 +167,7 @@
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">};</span></span></code></pre></div>
 <p>Above, we wrap <code>run_loop</code> into an event loop object with its own worker thread — started in the constructor, gracefully shut down in the destructor. This is a common usage pattern.</p>
 <hr>
-<h2 id="run_loop-vs-other-execution-contexts">run_loop vs Other Execution Contexts</h2></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/29-structured-concurrency/" data-astro-cid-ykvenys5>← 29 · Structured Concurrency — Giving Every Async Operation a Home</a><a href="/exec/tutorials/31-parallel-scheduler/" data-astro-cid-ykvenys5>31 · parallel_scheduler — CPU Parallel Computing Scheduler →</a></nav></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
+<h2 id="run_loop-vs-other-execution-contexts"><a aria-hidden="true" tabindex="-1" href="#run_loop-vs-other-execution-contexts"><span class="icon icon-link"></span></a>run_loop vs Other Execution Contexts</h2></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/29-structured-concurrency/" data-astro-cid-ykvenys5>← 29 · Structured Concurrency — Giving Every Async Operation a Home</a><a href="/exec/tutorials/31-parallel-scheduler/" data-astro-cid-ykvenys5>31 · parallel_scheduler — CPU Parallel Computing Scheduler →</a></nav></div></div></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
       (function() {
         const STORAGE_KEY = "exectutorial-theme";
 
@@ -200,5 +200,55 @@
           try { localStorage.setItem(STORAGE_KEY, next); } catch(e) {}
           setTheme(next);
         });
+      })();
+    </script><script>
+      (function() {
+        function buildToc(containerId, navId) {
+          var container = document.getElementById(containerId);
+          var nav = document.getElementById(navId);
+          if (!nav) return;
+          var headings = document.querySelectorAll(".article-content h2, .article-content h3");
+          if (headings.length === 0) { if (container) container.style.display = "none"; return; }
+
+          var ul = document.createElement("ul");
+          headings.forEach(function(h) {
+            if (!h.id) return;
+            var li = document.createElement("li");
+            var a = document.createElement("a");
+            a.href = "#" + h.id;
+            a.textContent = h.textContent.replace(/¶$/, "").trim();
+            a.className = "toc-" + h.tagName.toLowerCase();
+            li.appendChild(a);
+            ul.appendChild(li);
+          });
+          nav.appendChild(ul);
+        }
+
+        buildToc("tocSidebar", "tocNav");
+        buildToc(null, "tocNavMobile");
+
+        // active heading highlight
+        var tocLinks = document.querySelectorAll("#tocNav a, #tocNavMobile a");
+        if (tocLinks.length > 0) {
+          var headings = document.querySelectorAll(".article-content h2, .article-content h3");
+          function onScroll() {
+            var scrollY = window.scrollY + 80;
+            var active = null;
+            headings.forEach(function(h) {
+              if (h.offsetTop <= scrollY) active = h;
+            });
+            tocLinks.forEach(function(link) { link.classList.remove("active"); });
+            if (active) {
+              var id = active.id;
+              tocLinks.forEach(function(link) {
+                if (link.getAttribute("href") === "#" + id) {
+                  link.classList.add("active");
+                }
+              });
+            }
+          }
+          window.addEventListener("scroll", onScroll, { passive: true });
+          onScroll();
+        }
       })();
     </script></body></html>

@@ -5,8 +5,8 @@
         if(!s&&matchMedia("(prefers-color-scheme:light)").matches)theme="light";
         document.documentElement.setAttribute("data-theme",theme);
       })();
-    </script><link rel="stylesheet" href="/exec/_astro/01-why-stdexec.hXKgsPrw.css"></head><body data-astro-cid-ykvenys5><div class="container" data-astro-cid-ykvenys5><header data-astro-cid-ykvenys5><div class="title-area" data-astro-cid-ykvenys5><a href="/exec/tutorials/" style="color:var(--fg-muted);text-decoration:none;font-size:0.85rem;" data-astro-cid-ykvenys5>← Back to index</a><h1 data-astro-cid-ykvenys5>08 · Receiver Concept</h1></div><button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" data-astro-cid-ykvenys5>🌙</button></header><article class="article-content" data-astro-cid-ykvenys5>
-<h2 id="overview">Overview</h2>
+    </script><link rel="stylesheet" href="/exec/_astro/01-why-stdexec.YzjJ_D8W.css"></head><body data-astro-cid-ykvenys5><div class="layout-wrap" data-astro-cid-ykvenys5><aside class="toc-sidebar" id="tocSidebar" data-astro-cid-ykvenys5><div class="toc-label" data-astro-cid-ykvenys5>On this page</div><nav id="tocNav" data-astro-cid-ykvenys5></nav></aside><div class="layout-main" data-astro-cid-ykvenys5><div class="container" data-astro-cid-ykvenys5><header data-astro-cid-ykvenys5><div class="title-area" data-astro-cid-ykvenys5><a href="/exec/tutorials/" style="color:var(--fg-muted);text-decoration:none;font-size:0.85rem;" data-astro-cid-ykvenys5>← Back to index</a><h1 data-astro-cid-ykvenys5>08 · Receiver Concept</h1></div><button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" data-astro-cid-ykvenys5>🌙</button></header><details class="toc-mobile" id="tocMobile" data-astro-cid-ykvenys5><summary data-astro-cid-ykvenys5>On this page</summary><nav id="tocNavMobile" data-astro-cid-ykvenys5></nav></details><article class="article-content" data-astro-cid-ykvenys5>
+<h2 id="overview"><a aria-hidden="true" tabindex="-1" href="#overview"><span class="icon icon-link"></span></a>Overview</h2>
 <p><em>Receiver</em> is the <strong>result consumer</strong> of an asynchronous operation.</p>
 <p>In traditional async programming, you register three separate callbacks for each operation — success, failure, cancellation:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Old way: three independent callbacks, each managing its own lifecycle</span></span>
@@ -40,8 +40,8 @@
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  concept</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> receiver_of </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6A737D;--shiki-dark:#6A737D"> /* see below */</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span></code></pre></div>
 <p>In the code above, the <code>receiver</code> concept only requires two things: <strong>destructible</strong> and <strong>able to provide environment queries</strong>. Note that it does not directly require implementing <code>set_value</code> / <code>set_error</code> / <code>set_stopped</code> — those requirements are expressed in the <code>receiver_of</code> concept, which binds a Receiver to specific completion signatures.</p>
-<h2 id="basic-usage">Basic Usage</h2>
-<h3 id="the-simplest-receiver">The Simplest Receiver</h3>
+<h2 id="basic-usage"><a aria-hidden="true" tabindex="-1" href="#basic-usage"><span class="icon icon-link"></span></a>Basic Usage</h2>
+<h3 id="the-simplest-receiver"><a aria-hidden="true" tabindex="-1" href="#the-simplest-receiver"><span class="icon icon-link"></span></a>The Simplest Receiver</h3>
 <p>If you’re certain the Sender will only produce a success, you can define just <code>set_value</code>:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">struct</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> basic_receiver</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  void</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> set_value</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#D73A49;--shiki-dark:#F97583">int</span><span style="color:#E36209;--shiki-dark:#FFAB70"> x</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) </span><span style="color:#D73A49;--shiki-dark:#F97583">noexcept</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
@@ -56,7 +56,7 @@
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> op </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> stdexec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">connect</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">stdexec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">just</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">42</span><span style="color:#24292E;--shiki-dark:#E1E4E8">), basic_receiver{});</span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">stdexec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">start</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(op);</span><span style="color:#6A737D;--shiki-dark:#6A737D">  // prints: result: 42</span></span></code></pre></div>
 <p>In the code above, <code>just(42)</code> is a Sender that only produces <code>set_value(int)</code>, so <code>basic_receiver</code> only needs to handle the success case. C++26 std::execution’s concept mechanism only checks the paths that will actually be taken — it doesn’t force you to write out every possible branch.</p>
-<h3 id="handling-errors">Handling Errors</h3>
+<h3 id="handling-errors"><a aria-hidden="true" tabindex="-1" href="#handling-errors"><span class="icon icon-link"></span></a>Handling Errors</h3>
 <p>If the Sender might fail, add <code>set_error</code>:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">struct</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> failable_receiver</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  void</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> set_value</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#D73A49;--shiki-dark:#F97583">int</span><span style="color:#E36209;--shiki-dark:#FFAB70"> x</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) </span><span style="color:#D73A49;--shiki-dark:#F97583">noexcept</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
@@ -74,7 +74,7 @@
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  }</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">};</span></span></code></pre></div>
 <p>In the code above, <code>set_error</code> receives a <code>std::exception_ptr</code>, which you can rethrow with <code>rethrow_exception</code> to recover the original exception. Note that <code>set_error</code> must also be <code>noexcept</code> — errors are passed via exception pointers, not thrown directly.</p>
-<h3 id="handling-cancellation">Handling Cancellation</h3>
+<h3 id="handling-cancellation"><a aria-hidden="true" tabindex="-1" href="#handling-cancellation"><span class="icon icon-link"></span></a>Handling Cancellation</h3>
 <p>If the Sender supports cancellation, you also need <code>set_stopped</code>:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">struct</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> full_receiver</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  void</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> set_value</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#D73A49;--shiki-dark:#F97583">int</span><span style="color:#E36209;--shiki-dark:#FFAB70"> x</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) </span><span style="color:#D73A49;--shiki-dark:#F97583">noexcept</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> { result </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> x; }</span></span>
@@ -88,7 +88,7 @@
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">};</span></span></code></pre></div>
 <p>In the code above, we have a complete Receiver implementation — all three completion signals are handled. <code>set_stopped</code> takes no arguments; it simply means “this operation was cancelled.” The specific reason for cancellation is obtained through the stop token (covered in later chapters).</p>
 <p>Note that exactly <strong>one</strong> of the three completion signals will be called. A Sender will never send both success and failure, nor will it notify cancellation after succeeding.</p>
-<h2 id="connecting-receiver-to-sender">Connecting Receiver to Sender</h2>
+<h2 id="connecting-receiver-to-sender"><a aria-hidden="true" tabindex="-1" href="#connecting-receiver-to-sender"><span class="icon icon-link"></span></a>Connecting Receiver to Sender</h2>
 <p>With a Receiver defined, a Sender can use the <code>receiver_of</code> concept to check compatibility at compile time:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">template</span><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> R</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Completions</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">concept</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> receiver_of </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span></span>
@@ -105,7 +105,7 @@
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Compile error: Receiver lacks set_stopped</span></span>
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// auto op2 = connect(cancellable_sender, int_receiver{});</span></span></code></pre></div>
 <p>In the code above, you can see compile-time checking in action. You don’t need to write <code>static_assert</code> yourself — the <code>connect()</code> concept constraint does the work for you.</p>
-<h2 id="three-dispatch-forms">Three Dispatch Forms</h2>
+<h2 id="three-dispatch-forms"><a aria-hidden="true" tabindex="-1" href="#three-dispatch-forms"><span class="icon icon-link"></span></a>Three Dispatch Forms</h2>
 <p><code>set_value</code> / <code>set_error</code> / <code>set_stopped</code> on a Receiver have three valid invocation forms:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Form 1: called through lvalue</span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">set_value</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(r, args...);</span><span style="color:#6A737D;--shiki-dark:#6A737D">               // requires r.set_value(args...)</span></span>
@@ -118,7 +118,7 @@
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// requires static_cast&#x3C;R&#x26;&#x26;>(r).set_value(args...)</span></span></code></pre></div>
 <p>In the code above, form three is the most common calling convention used by Senders. This means your Receiver must correctly handle move semantics. A common pitfall: accessing a Receiver’s members after it has been <code>std::move</code>’d — the members may have been moved away and are now in an undefined state.</p>
 <p>Note that <code>receiver_of</code> checks that all three forms are valid, so you don’t need to manually specify value categories when defining a Receiver — just ensure both <code>&#x26;</code> and <code>&#x26;&#x26;</code> versions are correct.</p>
-<h2 id="environment-propagation">Environment Propagation</h2>
+<h2 id="environment-propagation"><a aria-hidden="true" tabindex="-1" href="#environment-propagation"><span class="icon icon-link"></span></a>Environment Propagation</h2>
 <p>A Receiver has another important responsibility — providing <strong>environment information</strong> to the Sender via <code>get_env()</code>. This is the core mechanism for property propagation in C++26 std::execution:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// The environment returned by get_env determines:</span></span>
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">//   ① which thread the scheduler executes on</span></span>
@@ -140,7 +140,7 @@
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// You can also inject custom properties into the environment:</span></span>
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// return stdexec::prop{get_stop_token, stdexec::never_stop_token{}};</span></span></code></pre></div>
 <p>In the code above, if you return <code>empty_env</code>, the framework uses defaults — execute on the current thread, ignore cancellation, use the default allocator.</p>
-<h2 id="inlinable_receiver">inlinable_receiver</h2>
+<h2 id="inlinable_receiver"><a aria-hidden="true" tabindex="-1" href="#inlinable_receiver"><span class="icon icon-link"></span></a>inlinable_receiver</h2>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">template</span><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> R</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> ChildOp</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">concept</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> inlinable_receiver </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  receiver</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;</span><span style="color:#24292E;--shiki-dark:#E1E4E8">R</span><span style="color:#D73A49;--shiki-dark:#F97583">></span><span style="color:#D73A49;--shiki-dark:#F97583"> &#x26;&#x26;</span></span>
@@ -148,21 +148,21 @@
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    { op.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">start</span><span style="color:#24292E;--shiki-dark:#E1E4E8">() } </span><span style="color:#D73A49;--shiki-dark:#F97583">noexcept</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  };</span></span></code></pre></div>
 <p><code>inlinable_receiver</code> is a <strong>performance optimization marker</strong>. When a Sender can complete synchronously, <code>inlinable_receiver</code> allows the framework to call the completion function directly on the <code>start()</code> call stack, skipping asynchronous scheduling. This is particularly useful with synchronous Senders like <code>inline_scheduler</code> or <code>just()</code>.</p>
-<h2 id="receiver_tag">receiver_tag</h2>
+<h2 id="receiver_tag"><a aria-hidden="true" tabindex="-1" href="#receiver_tag"><span class="icon icon-link"></span></a>receiver_tag</h2>
 <p>If you want to use stdexec’s <code>enable_sender</code> mechanism, declare <code>receiver_concept</code>:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">struct</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> my_receiver</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  using</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> receiver_concept</span><span style="color:#D73A49;--shiki-dark:#F97583"> =</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> stdexec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">receiver_tag</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">  // ...</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">};</span></span></code></pre></div>
 <p>In the code above, stdexec can now recognize your type as a Receiver at compile time, allowing Sender algorithms to match it correctly.</p>
-<h2 id="important-notes">Important Notes</h2>
+<h2 id="important-notes"><a aria-hidden="true" tabindex="-1" href="#important-notes"><span class="icon icon-link"></span></a>Important Notes</h2>
 <ol>
 <li><strong>The <code>receiver</code> concept does not require completion functions</strong> — those requirements come from <code>receiver_of</code>, which checks against specific completion signatures</li>
 <li><strong>Exactly one completion signal will be called</strong> — a single operation will not both succeed and fail</li>
 <li><strong>Don’t use a Receiver after it’s been moved</strong> — Senders typically call via <code>static_cast&#x3C;R&#x26;&#x26;></code>, so members may have been moved away</li>
 <li><strong><code>get_env()</code> should return a lightweight object</strong> — typically returned by value, just a few bytes in size</li>
 </ol>
-<p>The next chapter introduces the Receiver’s partner — the Sender — to see how async “job descriptions” are built.</p></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/07d-affine/" data-astro-cid-ykvenys5>← 07d · affine — Completing on the Receiver&#39;s Scheduler</a><a href="/exec/tutorials/09-sender-concept/" data-astro-cid-ykvenys5>09 · Sender Concept →</a></nav></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
+<p>The next chapter introduces the Receiver’s partner — the Sender — to see how async “job descriptions” are built.</p></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/07d-affine/" data-astro-cid-ykvenys5>← 07d · affine — Completing on the Receiver&#39;s Scheduler</a><a href="/exec/tutorials/09-sender-concept/" data-astro-cid-ykvenys5>09 · Sender Concept →</a></nav></div></div></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
       (function() {
         const STORAGE_KEY = "exectutorial-theme";
 
@@ -195,5 +195,55 @@
           try { localStorage.setItem(STORAGE_KEY, next); } catch(e) {}
           setTheme(next);
         });
+      })();
+    </script><script>
+      (function() {
+        function buildToc(containerId, navId) {
+          var container = document.getElementById(containerId);
+          var nav = document.getElementById(navId);
+          if (!nav) return;
+          var headings = document.querySelectorAll(".article-content h2, .article-content h3");
+          if (headings.length === 0) { if (container) container.style.display = "none"; return; }
+
+          var ul = document.createElement("ul");
+          headings.forEach(function(h) {
+            if (!h.id) return;
+            var li = document.createElement("li");
+            var a = document.createElement("a");
+            a.href = "#" + h.id;
+            a.textContent = h.textContent.replace(/¶$/, "").trim();
+            a.className = "toc-" + h.tagName.toLowerCase();
+            li.appendChild(a);
+            ul.appendChild(li);
+          });
+          nav.appendChild(ul);
+        }
+
+        buildToc("tocSidebar", "tocNav");
+        buildToc(null, "tocNavMobile");
+
+        // active heading highlight
+        var tocLinks = document.querySelectorAll("#tocNav a, #tocNavMobile a");
+        if (tocLinks.length > 0) {
+          var headings = document.querySelectorAll(".article-content h2, .article-content h3");
+          function onScroll() {
+            var scrollY = window.scrollY + 80;
+            var active = null;
+            headings.forEach(function(h) {
+              if (h.offsetTop <= scrollY) active = h;
+            });
+            tocLinks.forEach(function(link) { link.classList.remove("active"); });
+            if (active) {
+              var id = active.id;
+              tocLinks.forEach(function(link) {
+                if (link.getAttribute("href") === "#" + id) {
+                  link.classList.add("active");
+                }
+              });
+            }
+          }
+          window.addEventListener("scroll", onScroll, { passive: true });
+          onScroll();
+        }
       })();
     </script></body></html>

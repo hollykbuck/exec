@@ -5,11 +5,11 @@
         if(!s&&matchMedia("(prefers-color-scheme:light)").matches)theme="light";
         document.documentElement.setAttribute("data-theme",theme);
       })();
-    </script><link rel="stylesheet" href="/exec/_astro/01-why-stdexec.hXKgsPrw.css"></head><body data-astro-cid-ykvenys5><div class="container" data-astro-cid-ykvenys5><header data-astro-cid-ykvenys5><div class="title-area" data-astro-cid-ykvenys5><a href="/exec/tutorials/" style="color:var(--fg-muted);text-decoration:none;font-size:0.85rem;" data-astro-cid-ykvenys5>← Back to index</a><h1 data-astro-cid-ykvenys5>19 · when_all — Waiting for Multiple Senders in Parallel</h1></div><button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" data-astro-cid-ykvenys5>🌙</button></header><article class="article-content" data-astro-cid-ykvenys5>
-<h2 id="why-do-we-need-when_all">Why Do We Need when_all?</h2>
+    </script><link rel="stylesheet" href="/exec/_astro/01-why-stdexec.YzjJ_D8W.css"></head><body data-astro-cid-ykvenys5><div class="layout-wrap" data-astro-cid-ykvenys5><aside class="toc-sidebar" id="tocSidebar" data-astro-cid-ykvenys5><div class="toc-label" data-astro-cid-ykvenys5>On this page</div><nav id="tocNav" data-astro-cid-ykvenys5></nav></aside><div class="layout-main" data-astro-cid-ykvenys5><div class="container" data-astro-cid-ykvenys5><header data-astro-cid-ykvenys5><div class="title-area" data-astro-cid-ykvenys5><a href="/exec/tutorials/" style="color:var(--fg-muted);text-decoration:none;font-size:0.85rem;" data-astro-cid-ykvenys5>← Back to index</a><h1 data-astro-cid-ykvenys5>19 · when_all — Waiting for Multiple Senders in Parallel</h1></div><button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" data-astro-cid-ykvenys5>🌙</button></header><details class="toc-mobile" id="tocMobile" data-astro-cid-ykvenys5><summary data-astro-cid-ykvenys5>On this page</summary><nav id="tocNavMobile" data-astro-cid-ykvenys5></nav></details><article class="article-content" data-astro-cid-ykvenys5>
+<h2 id="why-do-we-need-when_all"><a aria-hidden="true" tabindex="-1" href="#why-do-we-need-when_all"><span class="icon icon-link"></span></a>Why Do We Need when_all?</h2>
 <p>Imagine a page that needs to query a database, call an external API, and read a local cache — three independent operations that could all run concurrently. If you called <code>sync_wait</code> three times sequentially, the total time would be the sum of all three — wasted time.</p>
 <p><code>when_all</code> solves this: launch multiple senders at once, wait for all results to arrive, then bundle them into a tuple for the downstream.</p>
-<h2 id="basic-usage">Basic Usage</h2>
+<h2 id="basic-usage"><a aria-hidden="true" tabindex="-1" href="#basic-usage"><span class="icon icon-link"></span></a>Basic Usage</h2>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">namespace</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> std</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">execution</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  inline</span><span style="color:#D73A49;--shiki-dark:#F97583"> constexpr</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> when_all_t</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> when_all{};</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span></code></pre></div>
@@ -28,7 +28,7 @@
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">  when_all</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">just</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">42</span><span style="color:#24292E;--shiki-dark:#E1E4E8">), </span><span style="color:#6F42C1;--shiki-dark:#B392F0">just</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">3.14</span><span style="color:#24292E;--shiki-dark:#E1E4E8">), </span><span style="color:#6F42C1;--shiki-dark:#B392F0">just</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"hello"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">))</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">).</span><span style="color:#6F42C1;--shiki-dark:#B392F0">value</span><span style="color:#24292E;--shiki-dark:#E1E4E8">();</span></span></code></pre></div>
 <p>The code above creates three senders via <code>just</code>. <code>when_all</code> launches them concurrently, waits for all three to finish, then bundles <code>42</code>, <code>3.14</code>, and <code>"hello"</code> into a tuple for <code>sync_wait</code>.</p>
-<h2 id="real-world-example-parallel-image-processing">Real-World Example: Parallel Image Processing</h2>
+<h2 id="real-world-example-parallel-image-processing"><a aria-hidden="true" tabindex="-1" href="#real-world-example-parallel-image-processing"><span class="icon icon-link"></span></a>Real-World Example: Parallel Image Processing</h2>
 <p>From <code>examples/server_theme/split_bulk.cpp</code> — running three edge detection algorithms on the same image in parallel:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">schedule</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(io_sched)</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  |</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> then</span><span style="color:#24292E;--shiki-dark:#E1E4E8">([] { </span><span style="color:#D73A49;--shiki-dark:#F97583">return</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> load_image</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"photo.jpg"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">); })</span></span>
@@ -46,7 +46,7 @@
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">      return</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> save_result</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(result);</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    });</span></span></code></pre></div>
 <p>The code above runs three detection algorithms on the same image, each on a separate CPU thread. <code>when_all</code> waits for all three results before merging. A sequential run would take 3x the time — <code>when_all</code> compresses it to roughly the time of the slowest algorithm.</p>
-<h2 id="error-propagation">Error Propagation</h2>
+<h2 id="error-propagation"><a aria-hidden="true" tabindex="-1" href="#error-propagation"><span class="icon icon-link"></span></a>Error Propagation</h2>
 <p><code>when_all</code>’s error rule: <strong>if any child sender fails, the entire when_all fails</strong>.</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">sync_wait</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">  when_all</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span></span>
@@ -56,7 +56,7 @@
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">);</span></span>
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Result: set_error triggers immediately; unstarted children are never started</span></span>
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// The entire when_all emits set_error</span></span></code></pre></div>
-<h2 id="cancellation-propagation">Cancellation Propagation</h2>
+<h2 id="cancellation-propagation"><a aria-hidden="true" tabindex="-1" href="#cancellation-propagation"><span class="icon icon-link"></span></a>Cancellation Propagation</h2>
 <p>Likewise, if any child sender is cancelled:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">sync_wait</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">  when_all</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span></span>
@@ -65,7 +65,7 @@
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  )</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">);</span></span>
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Result: set_stopped()</span></span></code></pre></div>
-<h2 id="when_all_with_variant--when_all-for-heterogeneous-results"><code>when_all_with_variant</code> —— when_all for Heterogeneous Results</h2>
+<h2 id="when_all_with_variant--when_all-for-heterogeneous-results"><a aria-hidden="true" tabindex="-1" href="#when_all_with_variant--when_all-for-heterogeneous-results"><span class="icon icon-link"></span></a><code>when_all_with_variant</code> —— when_all for Heterogeneous Results</h2>
 <p>When child senders have different value types, <code>when_all_with_variant</code> packs the results into a <code>variant</code>:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// when_all requires all child senders' value signatures to be consistent</span></span>
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// when_all_with_variant packs results into variant&#x3C;tuple&#x3C;Ts...>, tuple&#x3C;Us...>></span></span>
@@ -74,7 +74,7 @@
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  decltype</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">when_all_with_variant</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">just</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">42</span><span style="color:#24292E;--shiki-dark:#E1E4E8">), </span><span style="color:#6F42C1;--shiki-dark:#B392F0">just</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">3.14</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)))</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">></span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// value type: variant&#x3C;tuple&#x3C;int>, tuple&#x3C;double>></span></span></code></pre></div>
-<h2 id="composing-with-then">Composing with <code>then</code></h2>
+<h2 id="composing-with-then"><a aria-hidden="true" tabindex="-1" href="#composing-with-then"><span class="icon icon-link"></span></a>Composing with <code>then</code></h2>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">sync_wait</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">  when_all</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">      schedule</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(pool.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">get_scheduler</span><span style="color:#24292E;--shiki-dark:#E1E4E8">()) </span><span style="color:#D73A49;--shiki-dark:#F97583">|</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> then</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(work1),</span></span>
@@ -86,20 +86,20 @@
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    })</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">);</span></span></code></pre></div>
 <p>The code above runs three jobs concurrently, then merges the results via <code>then</code>.</p>
-<h2 id="completion-signatures-of-when_all">Completion Signatures of <code>when_all</code></h2>
+<h2 id="completion-signatures-of-when_all"><a aria-hidden="true" tabindex="-1" href="#completion-signatures-of-when_all"><span class="icon icon-link"></span></a>Completion Signatures of <code>when_all</code></h2>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">when_all</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  sender</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;</span><span style="color:#005CC5;--shiki-dark:#79B8FF">set_value_t</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#D73A49;--shiki-dark:#F97583">int</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span><span style="color:#D73A49;--shiki-dark:#F97583">></span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span><span style="color:#6A737D;--shiki-dark:#6A737D">         // value: tuple&#x3C;int></span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  sender</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;</span><span style="color:#005CC5;--shiki-dark:#79B8FF">set_value_t</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#D73A49;--shiki-dark:#F97583">double</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#D73A49;--shiki-dark:#F97583">char</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span><span style="color:#D73A49;--shiki-dark:#F97583">></span><span style="color:#6A737D;--shiki-dark:#6A737D"> // value: tuple&#x3C;double, char></span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Result value signature: set_value_t(int, double, char)</span></span>
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// i.e., flattens all child senders' value types into one big tuple</span></span></code></pre></div>
-<h2 id="key-points">Key Points</h2>
+<h2 id="key-points"><a aria-hidden="true" tabindex="-1" href="#key-points"><span class="icon icon-link"></span></a>Key Points</h2>
 <ol>
 <li><strong>All child senders launch concurrently</strong> — no deterministic execution order</li>
 <li><strong>Short-circuit logic</strong>: any child failing/cancelling triggers an immediate short-circuit</li>
 <li><strong>No shared scheduler required</strong>: child senders can run on different schedulers</li>
 <li><strong>Resource management</strong>: <code>when_all</code>’s operation state holds all child sender operation states</li>
-</ol></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/18b-schedule-from/" data-astro-cid-ykvenys5>← 18b · schedule_from and Scheduler Transition Internals</a><a href="/exec/tutorials/20-bulk/" data-astro-cid-ykvenys5>20 · bulk — Data Parallel Operations →</a></nav></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
+</ol></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/18b-schedule-from/" data-astro-cid-ykvenys5>← 18b · schedule_from and Scheduler Transition Internals</a><a href="/exec/tutorials/20-bulk/" data-astro-cid-ykvenys5>20 · bulk — Data Parallel Operations →</a></nav></div></div></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
       (function() {
         const STORAGE_KEY = "exectutorial-theme";
 
@@ -132,5 +132,55 @@
           try { localStorage.setItem(STORAGE_KEY, next); } catch(e) {}
           setTheme(next);
         });
+      })();
+    </script><script>
+      (function() {
+        function buildToc(containerId, navId) {
+          var container = document.getElementById(containerId);
+          var nav = document.getElementById(navId);
+          if (!nav) return;
+          var headings = document.querySelectorAll(".article-content h2, .article-content h3");
+          if (headings.length === 0) { if (container) container.style.display = "none"; return; }
+
+          var ul = document.createElement("ul");
+          headings.forEach(function(h) {
+            if (!h.id) return;
+            var li = document.createElement("li");
+            var a = document.createElement("a");
+            a.href = "#" + h.id;
+            a.textContent = h.textContent.replace(/¶$/, "").trim();
+            a.className = "toc-" + h.tagName.toLowerCase();
+            li.appendChild(a);
+            ul.appendChild(li);
+          });
+          nav.appendChild(ul);
+        }
+
+        buildToc("tocSidebar", "tocNav");
+        buildToc(null, "tocNavMobile");
+
+        // active heading highlight
+        var tocLinks = document.querySelectorAll("#tocNav a, #tocNavMobile a");
+        if (tocLinks.length > 0) {
+          var headings = document.querySelectorAll(".article-content h2, .article-content h3");
+          function onScroll() {
+            var scrollY = window.scrollY + 80;
+            var active = null;
+            headings.forEach(function(h) {
+              if (h.offsetTop <= scrollY) active = h;
+            });
+            tocLinks.forEach(function(link) { link.classList.remove("active"); });
+            if (active) {
+              var id = active.id;
+              tocLinks.forEach(function(link) {
+                if (link.getAttribute("href") === "#" + id) {
+                  link.classList.add("active");
+                }
+              });
+            }
+          }
+          window.addEventListener("scroll", onScroll, { passive: true });
+          onScroll();
+        }
       })();
     </script></body></html>

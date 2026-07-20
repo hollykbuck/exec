@@ -5,11 +5,11 @@
         if(!s&&matchMedia("(prefers-color-scheme:light)").matches)theme="light";
         document.documentElement.setAttribute("data-theme",theme);
       })();
-    </script><link rel="stylesheet" href="/exec/_astro/01-why-stdexec.hXKgsPrw.css"></head><body data-astro-cid-ykvenys5><div class="container" data-astro-cid-ykvenys5><header data-astro-cid-ykvenys5><div class="title-area" data-astro-cid-ykvenys5><a href="/exec/tutorials/" style="color:var(--fg-muted);text-decoration:none;font-size:0.85rem;" data-astro-cid-ykvenys5>← Back to index</a><h1 data-astro-cid-ykvenys5>26b · apply_sender — The Domain Hook Consumers Use</h1></div><button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" data-astro-cid-ykvenys5>🌙</button></header><article class="article-content" data-astro-cid-ykvenys5><blockquote>
+    </script><link rel="stylesheet" href="/exec/_astro/01-why-stdexec.YzjJ_D8W.css"></head><body data-astro-cid-ykvenys5><div class="layout-wrap" data-astro-cid-ykvenys5><aside class="toc-sidebar" id="tocSidebar" data-astro-cid-ykvenys5><div class="toc-label" data-astro-cid-ykvenys5>On this page</div><nav id="tocNav" data-astro-cid-ykvenys5></nav></aside><div class="layout-main" data-astro-cid-ykvenys5><div class="container" data-astro-cid-ykvenys5><header data-astro-cid-ykvenys5><div class="title-area" data-astro-cid-ykvenys5><a href="/exec/tutorials/" style="color:var(--fg-muted);text-decoration:none;font-size:0.85rem;" data-astro-cid-ykvenys5>← Back to index</a><h1 data-astro-cid-ykvenys5>26b · apply_sender — The Domain Hook Consumers Use</h1></div><button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" data-astro-cid-ykvenys5>🌙</button></header><details class="toc-mobile" id="tocMobile" data-astro-cid-ykvenys5><summary data-astro-cid-ykvenys5>On this page</summary><nav id="tocNavMobile" data-astro-cid-ykvenys5></nav></details><article class="article-content" data-astro-cid-ykvenys5><blockquote>
 <p><strong>Standard Section</strong>: <code>[exec.snd.apply]</code> <br>
 <strong>Draft Reference</strong>: <code>exec.tex</code> lines 2870–2994</p>
 </blockquote>
-<h2 id="the-other-half">The Other Half</h2>
+<h2 id="the-other-half"><a aria-hidden="true" tabindex="-1" href="#the-other-half"><span class="icon icon-link"></span></a>The Other Half</h2>
 <p>Chapter 26 explained <code>transform_sender</code> — the domain hook called by sender algorithms. But there is a second hook: <code>apply_sender</code>, called by <strong>consumers</strong>.</p>
 <p>The standard defines it as:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">template</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> &#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Domain</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Tag</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#D73A49;--shiki-dark:#F97583">sender</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Sndr</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#24292E;--shiki-dark:#E1E4E8">... </span><span style="color:#6F42C1;--shiki-dark:#B392F0">Args</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
@@ -19,7 +19,7 @@
 <li><code>dom.apply_sender(Tag(), sndr, args...)</code> if that expression is well-formed</li>
 <li>Otherwise, <code>default_domain().apply_sender(Tag(), sndr, args...)</code></li>
 </ol>
-<h2 id="where-apply_sender-is-called">Where apply_sender is Called</h2>
+<h2 id="where-apply_sender-is-called"><a aria-hidden="true" tabindex="-1" href="#where-apply_sender-is-called"><span class="icon icon-link"></span></a>Where apply_sender is Called</h2>
 <p>Consumers call <code>apply_sender</code> to give the domain a final chance to transform the sender before connecting:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// sync_wait (simplified):</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">template</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> &#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">sender</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Sndr</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
@@ -37,7 +37,7 @@
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">  // ... connect and start ...</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span></code></pre></div>
 <p>This gives the domain a chance to wrap or replace the sender after all algorithms have been applied but before the final connect.</p>
-<h2 id="apply_sender-vs-transform_sender">apply_sender vs transform_sender</h2>
+<h2 id="apply_sender-vs-transform_sender"><a aria-hidden="true" tabindex="-1" href="#apply_sender-vs-transform_sender"><span class="icon icon-link"></span></a>apply_sender vs transform_sender</h2>
 <div class="table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch">
 
 
@@ -69,7 +69,7 @@
 
 
 <table><thead><tr><th>Aspect</th><th><code>transform_sender</code></th><th><code>apply_sender</code></th></tr></thead><tbody><tr><td>Called by</td><td>Sender algorithms (when constructed)</td><td>Sender consumers (before connect)</td></tr><tr><td>Timing</td><td>During pipeline construction</td><td>At the point of consumption</td></tr><tr><td>Purpose</td><td>Replace algorithm implementation</td><td>Replace the entire sender tree</td></tr><tr><td>Typical Tags</td><td><code>then_t</code>, <code>bulk_t</code>, <code>when_all_t</code></td><td><code>sync_wait_t</code>, <code>spawn_t</code></td></tr></tbody></table></div>
-<h2 id="concrete-example">Concrete Example</h2>
+<h2 id="concrete-example"><a aria-hidden="true" tabindex="-1" href="#concrete-example"><span class="icon icon-link"></span></a>Concrete Example</h2>
 <p>Suppose you want a custom domain that wraps every sender consumed by <code>sync_wait</code> with a timeout:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">struct</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> timeout_domain</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> : stdexec::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">default_domain</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  template</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> &#x3C;</span><span style="color:#6F42C1;--shiki-dark:#B392F0">stdexec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#D73A49;--shiki-dark:#F97583">sender</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Sndr</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#24292E;--shiki-dark:#E1E4E8">... </span><span style="color:#6F42C1;--shiki-dark:#B392F0">Args</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
@@ -86,15 +86,15 @@
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">);</span></span>
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// apply_sender wraps my_work() with a 5-second timeout</span></span></code></pre></div>
 <p>Every call to <code>sync_wait</code> with this domain in the environment automatically applies the timeout.</p>
-<h2 id="why-two-hooks">Why Two Hooks?</h2>
+<h2 id="why-two-hooks"><a aria-hidden="true" tabindex="-1" href="#why-two-hooks"><span class="icon icon-link"></span></a>Why Two Hooks?</h2>
 <p>The two-phase design separates concerns:</p>
 <ul>
 <li><strong><code>transform_sender</code></strong> — per-algorithm customization (replace <code>bulk</code> with GPU kernel)</li>
 <li><strong><code>apply_sender</code></strong> — per-consumer customization (wrap in timeout, add logging, inject allocator)</li>
 </ul>
 <p>A domain that only needs to swap algorithm implementations never touches <code>apply_sender</code>. A domain that needs to intercept consumption never touches <code>transform_sender</code>.</p>
-<h2 id="default-domain-behavior">Default Domain Behavior</h2>
-<p><code>default_domain</code>’s <code>apply_sender</code> simply returns the sender unchanged. The indirection through <code>apply_sender</code> compiles to nothing — zero runtime overhead.</p></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/26-domain-mechanism/" data-astro-cid-ykvenys5>← 26 · Domain — Letting Schedulers Take Over Algorithm Implementation</a><a href="/exec/tutorials/27-tag-invoke-cpo/" data-astro-cid-ykvenys5>27 · tag_invoke — Zero-Overhead Extension Points →</a></nav></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
+<h2 id="default-domain-behavior"><a aria-hidden="true" tabindex="-1" href="#default-domain-behavior"><span class="icon icon-link"></span></a>Default Domain Behavior</h2>
+<p><code>default_domain</code>’s <code>apply_sender</code> simply returns the sender unchanged. The indirection through <code>apply_sender</code> compiles to nothing — zero runtime overhead.</p></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/26-domain-mechanism/" data-astro-cid-ykvenys5>← 26 · Domain — Letting Schedulers Take Over Algorithm Implementation</a><a href="/exec/tutorials/27-tag-invoke-cpo/" data-astro-cid-ykvenys5>27 · tag_invoke — Zero-Overhead Extension Points →</a></nav></div></div></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
       (function() {
         const STORAGE_KEY = "exectutorial-theme";
 
@@ -127,5 +127,55 @@
           try { localStorage.setItem(STORAGE_KEY, next); } catch(e) {}
           setTheme(next);
         });
+      })();
+    </script><script>
+      (function() {
+        function buildToc(containerId, navId) {
+          var container = document.getElementById(containerId);
+          var nav = document.getElementById(navId);
+          if (!nav) return;
+          var headings = document.querySelectorAll(".article-content h2, .article-content h3");
+          if (headings.length === 0) { if (container) container.style.display = "none"; return; }
+
+          var ul = document.createElement("ul");
+          headings.forEach(function(h) {
+            if (!h.id) return;
+            var li = document.createElement("li");
+            var a = document.createElement("a");
+            a.href = "#" + h.id;
+            a.textContent = h.textContent.replace(/¶$/, "").trim();
+            a.className = "toc-" + h.tagName.toLowerCase();
+            li.appendChild(a);
+            ul.appendChild(li);
+          });
+          nav.appendChild(ul);
+        }
+
+        buildToc("tocSidebar", "tocNav");
+        buildToc(null, "tocNavMobile");
+
+        // active heading highlight
+        var tocLinks = document.querySelectorAll("#tocNav a, #tocNavMobile a");
+        if (tocLinks.length > 0) {
+          var headings = document.querySelectorAll(".article-content h2, .article-content h3");
+          function onScroll() {
+            var scrollY = window.scrollY + 80;
+            var active = null;
+            headings.forEach(function(h) {
+              if (h.offsetTop <= scrollY) active = h;
+            });
+            tocLinks.forEach(function(link) { link.classList.remove("active"); });
+            if (active) {
+              var id = active.id;
+              tocLinks.forEach(function(link) {
+                if (link.getAttribute("href") === "#" + id) {
+                  link.classList.add("active");
+                }
+              });
+            }
+          }
+          window.addEventListener("scroll", onScroll, { passive: true });
+          onScroll();
+        }
       })();
     </script></body></html>

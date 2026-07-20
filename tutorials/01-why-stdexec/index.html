@@ -5,9 +5,9 @@
         if(!s&&matchMedia("(prefers-color-scheme:light)").matches)theme="light";
         document.documentElement.setAttribute("data-theme",theme);
       })();
-    </script><link rel="stylesheet" href="/exec/_astro/01-why-stdexec.hXKgsPrw.css"></head><body data-astro-cid-ykvenys5><div class="container" data-astro-cid-ykvenys5><header data-astro-cid-ykvenys5><div class="title-area" data-astro-cid-ykvenys5><a href="/exec/tutorials/" style="color:var(--fg-muted);text-decoration:none;font-size:0.85rem;" data-astro-cid-ykvenys5>← Back to index</a><h1 data-astro-cid-ykvenys5>01 · Why std::execution?</h1></div><button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" data-astro-cid-ykvenys5>🌙</button></header><article class="article-content" data-astro-cid-ykvenys5>
+    </script><link rel="stylesheet" href="/exec/_astro/01-why-stdexec.YzjJ_D8W.css"></head><body data-astro-cid-ykvenys5><div class="layout-wrap" data-astro-cid-ykvenys5><aside class="toc-sidebar" id="tocSidebar" data-astro-cid-ykvenys5><div class="toc-label" data-astro-cid-ykvenys5>On this page</div><nav id="tocNav" data-astro-cid-ykvenys5></nav></aside><div class="layout-main" data-astro-cid-ykvenys5><div class="container" data-astro-cid-ykvenys5><header data-astro-cid-ykvenys5><div class="title-area" data-astro-cid-ykvenys5><a href="/exec/tutorials/" style="color:var(--fg-muted);text-decoration:none;font-size:0.85rem;" data-astro-cid-ykvenys5>← Back to index</a><h1 data-astro-cid-ykvenys5>01 · Why std::execution?</h1></div><button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" data-astro-cid-ykvenys5>🌙</button></header><details class="toc-mobile" id="tocMobile" data-astro-cid-ykvenys5><summary data-astro-cid-ykvenys5>On this page</summary><nav id="tocNavMobile" data-astro-cid-ykvenys5></nav></details><article class="article-content" data-astro-cid-ykvenys5>
 <p>Say you’re writing a C++ network service. You need to read a request asynchronously, process the data, then send back a response. How would you do it?</p>
-<h2 id="callbacks">Callbacks</h2>
+<h2 id="callbacks"><a aria-hidden="true" tabindex="-1" href="#callbacks"><span class="icon icon-link"></span></a>Callbacks</h2>
 <p>The most straightforward approach is callbacks, a pattern pretty common while you are using Qt or libuv:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">void</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> fetch_data</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">std</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">function</span><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">void</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">std</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">string</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)> </span><span style="color:#E36209;--shiki-dark:#FFAB70">on_success</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">                std</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">function</span><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">void</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">std</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">error_code</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)> </span><span style="color:#E36209;--shiki-dark:#FFAB70">on_error</span><span style="color:#24292E;--shiki-dark:#E1E4E8">);</span></span></code></pre></div>
@@ -25,22 +25,22 @@
 <p>This code has poor readability with too many levels of nesting. A more serious problem than visual indentation is that these callbacks are often semantically ambiguous — it’s hard to tell whether they are error handling routines or happy path business logic.</p>
 <p>Due to the lack of a unified interface specification and lifecycle convention, a frustrating problem is that you need to bridge between different async interfaces (e.g., async gRPC, Qt, libuv, etc.) and carefully ensure there are no dangling callback objects.</p>
 <p>callback is bad, what about std::future?</p>
-<h2 id="stdfuture">std::future</h2>
+<h2 id="stdfuture"><a aria-hidden="true" tabindex="-1" href="#stdfuture"><span class="icon icon-link"></span></a>std::future</h2>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">std</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::future</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;int></span><span style="color:#24292E;--shiki-dark:#E1E4E8"> f </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> std</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">async</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">std</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">launch</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::async, [] { </span><span style="color:#D73A49;--shiki-dark:#F97583">return</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 42</span><span style="color:#24292E;--shiki-dark:#E1E4E8">; });</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">int</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> result </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> f.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">get</span><span style="color:#24292E;--shiki-dark:#E1E4E8">();</span><span style="color:#6A737D;--shiki-dark:#6A737D"> // blocks</span></span></code></pre></div>
 <p>std::future is a loosely coupled asynchronous result delivery mechanism. It uses a push design where the producer is unaware of the consumer. This brings disadvantages such as poor back pressure control. To support consumption at any time, the future/promise design relies on heap allocation. Since its design goal only covers result delivery, it completely lacks the cancellation and structured concurrency features that are crucial in asynchronous programming.</p>
 <p>Can C++20 coroutines enough for C++ dev communities to develope async</p>
-<h2 id="c20-coroutines">C++20 Coroutines</h2>
+<h2 id="c20-coroutines"><a aria-hidden="true" tabindex="-1" href="#c20-coroutines"><span class="icon icon-link"></span></a>C++20 Coroutines</h2>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">generator</span><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">int</span><span style="color:#24292E;--shiki-dark:#E1E4E8">> </span><span style="color:#6F42C1;--shiki-dark:#B392F0">gen</span><span style="color:#24292E;--shiki-dark:#E1E4E8">() {</span><span style="color:#6A737D;--shiki-dark:#6A737D"> /* ... */</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> }</span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">task</span><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">int</span><span style="color:#24292E;--shiki-dark:#E1E4E8">> </span><span style="color:#6F42C1;--shiki-dark:#B392F0">async_fn</span><span style="color:#24292E;--shiki-dark:#E1E4E8">() { </span><span style="color:#D73A49;--shiki-dark:#F97583">co_return</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 42</span><span style="color:#24292E;--shiki-dark:#E1E4E8">; }</span></span></code></pre></div>
 <p>Coroutines are just a language mechanism — they define how <code>co_await</code>, <code>co_yield</code>, <code>co_return</code> are translated, but they don’t provide a <strong>standard asynchronous runtime</strong>.</p>
 <p>This means every library (ASIO, libunifex, cppcoro) defines its own <code>task</code> type, and they’re incompatible. Pick one library and you’re locked into its ecosystem. What’s more, coroutines don’t address execution context scheduling — “which thread does this code run on?” Coroutines can’t answer that.</p>
 <p>What’s worse, in my opinion C++ coroutines further break the memory safety of C++. C++ already has a poor reputation for memory safety compared to newer languages, but C++20 coroutines make this problem even more serious. You may have heard about lifetime issues with C++20 coroutine lambdas. For example, misusing C++ coroutine lambda capture can silently cause use-after-free. <sup><a href="#user-content-fn-1" id="user-content-fnref-1" data-footnote-ref="" aria-describedby="footnote-label">1</a></sup></p>
 <p>Coroutine promises are easily misimplemented or misused, leading to use-after-free. <sup><a href="#user-content-fn-2" id="user-content-fnref-2" data-footnote-ref="" aria-describedby="footnote-label">2</a></sup> And these problems are difficult to detect even with sanitizers and static analysis.</p>
-<h2 id="the-c26-stdexecution-solution">The C++26 std::execution Solution</h2>
+<h2 id="the-c26-stdexecution-solution"><a aria-hidden="true" tabindex="-1" href="#the-c26-stdexecution-solution"><span class="icon icon-link"></span></a>The C++26 std::execution Solution</h2>
 <p>So is there a solution that lets you compose async operations, doesn’t block threads, supports cancellation, and provides standard execution context switching?</p>
 <p>That’s exactly what <a href="https://wg21.link/P2300">P2300</a> (<code>std::execution</code>) is for. It introduces a <strong>standardized asynchronous operation model</strong> built around the <strong>Sender / Receiver model</strong>.</p>
-<h3 id="the-big-picture">The Big Picture</h3>
+<h3 id="the-big-picture"><a aria-hidden="true" tabindex="-1" href="#the-big-picture"><span class="icon icon-link"></span></a>The Big Picture</h3>
 <p>Instead of immeditately executing, <code>std::execution</code> builds a <em>description</em> of the work:</p>
 <pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="plaintext"><code><span class="line"><span>Scheduler (execution resource) → Sender (description of async work) → Receiver (result handling)</span></span></code></pre>
 <ul>
@@ -49,7 +49,7 @@
 <li><strong>Scheduler</strong>: an abstract execution resource (thread pool, GPU, io_uring…)</li>
 <li><strong>Operation State</strong>: the actual state object created after connecting a sender + receiver</li>
 </ul>
-<h3 id="why-it-matters">Why it matters</h3>
+<h3 id="why-it-matters"><a aria-hidden="true" tabindex="-1" href="#why-it-matters"><span class="icon icon-link"></span></a>Why it matters</h3>
 <p>Unlike the loose relationship of future/promise, in the sender/receiver model the producer knows at compile time how it will be consumed. This is important for lifecycle management.</p>
 <ol>
 <li>Lazy Evaluation &#x26; Composability — Like C++20 Ranges, you build pipelines using <code>operator|</code>. No work is done, and no threads are spawned until you explicitly call <code>start()</code>.</li>
@@ -58,7 +58,7 @@
 <li>Customizability — custom behavior via <code>tag_invoke</code> and <code>domain</code> mechanisms</li>
 <li>Cancellation Support — unified stop token mechanism</li>
 </ol>
-<h3 id="comparison-with-traditional-approaches">Comparison with Traditional Approaches</h3>
+<h3 id="comparison-with-traditional-approaches"><a aria-hidden="true" tabindex="-1" href="#comparison-with-traditional-approaches"><span class="icon icon-link"></span></a>Comparison with Traditional Approaches</h3>
 <div class="table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch">
 
 
@@ -121,7 +121,7 @@
 
 
 <table><thead><tr><th>Feature</th><th>Callback</th><th><code>std::future</code></th><th>Coroutines (no std runtime)</th><th><code>std::execution</code></th></tr></thead><tbody><tr><td>Composable</td><td>✗</td><td>✗</td><td>Partial (library-dependent)</td><td>✓</td></tr><tr><td>Lazy Evaluation</td><td>✗</td><td>✗</td><td>✓</td><td>✓</td></tr><tr><td>Thread Safety</td><td>Implementation-dependent</td><td>Partial</td><td>Implementation-dependent</td><td>✓</td></tr><tr><td>Cancellation</td><td>✗</td><td>✗</td><td>Partial</td><td>✓</td></tr><tr><td>Structured Concurrency</td><td>✗</td><td>✗</td><td>Partial</td><td>✓</td></tr><tr><td>Execution Context Switching</td><td>Manual</td><td>✗</td><td>Library-dependent</td><td>✓</td></tr><tr><td>Type Safety</td><td>Runtime</td><td>Partial</td><td>Compile-time</td><td>Compile-time</td></tr></tbody></table></div>
-<h2 id="the-life-of-a-pipeline">The Life of a Pipeline</h2>
+<h2 id="the-life-of-a-pipeline"><a aria-hidden="true" tabindex="-1" href="#the-life-of-a-pipeline"><span class="icon icon-link"></span></a>The Life of a Pipeline</h2>
 <pre class="mermaid">graph TD
   A["scheduler"] --> B["schedule()"]
   B --> C["sender"]
@@ -134,7 +134,7 @@
   I --> J["set_value / set_error / set_stopped"]
   J --> K["receiver's three handlers"]</pre>
 <p>This diagram is the foundation for everything that follows. Each subsequent chapter will unpack one piece of it.</p>
-<section data-footnotes="" class="footnotes"><h2 class="sr-only" id="footnote-label">Footnotes</h2>
+<section data-footnotes="" class="footnotes"><h2 class="sr-only" id="footnote-label"><a aria-hidden="true" tabindex="-1" href="#footnote-label"><span class="icon icon-link"></span></a>Footnotes</h2>
 <ol>
 <li id="user-content-fn-1">
 <p><a href="https://news.ycombinator.com/item?id=33084431">https://news.ycombinator.com/item?id=33084431</a> <a href="#user-content-fnref-1" data-footnote-backref="" aria-label="Back to reference 1" class="data-footnote-backref">↩</a></p>
@@ -143,7 +143,7 @@
 <p><a href="https://devblogs.microsoft.com/oldnewthing/20191213-00/?p=103210">https://devblogs.microsoft.com/oldnewthing/20191213-00/?p=103210</a> <a href="#user-content-fnref-2" data-footnote-backref="" aria-label="Back to reference 2" class="data-footnote-backref">↩</a></p>
 </li>
 </ol>
-</section></article><nav class="nav-links" data-astro-cid-ykvenys5><span class="disabled" data-astro-cid-ykvenys5>← Previous</span><a href="/exec/tutorials/02-core-abstractions/" data-astro-cid-ykvenys5>02 · Three Core Abstractions — receiver, sender, scheduler, operation_state Overview →</a></nav></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
+</section></article><nav class="nav-links" data-astro-cid-ykvenys5><span class="disabled" data-astro-cid-ykvenys5>← Previous</span><a href="/exec/tutorials/02-core-abstractions/" data-astro-cid-ykvenys5>02 · Three Core Abstractions — receiver, sender, scheduler, operation_state Overview →</a></nav></div></div></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
       (function() {
         const STORAGE_KEY = "exectutorial-theme";
 
@@ -176,5 +176,55 @@
           try { localStorage.setItem(STORAGE_KEY, next); } catch(e) {}
           setTheme(next);
         });
+      })();
+    </script><script>
+      (function() {
+        function buildToc(containerId, navId) {
+          var container = document.getElementById(containerId);
+          var nav = document.getElementById(navId);
+          if (!nav) return;
+          var headings = document.querySelectorAll(".article-content h2, .article-content h3");
+          if (headings.length === 0) { if (container) container.style.display = "none"; return; }
+
+          var ul = document.createElement("ul");
+          headings.forEach(function(h) {
+            if (!h.id) return;
+            var li = document.createElement("li");
+            var a = document.createElement("a");
+            a.href = "#" + h.id;
+            a.textContent = h.textContent.replace(/¶$/, "").trim();
+            a.className = "toc-" + h.tagName.toLowerCase();
+            li.appendChild(a);
+            ul.appendChild(li);
+          });
+          nav.appendChild(ul);
+        }
+
+        buildToc("tocSidebar", "tocNav");
+        buildToc(null, "tocNavMobile");
+
+        // active heading highlight
+        var tocLinks = document.querySelectorAll("#tocNav a, #tocNavMobile a");
+        if (tocLinks.length > 0) {
+          var headings = document.querySelectorAll(".article-content h2, .article-content h3");
+          function onScroll() {
+            var scrollY = window.scrollY + 80;
+            var active = null;
+            headings.forEach(function(h) {
+              if (h.offsetTop <= scrollY) active = h;
+            });
+            tocLinks.forEach(function(link) { link.classList.remove("active"); });
+            if (active) {
+              var id = active.id;
+              tocLinks.forEach(function(link) {
+                if (link.getAttribute("href") === "#" + id) {
+                  link.classList.add("active");
+                }
+              });
+            }
+          }
+          window.addEventListener("scroll", onScroll, { passive: true });
+          onScroll();
+        }
       })();
     </script></body></html>

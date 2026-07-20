@@ -5,8 +5,8 @@
         if(!s&&matchMedia("(prefers-color-scheme:light)").matches)theme="light";
         document.documentElement.setAttribute("data-theme",theme);
       })();
-    </script><link rel="stylesheet" href="/exec/_astro/01-why-stdexec.hXKgsPrw.css"></head><body data-astro-cid-ykvenys5><div class="container" data-astro-cid-ykvenys5><header data-astro-cid-ykvenys5><div class="title-area" data-astro-cid-ykvenys5><a href="/exec/tutorials/" style="color:var(--fg-muted);text-decoration:none;font-size:0.85rem;" data-astro-cid-ykvenys5>← Back to index</a><h1 data-astro-cid-ykvenys5>17 · let_value / let_error / let_stopped — Dynamically Generating New Senders Based on Results</h1></div><button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" data-astro-cid-ykvenys5>🌙</button></header><article class="article-content" data-astro-cid-ykvenys5>
-<h2 id="the-limits-of-then">The Limits of then</h2>
+    </script><link rel="stylesheet" href="/exec/_astro/01-why-stdexec.YzjJ_D8W.css"></head><body data-astro-cid-ykvenys5><div class="layout-wrap" data-astro-cid-ykvenys5><aside class="toc-sidebar" id="tocSidebar" data-astro-cid-ykvenys5><div class="toc-label" data-astro-cid-ykvenys5>On this page</div><nav id="tocNav" data-astro-cid-ykvenys5></nav></aside><div class="layout-main" data-astro-cid-ykvenys5><div class="container" data-astro-cid-ykvenys5><header data-astro-cid-ykvenys5><div class="title-area" data-astro-cid-ykvenys5><a href="/exec/tutorials/" style="color:var(--fg-muted);text-decoration:none;font-size:0.85rem;" data-astro-cid-ykvenys5>← Back to index</a><h1 data-astro-cid-ykvenys5>17 · let_value / let_error / let_stopped — Dynamically Generating New Senders Based on Results</h1></div><button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" data-astro-cid-ykvenys5>🌙</button></header><details class="toc-mobile" id="tocMobile" data-astro-cid-ykvenys5><summary data-astro-cid-ykvenys5>On this page</summary><nav id="tocNavMobile" data-astro-cid-ykvenys5></nav></details><article class="article-content" data-astro-cid-ykvenys5>
+<h2 id="the-limits-of-then"><a aria-hidden="true" tabindex="-1" href="#the-limits-of-then"><span class="icon icon-link"></span></a>The Limits of then</h2>
 <p>In the previous chapter we learned about <code>then</code> — it transforms a value on success and passes it along. But <code>then</code> has a fundamental limitation:</p>
 <p><strong><code>then</code>’s callback returns a plain value, not a sender.</strong></p>
 <p>This means the most you can do inside the callback is “swap the value.” You can’t say “based on this value, I want to take a different async pipeline.” For example:</p>
@@ -19,7 +19,7 @@
 <p><code>let_value</code> solves this. Its callback returns not a plain value, but <strong>a sender</strong> — so you can dynamically choose what to do next based on the runtime input.</p>
 <p><code>then</code> is like a fixed conveyor belt — no matter the input, the output type is determined at compile time.
 <code>let_value</code> is like a smart sorting system — it can decide which conveyor belt comes next, based on the result.</p>
-<h2 id="callback-signatures">Callback Signatures</h2>
+<h2 id="callback-signatures"><a aria-hidden="true" tabindex="-1" href="#callback-signatures"><span class="icon icon-link"></span></a>Callback Signatures</h2>
 <div class="table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch">
 
 
@@ -47,7 +47,7 @@
 
 <table><thead><tr><th>Adaptor</th><th>Trigger Condition</th><th>Callback Signature</th></tr></thead><tbody><tr><td><code>let_value(sndr, f)</code></td><td><code>set_value(args...)</code></td><td><code>f(Args...) → sender&#x3C;U></code></td></tr><tr><td><code>let_error(sndr, f)</code></td><td><code>set_error(err)</code></td><td><code>f(Error) → sender&#x3C;U></code></td></tr><tr><td><code>let_stopped(sndr, f)</code></td><td><code>set_stopped()</code></td><td><code>f() → sender&#x3C;U></code></td></tr></tbody></table></div>
 <p>Note: the key difference from <code>then</code>/<code>upon_error</code>/<code>upon_stopped</code> is that the callback returns a <strong>sender</strong>, not a plain value.</p>
-<h2 id="let_value--branching-on-success"><code>let_value</code> —— Branching on Success</h2>
+<h2 id="let_value--branching-on-success"><a aria-hidden="true" tabindex="-1" href="#let_value--branching-on-success"><span class="icon icon-link"></span></a><code>let_value</code> —— Branching on Success</h2>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">sender </span><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> handle_request</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(http_request req) {</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  return</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> just</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(req)</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    |</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> let_value</span><span style="color:#24292E;--shiki-dark:#E1E4E8">([](</span><span style="color:#6F42C1;--shiki-dark:#B392F0">http_request</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x26;</span><span style="color:#E36209;--shiki-dark:#FFAB70"> req</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) -> </span><span style="color:#D73A49;--shiki-dark:#F97583">sender</span><span style="color:#D73A49;--shiki-dark:#F97583"> auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
@@ -61,7 +61,7 @@
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">      });</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span></code></pre></div>
 <p>The code above dynamically picks a pipeline based on the HTTP method: GET goes to <code>handle_get</code>, POST to <code>handle_post</code>, anything else returns an error immediately. Each branch returns a sender — it could be one that reads a file, queries a database, or just a plain <code>just</code>.</p>
-<h3 id="let_value-vs-then"><code>let_value</code> vs <code>then</code></h3>
+<h3 id="let_value-vs-then"><a aria-hidden="true" tabindex="-1" href="#let_value-vs-then"><span class="icon icon-link"></span></a><code>let_value</code> vs <code>then</code></h3>
 <p>The core distinction:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// then: callback returns a plain value (auto-wrapped as set_value)</span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">then</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(sndr, [](</span><span style="color:#D73A49;--shiki-dark:#F97583">int</span><span style="color:#E36209;--shiki-dark:#FFAB70"> x</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) -> </span><span style="color:#D73A49;--shiki-dark:#F97583">int</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> { </span><span style="color:#D73A49;--shiki-dark:#F97583">return</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> x </span><span style="color:#D73A49;--shiki-dark:#F97583">+</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">; })</span></span>
@@ -77,7 +77,7 @@
 <li><code>then(f)</code>: <code>f</code> returns <code>T</code>, which is implicitly wrapped as <code>just(f(args...))</code> and delivered via <code>set_value</code></li>
 <li><code>let_value(f)</code>: <code>f</code> returns <code>sender&#x3C;T></code>, and that sender’s <code>set_value(T)</code> is forwarded downstream</li>
 </ul>
-<h2 id="let_error--error-recovery"><code>let_error</code> —— Error Recovery</h2>
+<h2 id="let_error--error-recovery"><a aria-hidden="true" tabindex="-1" href="#let_error--error-recovery"><span class="icon icon-link"></span></a><code>let_error</code> —— Error Recovery</h2>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">sender </span><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> safe_divide</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#D73A49;--shiki-dark:#F97583">int</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> a, </span><span style="color:#D73A49;--shiki-dark:#F97583">int</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> b) {</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  return</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> just</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(a, b)</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    |</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> let_value</span><span style="color:#24292E;--shiki-dark:#E1E4E8">([](</span><span style="color:#D73A49;--shiki-dark:#F97583">int</span><span style="color:#E36209;--shiki-dark:#FFAB70"> a</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#D73A49;--shiki-dark:#F97583">int</span><span style="color:#E36209;--shiki-dark:#FFAB70"> b</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) -> </span><span style="color:#D73A49;--shiki-dark:#F97583">sender</span><span style="color:#D73A49;--shiki-dark:#F97583"> auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
@@ -92,14 +92,14 @@
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span></code></pre></div>
 <p>The code above first checks via <code>let_value</code> whether the divisor is zero — if so, returns <code>just_error</code>. Then <code>let_error</code> catches this error and returns a sender with a default value of 0.</p>
 <p>Note the difference between <code>let_error</code> and <code>upon_error</code>: <code>let_error</code>’s callback returns a <strong>sender</strong>, so you can launch new async operations here (e.g., write a log, retry a request), not just return a replacement value.</p>
-<h2 id="let_stopped--cleanup-on-cancellation"><code>let_stopped</code> —— Cleanup on Cancellation</h2>
+<h2 id="let_stopped--cleanup-on-cancellation"><a aria-hidden="true" tabindex="-1" href="#let_stopped--cleanup-on-cancellation"><span class="icon icon-link"></span></a><code>let_stopped</code> —— Cleanup on Cancellation</h2>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">sender </span><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> with_cleanup</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(sender </span><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> work) {</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  return</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> work</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    |</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> let_stopped</span><span style="color:#24292E;--shiki-dark:#E1E4E8">([] {</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">        return</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> just</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">);</span><span style="color:#6A737D;--shiki-dark:#6A737D">  // cleanup done, return sender</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">      });</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span></code></pre></div>
-<h2 id="server-theme-complete-example">Server Theme Complete Example</h2>
+<h2 id="server-theme-complete-example"><a aria-hidden="true" tabindex="-1" href="#server-theme-complete-example"><span class="icon icon-link"></span></a>Server Theme Complete Example</h2>
 <p>From <code>examples/server_theme/let_value.cpp</code> — request validation → processing → response:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">schedule</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(io_sched)</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  |</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> then</span><span style="color:#24292E;--shiki-dark:#E1E4E8">([] { </span><span style="color:#D73A49;--shiki-dark:#F97583">return</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> read_request</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(); })</span><span style="color:#6A737D;--shiki-dark:#6A737D">                       // Read request</span></span>
@@ -117,7 +117,7 @@
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">      return</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> send_error_response</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">499</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#032F62;--shiki-dark:#9ECBFF">"cancelled"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">);</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    });</span></span></code></pre></div>
 <p>The code above shows a complete HTTP server request flow: read request → validate → (fork: process if valid, error if not) → send response. Each segment dynamically decides the next sender via <code>let_value</code>.</p>
-<h2 id="signal-transformation-rules">Signal Transformation Rules</h2>
+<h2 id="signal-transformation-rules"><a aria-hidden="true" tabindex="-1" href="#signal-transformation-rules"><span class="icon icon-link"></span></a>Signal Transformation Rules</h2>
 <p><code>let_value</code> only intercepts <code>set_value</code>; <code>set_error</code> and <code>set_stopped</code> pass through:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">just_error</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(ptr)</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  |</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> let_value</span><span style="color:#24292E;--shiki-dark:#E1E4E8">([](</span><span style="color:#D73A49;--shiki-dark:#F97583">int</span><span style="color:#E36209;--shiki-dark:#FFAB70"> x</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) { </span><span style="color:#D73A49;--shiki-dark:#F97583">return</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> just</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(x </span><span style="color:#D73A49;--shiki-dark:#F97583">+</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">); });</span></span>
@@ -126,7 +126,7 @@
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">just_stopped</span><span style="color:#24292E;--shiki-dark:#E1E4E8">()</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  |</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> let_value</span><span style="color:#24292E;--shiki-dark:#E1E4E8">([](</span><span style="color:#D73A49;--shiki-dark:#F97583">int</span><span style="color:#E36209;--shiki-dark:#FFAB70"> x</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) { </span><span style="color:#D73A49;--shiki-dark:#F97583">return</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> just</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(x </span><span style="color:#D73A49;--shiki-dark:#F97583">+</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">); });</span></span>
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// set_stopped() passes through</span></span></code></pre></div>
-<h2 id="nested-async-operations">Nested Async Operations</h2>
+<h2 id="nested-async-operations"><a aria-hidden="true" tabindex="-1" href="#nested-async-operations"><span class="icon icon-link"></span></a>Nested Async Operations</h2>
 <p>The true power of <code>let_value</code> lies in <strong>nested async operations</strong> — you can launch an entirely new async pipeline inside the callback, and it gets seamlessly embedded into the outer pipeline:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">schedule</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(io_sched)</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  |</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> then</span><span style="color:#24292E;--shiki-dark:#E1E4E8">([] { </span><span style="color:#D73A49;--shiki-dark:#F97583">return</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> open_file</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"data.txt"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">); })</span></span>
@@ -140,9 +140,9 @@
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    });</span></span></code></pre></div>
 <p>In the code above, after <code>open_file</code> completes, <code>let_value</code>’s callback starts a new sub-pipeline (read file → switch to CPU pool → parse data). The result of this sub-pipeline (<code>parsed_data</code>) automatically flows into the outer <code>process(data)</code>.</p>
 <p>Internally, <code>let_value</code> creates new <code>connect</code> + <code>start</code> calls, flattening the nested sender into the outer pipeline.</p>
-<h2 id="limitations">Limitations</h2>
+<h2 id="limitations"><a aria-hidden="true" tabindex="-1" href="#limitations"><span class="icon icon-link"></span></a>Limitations</h2>
 <p>Each branch returned by <code>let_value</code> must satisfy the same <code>sender_to&#x3C;Receiver></code> constraint. If different branches return different sender types (e.g., one returns <code>sender&#x3C;set_value_t(int)></code>, another <code>sender&#x3C;set_value_t(double)></code>), the compiler will error. In that case, use <code>into_variant</code> from chapter 21 to unify the types.</p>
-<p>Also, <code>let_value</code> re-connects and re-starts on every invocation, which has some runtime overhead. For simple value transformations, <code>then</code> is lighter.</p></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/16-then-upon/" data-astro-cid-ykvenys5>← 16 · then / upon_error / upon_stopped — Handling the Three Completion Signals</a><a href="/exec/tutorials/18-starts-on-continues-on/" data-astro-cid-ykvenys5>18 · starts_on / continues_on / on — Switching Execution Contexts →</a></nav></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
+<p>Also, <code>let_value</code> re-connects and re-starts on every invocation, which has some runtime overhead. For simple value transformations, <code>then</code> is lighter.</p></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/16-then-upon/" data-astro-cid-ykvenys5>← 16 · then / upon_error / upon_stopped — Handling the Three Completion Signals</a><a href="/exec/tutorials/18-starts-on-continues-on/" data-astro-cid-ykvenys5>18 · starts_on / continues_on / on — Switching Execution Contexts →</a></nav></div></div></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
       (function() {
         const STORAGE_KEY = "exectutorial-theme";
 
@@ -175,5 +175,55 @@
           try { localStorage.setItem(STORAGE_KEY, next); } catch(e) {}
           setTheme(next);
         });
+      })();
+    </script><script>
+      (function() {
+        function buildToc(containerId, navId) {
+          var container = document.getElementById(containerId);
+          var nav = document.getElementById(navId);
+          if (!nav) return;
+          var headings = document.querySelectorAll(".article-content h2, .article-content h3");
+          if (headings.length === 0) { if (container) container.style.display = "none"; return; }
+
+          var ul = document.createElement("ul");
+          headings.forEach(function(h) {
+            if (!h.id) return;
+            var li = document.createElement("li");
+            var a = document.createElement("a");
+            a.href = "#" + h.id;
+            a.textContent = h.textContent.replace(/¶$/, "").trim();
+            a.className = "toc-" + h.tagName.toLowerCase();
+            li.appendChild(a);
+            ul.appendChild(li);
+          });
+          nav.appendChild(ul);
+        }
+
+        buildToc("tocSidebar", "tocNav");
+        buildToc(null, "tocNavMobile");
+
+        // active heading highlight
+        var tocLinks = document.querySelectorAll("#tocNav a, #tocNavMobile a");
+        if (tocLinks.length > 0) {
+          var headings = document.querySelectorAll(".article-content h2, .article-content h3");
+          function onScroll() {
+            var scrollY = window.scrollY + 80;
+            var active = null;
+            headings.forEach(function(h) {
+              if (h.offsetTop <= scrollY) active = h;
+            });
+            tocLinks.forEach(function(link) { link.classList.remove("active"); });
+            if (active) {
+              var id = active.id;
+              tocLinks.forEach(function(link) {
+                if (link.getAttribute("href") === "#" + id) {
+                  link.classList.add("active");
+                }
+              });
+            }
+          }
+          window.addEventListener("scroll", onScroll, { passive: true });
+          onScroll();
+        }
       })();
     </script></body></html>

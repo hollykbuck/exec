@@ -5,8 +5,8 @@
         if(!s&&matchMedia("(prefers-color-scheme:light)").matches)theme="light";
         document.documentElement.setAttribute("data-theme",theme);
       })();
-    </script><link rel="stylesheet" href="/exec/_astro/01-why-stdexec.hXKgsPrw.css"></head><body data-astro-cid-ykvenys5><div class="container" data-astro-cid-ykvenys5><header data-astro-cid-ykvenys5><div class="title-area" data-astro-cid-ykvenys5><a href="/exec/tutorials/" style="color:var(--fg-muted);text-decoration:none;font-size:0.85rem;" data-astro-cid-ykvenys5>← Back to index</a><h1 data-astro-cid-ykvenys5>26 · Domain — Letting Schedulers Take Over Algorithm Implementation</h1></div><button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" data-astro-cid-ykvenys5>🌙</button></header><article class="article-content" data-astro-cid-ykvenys5>
-<h2 id="same-algorithm-different-scheduler-different-best-version">Same Algorithm, Different Scheduler, Different Best Version</h2>
+    </script><link rel="stylesheet" href="/exec/_astro/01-why-stdexec.YzjJ_D8W.css"></head><body data-astro-cid-ykvenys5><div class="layout-wrap" data-astro-cid-ykvenys5><aside class="toc-sidebar" id="tocSidebar" data-astro-cid-ykvenys5><div class="toc-label" data-astro-cid-ykvenys5>On this page</div><nav id="tocNav" data-astro-cid-ykvenys5></nav></aside><div class="layout-main" data-astro-cid-ykvenys5><div class="container" data-astro-cid-ykvenys5><header data-astro-cid-ykvenys5><div class="title-area" data-astro-cid-ykvenys5><a href="/exec/tutorials/" style="color:var(--fg-muted);text-decoration:none;font-size:0.85rem;" data-astro-cid-ykvenys5>← Back to index</a><h1 data-astro-cid-ykvenys5>26 · Domain — Letting Schedulers Take Over Algorithm Implementation</h1></div><button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" data-astro-cid-ykvenys5>🌙</button></header><details class="toc-mobile" id="tocMobile" data-astro-cid-ykvenys5><summary data-astro-cid-ykvenys5>On this page</summary><nav id="tocNavMobile" data-astro-cid-ykvenys5></nav></details><article class="article-content" data-astro-cid-ykvenys5>
+<h2 id="same-algorithm-different-scheduler-different-best-version"><a aria-hidden="true" tabindex="-1" href="#same-algorithm-different-scheduler-different-best-version"><span class="icon icon-link"></span></a>Same Algorithm, Different Scheduler, Different Best Version</h2>
 <p>Different schedulers have different optimal implementations for the same algorithm. A GPU scheduler’s <code>bulk</code> can compile down to a CUDA kernel executing on thousands of cores; a CPU scheduler’s <code>bulk</code> becomes a <code>std::thread</code> parallel loop. The catch: <strong>user code looks the same</strong>:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">bulk</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(sndr, N, f)</span></span></code></pre></div>
 <p>Who decides how this line actually executes? The <strong>Domain</strong> is that decision-maker — it gives a scheduler the chance to replace a generic algorithm with a backend-optimized version at compile time.</p>
@@ -21,15 +21,15 @@
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// With domain   → GPU backend injects its own when_all</span></span></code></pre></div>
 <p>Domain allows replacing algorithm implementations <strong>without changing user code</strong>. This is the core of C++26 std::execution’s extension mechanism.</p>
 <hr>
-<h2 id="two-phase-processing-apply_sender--transform_sender">Two-Phase Processing: <code>apply_sender</code> → <code>transform_sender</code></h2>
+<h2 id="two-phase-processing-apply_sender--transform_sender"><a aria-hidden="true" tabindex="-1" href="#two-phase-processing-apply_sender--transform_sender"><span class="icon icon-link"></span></a>Two-Phase Processing: <code>apply_sender</code> → <code>transform_sender</code></h2>
 <p>If you think of sender pipeline construction as a compiler, domain participates in two key phases:</p>
-<h3 id="phase-1-apply_sender--parsing">Phase 1: <code>apply_sender</code> — Parsing</h3>
+<h3 id="phase-1-apply_sender--parsing"><a aria-hidden="true" tabindex="-1" href="#phase-1-apply_sender--parsing"><span class="icon icon-link"></span></a>Phase 1: <code>apply_sender</code> — Parsing</h3>
 <p>When the user writes <code>sndr | then(f)</code>, the pipe operator first gets the current domain, then calls <code>domain.apply_sender(then_t{}, sndr, f)</code>. This step produces an <strong>unresolved expression tree</strong> — still an abstract description at this point.</p>
 <pre class="mermaid">graph TD
   A["sndr | then(f)"] --> B["get_domain(get_env(sndr)) — fetch domain"]
   B --> C["domain.apply_sender(then_t{}, sndr, f)"]
   C --> D["Returns unresolved sender expression tree"]</pre>
-<h3 id="phase-2-transform_sender--code-generation">Phase 2: <code>transform_sender</code> — Code Generation</h3>
+<h3 id="phase-2-transform_sender--code-generation"><a aria-hidden="true" tabindex="-1" href="#phase-2-transform_sender--code-generation"><span class="icon icon-link"></span></a>Phase 2: <code>transform_sender</code> — Code Generation</h3>
 <p>When <code>connect(sndr, rcvr)</code> is called, domain gets a second chance — this time via <code>transform_sender</code>. Here, a domain can <strong>replace the entire expression tree</strong>:</p>
 <pre class="mermaid">graph TD
   A["connect(sndr, rcvr)"] --> B["transform_sender(sndr, get_env(rcvr))"]
@@ -43,7 +43,7 @@
 <li><code>transform_sender</code> is the <strong>code generator</strong>, translating the AST into target-specific instructions</li>
 </ul>
 <hr>
-<h2 id="default_domain--the-laziest-translator"><code>default_domain</code> — The Laziest Translator</h2>
+<h2 id="default_domain--the-laziest-translator"><a aria-hidden="true" tabindex="-1" href="#default_domain--the-laziest-translator"><span class="icon icon-link"></span></a><code>default_domain</code> — The Laziest Translator</h2>
 <p><code>default_domain</code> does nothing. It has two <code>transform_sender</code> overloads:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">struct</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> default_domain</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">  // Priority 1: if the sender's own tag provides transform_sender, delegate</span></span>
@@ -61,7 +61,7 @@
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">};</span></span></code></pre></div>
 <p><code>default_domain</code> itself performs no optimization — it just passes the sender along. When you don’t need customization, all domain machinery is optimized away at compile time: zero runtime overhead.</p>
 <hr>
-<h2 id="indeterminate_domain--when-two-schedulers-disagree"><code>indeterminate_domain</code> — When Two Schedulers Disagree</h2>
+<h2 id="indeterminate_domain--when-two-schedulers-disagree"><a aria-hidden="true" tabindex="-1" href="#indeterminate_domain--when-two-schedulers-disagree"><span class="icon icon-link"></span></a><code>indeterminate_domain</code> — When Two Schedulers Disagree</h2>
 <p>This is the most important design decision in the domain mechanism. Consider this scenario:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">starts_on</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(cpu_sch,</span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">  continues_on</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(gpu_sch,</span></span>
@@ -85,7 +85,7 @@
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">};</span></span></code></pre></div>
 <p>In other words: if every domain says “I won’t replace this algorithm,” the default is used. If one domain says “I want to replace it” and another disagrees, the compiler rejects the code outright — forcing you to resolve the architectural conflict at compile time, not discover inconsistent behavior at runtime.</p>
 <hr>
-<h2 id="the-shortest-custom-domain-example">The Shortest Custom Domain Example</h2>
+<h2 id="the-shortest-custom-domain-example"><a aria-hidden="true" tabindex="-1" href="#the-shortest-custom-domain-example"><span class="icon icon-link"></span></a>The Shortest Custom Domain Example</h2>
 <p>A domain that does exactly one thing — print logs before and after <code>then</code>:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">struct</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> log_domain</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> : stdexec::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">default_domain</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  template</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> &#x3C;</span><span style="color:#6F42C1;--shiki-dark:#B392F0">stdexec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#D73A49;--shiki-dark:#F97583">sender</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Sndr</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> F</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
@@ -108,7 +108,7 @@
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  }</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">};</span></span></code></pre></div>
 <hr>
-<h2 id="domain--write_env">Domain + <code>write_env</code></h2>
+<h2 id="domain--write_env"><a aria-hidden="true" tabindex="-1" href="#domain--write_env"><span class="icon icon-link"></span></a>Domain + <code>write_env</code></h2>
 <p><code>write_env</code> can inject or override a domain mid-pipeline:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">sync_wait</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">  write_env</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span></span>
@@ -118,7 +118,7 @@
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">);</span></span></code></pre></div>
 <p>The scheduler injected by <code>write_env</code> carries its associated domain, affecting which implementation downstream algorithms choose during <code>transform_sender</code>.</p>
 <hr>
-<h2 id="limitations">Limitations</h2>
+<h2 id="limitations"><a aria-hidden="true" tabindex="-1" href="#limitations"><span class="icon icon-link"></span></a>Limitations</h2>
 <ol>
 <li><strong>Conflict = compile error</strong> — <code>indeterminate_domain</code> won’t try to “pick the right one.” It demands behavior consistency. Multi-backend hybrid pipelines require you to plan domain boundaries at design time, not hope for runtime auto-adaptation.</li>
 <li><strong>Domain only affects sender algorithms (then / bulk / when_all etc.), not CPOs (schedule / connect / start).</strong> To customize a scheduler, you still need <code>tag_invoke</code>.</li>
@@ -127,7 +127,7 @@
 <hr>
 <blockquote>
 <p><strong>Deep dive</strong>: See <a href="26b-apply-sender">Chapter 26b</a> for <code>apply_sender</code> — the CPO that consumers like <code>sync_wait</code> use to give the domain a final transformation opportunity before connecting.</p>
-</blockquote></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/25b-env-composition/" data-astro-cid-ykvenys5>← 25b · Environment Composition and Query Forwarding</a><a href="/exec/tutorials/26b-apply-sender/" data-astro-cid-ykvenys5>26b · apply_sender — The Domain Hook Consumers Use →</a></nav></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
+</blockquote></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/25b-env-composition/" data-astro-cid-ykvenys5>← 25b · Environment Composition and Query Forwarding</a><a href="/exec/tutorials/26b-apply-sender/" data-astro-cid-ykvenys5>26b · apply_sender — The Domain Hook Consumers Use →</a></nav></div></div></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
       (function() {
         const STORAGE_KEY = "exectutorial-theme";
 
@@ -160,5 +160,55 @@
           try { localStorage.setItem(STORAGE_KEY, next); } catch(e) {}
           setTheme(next);
         });
+      })();
+    </script><script>
+      (function() {
+        function buildToc(containerId, navId) {
+          var container = document.getElementById(containerId);
+          var nav = document.getElementById(navId);
+          if (!nav) return;
+          var headings = document.querySelectorAll(".article-content h2, .article-content h3");
+          if (headings.length === 0) { if (container) container.style.display = "none"; return; }
+
+          var ul = document.createElement("ul");
+          headings.forEach(function(h) {
+            if (!h.id) return;
+            var li = document.createElement("li");
+            var a = document.createElement("a");
+            a.href = "#" + h.id;
+            a.textContent = h.textContent.replace(/¶$/, "").trim();
+            a.className = "toc-" + h.tagName.toLowerCase();
+            li.appendChild(a);
+            ul.appendChild(li);
+          });
+          nav.appendChild(ul);
+        }
+
+        buildToc("tocSidebar", "tocNav");
+        buildToc(null, "tocNavMobile");
+
+        // active heading highlight
+        var tocLinks = document.querySelectorAll("#tocNav a, #tocNavMobile a");
+        if (tocLinks.length > 0) {
+          var headings = document.querySelectorAll(".article-content h2, .article-content h3");
+          function onScroll() {
+            var scrollY = window.scrollY + 80;
+            var active = null;
+            headings.forEach(function(h) {
+              if (h.offsetTop <= scrollY) active = h;
+            });
+            tocLinks.forEach(function(link) { link.classList.remove("active"); });
+            if (active) {
+              var id = active.id;
+              tocLinks.forEach(function(link) {
+                if (link.getAttribute("href") === "#" + id) {
+                  link.classList.add("active");
+                }
+              });
+            }
+          }
+          window.addEventListener("scroll", onScroll, { passive: true });
+          onScroll();
+        }
       })();
     </script></body></html>

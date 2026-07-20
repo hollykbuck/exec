@@ -5,19 +5,19 @@
         if(!s&&matchMedia("(prefers-color-scheme:light)").matches)theme="light";
         document.documentElement.setAttribute("data-theme",theme);
       })();
-    </script><link rel="stylesheet" href="/exec/_astro/01-why-stdexec.hXKgsPrw.css"></head><body data-astro-cid-ykvenys5><div class="container" data-astro-cid-ykvenys5><header data-astro-cid-ykvenys5><div class="title-area" data-astro-cid-ykvenys5><a href="/exec/tutorials/" style="color:var(--fg-muted);text-decoration:none;font-size:0.85rem;" data-astro-cid-ykvenys5>← Back to index</a><h1 data-astro-cid-ykvenys5>23 · spawn / ensure_started —— Fire-and-Forget &amp; Eager Start</h1></div><button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" data-astro-cid-ykvenys5>🌙</button></header><article class="article-content" data-astro-cid-ykvenys5>
+    </script><link rel="stylesheet" href="/exec/_astro/01-why-stdexec.YzjJ_D8W.css"></head><body data-astro-cid-ykvenys5><div class="layout-wrap" data-astro-cid-ykvenys5><aside class="toc-sidebar" id="tocSidebar" data-astro-cid-ykvenys5><div class="toc-label" data-astro-cid-ykvenys5>On this page</div><nav id="tocNav" data-astro-cid-ykvenys5></nav></aside><div class="layout-main" data-astro-cid-ykvenys5><div class="container" data-astro-cid-ykvenys5><header data-astro-cid-ykvenys5><div class="title-area" data-astro-cid-ykvenys5><a href="/exec/tutorials/" style="color:var(--fg-muted);text-decoration:none;font-size:0.85rem;" data-astro-cid-ykvenys5>← Back to index</a><h1 data-astro-cid-ykvenys5>23 · spawn / ensure_started —— Fire-and-Forget &amp; Eager Start</h1></div><button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" data-astro-cid-ykvenys5>🌙</button></header><details class="toc-mobile" id="tocMobile" data-astro-cid-ykvenys5><summary data-astro-cid-ykvenys5>On this page</summary><nav id="tocNavMobile" data-astro-cid-ykvenys5></nav></details><article class="article-content" data-astro-cid-ykvenys5>
 <blockquote>
 <p><strong>Standard Status Update</strong>: P2300R10 removed <code>ensure_started</code> and <code>start_detached</code>. P2300R11 further removed <code>spawn</code>. The C++26 working draft (R10) still includes <code>spawn</code> and <code>spawn_future</code> (as <code>ensure_started</code> replacement). This chapter describes the R10 draft APIs. For the latest P2300R11 direction, use <code>spawn_future</code> instead of <code>ensure_started</code>, and scope-based launch instead of <code>spawn</code>.</p>
 </blockquote>
-<h2 id="the-shortcomings-of-sync_wait">The Shortcomings of sync_wait</h2>
+<h2 id="the-shortcomings-of-sync_wait"><a aria-hidden="true" tabindex="-1" href="#the-shortcomings-of-sync_wait"><span class="icon icon-link"></span></a>The Shortcomings of sync_wait</h2>
 <p>The previous chapter covered <code>sync_wait</code> — it’s convenient, but it blocks the current thread until the task finishes. In a server program, you can’t block an entire thread just to handle one request. You need to “start and move on” — not stand waiting at the kitchen door.</p>
 <p><code>spawn</code> and <code>ensure_started</code> are two non-blocking ways to kick off work.</p>
-<h2 id="analogy-three-kinds-of-consumers">Analogy: Three Kinds of Consumers</h2>
+<h2 id="analogy-three-kinds-of-consumers"><a aria-hidden="true" tabindex="-1" href="#analogy-three-kinds-of-consumers"><span class="icon icon-link"></span></a>Analogy: Three Kinds of Consumers</h2>
 <p>Think of async operations as ordering food at a restaurant:</p>
 <p>| <code>sync_wait</code> | Stand at the kitchen door waiting — grab the dish as soon as it’s ready |
 | <code>spawn</code> | Order and walk away — someone else will handle the food when it’s done |
 | <code>ensure_started</code> | Order ahead (prep in advance) — call for the dish when you’re ready to eat |</p>
-<h2 id="overview">Overview</h2>
+<h2 id="overview"><a aria-hidden="true" tabindex="-1" href="#overview"><span class="icon icon-link"></span></a>Overview</h2>
 <div class="table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch">
 
 
@@ -36,7 +36,7 @@
 
 
 <table><thead><tr><th>Consumer</th><th>Behavior</th></tr></thead><tbody><tr><td><code>spawn(sndr)</code></td><td>Starts async operation, does not wait (fire-and-forget), returns <code>void</code></td></tr><tr><td><code>ensure_started(sndr)</code></td><td>Starts async operation, returns a sender you can wait on later</td></tr></tbody></table></div>
-<h2 id="spawn--fire-and-forget"><code>spawn</code> —— Fire-and-Forget</h2>
+<h2 id="spawn--fire-and-forget"><a aria-hidden="true" tabindex="-1" href="#spawn--fire-and-forget"><span class="icon icon-link"></span></a><code>spawn</code> —— Fire-and-Forget</h2>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">namespace</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> std</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">execution</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  inline</span><span style="color:#D73A49;--shiki-dark:#F97583"> constexpr</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> spawn_t</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> spawn{};</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span>
@@ -49,9 +49,9 @@
 <span class="line"></span>
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// spawn returns void</span></span></code></pre></div>
 <p>The code above starts an async operation and returns immediately. The result is discarded — whether success, failure, or cancellation, <code>spawn</code> doesn’t track it.</p>
-<h3 id="spawn-lifecycle">spawn Lifecycle</h3>
+<h3 id="spawn-lifecycle"><a aria-hidden="true" tabindex="-1" href="#spawn-lifecycle"><span class="icon icon-link"></span></a>spawn Lifecycle</h3>
 <p>Operations started by <code>spawn</code> must complete before their associated resources are destroyed, or behavior is undefined.</p>
-<h3 id="spawn-internals">spawn Internals</h3>
+<h3 id="spawn-internals"><a aria-hidden="true" tabindex="-1" href="#spawn-internals"><span class="icon icon-link"></span></a>spawn Internals</h3>
 <p>The internal flow is simple:</p>
 <ol>
 <li>Create a default receiver (handles all three completion signals but discards results)</li>
@@ -59,7 +59,7 @@
 <li><code>start(op)</code></li>
 <li>Return (do not wait for completion)</li>
 </ol>
-<h2 id="ensure_started--eager-start"><code>ensure_started</code> —— Eager Start</h2>
+<h2 id="ensure_started--eager-start"><a aria-hidden="true" tabindex="-1" href="#ensure_started--eager-start"><span class="icon icon-link"></span></a><code>ensure_started</code> —— Eager Start</h2>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Start the async operation immediately, but keep a sender to collect the result later</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">sender </span><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> work </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> ensure_started</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">  schedule</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(sch) </span><span style="color:#D73A49;--shiki-dark:#F97583">|</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> then</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(heavy_computation)</span></span>
@@ -68,7 +68,7 @@
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// work is already running in the background</span></span>
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// You can wait for the result later</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> [result] </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> sync_wait</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">std</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">move</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(work)).</span><span style="color:#6F42C1;--shiki-dark:#B392F0">value</span><span style="color:#24292E;--shiki-dark:#E1E4E8">();</span></span></code></pre></div>
-<h3 id="ensure_started-vs-normal-sender"><code>ensure_started</code> vs Normal Sender</h3>
+<h3 id="ensure_started-vs-normal-sender"><a aria-hidden="true" tabindex="-1" href="#ensure_started-vs-normal-sender"><span class="icon icon-link"></span></a><code>ensure_started</code> vs Normal Sender</h3>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Lazy: doesn't execute at construction time</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">sender </span><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> lazy </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> schedule</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(sch) </span><span style="color:#D73A49;--shiki-dark:#F97583">|</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> then</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(work);</span></span>
 <span class="line"></span>
@@ -79,7 +79,7 @@
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">sync_wait</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">std</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">move</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(lazy));</span><span style="color:#6A737D;--shiki-dark:#6A737D">   // Execution only starts now</span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">sync_wait</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">std</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">move</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(eager));</span><span style="color:#6A737D;--shiki-dark:#6A737D">  // May already be nearly done</span></span></code></pre></div>
 <p>The code above highlights the key difference: normal senders are <strong>lazy</strong> — execution begins only after <code>connect</code> + <code>start</code>. <code>ensure_started</code> is <strong>eager</strong> — it starts at construction time; <code>sync_wait</code> just waits for the result.</p>
-<h2 id="cooperating-with-async_scope">Cooperating with <code>async_scope</code></h2>
+<h2 id="cooperating-with-async_scope"><a aria-hidden="true" tabindex="-1" href="#cooperating-with-async_scope"><span class="icon icon-link"></span></a>Cooperating with <code>async_scope</code></h2>
 <p><code>spawn</code> and <code>ensure_started</code> are often paired with <code>async_scope</code> to manage task lifecycles:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">exec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::async_scope scope;</span></span>
 <span class="line"></span>
@@ -102,7 +102,7 @@
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">sender </span><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> empty </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> scope.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">on_empty</span><span style="color:#24292E;--shiki-dark:#E1E4E8">();</span></span>
 <span class="line"></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">sync_wait</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">when_all</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(empty, future </span><span style="color:#D73A49;--shiki-dark:#F97583">|</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> then</span><span style="color:#24292E;--shiki-dark:#E1E4E8">([](</span><span style="color:#D73A49;--shiki-dark:#F97583">int</span><span style="color:#E36209;--shiki-dark:#FFAB70"> x</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) { </span><span style="color:#6F42C1;--shiki-dark:#B392F0">printf</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"</span><span style="color:#005CC5;--shiki-dark:#79B8FF">%d\n</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, x); })));</span></span></code></pre></div>
-<h2 id="spawns-receiver">spawn’s Receiver</h2>
+<h2 id="spawns-receiver"><a aria-hidden="true" tabindex="-1" href="#spawns-receiver"><span class="icon icon-link"></span></a>spawn’s Receiver</h2>
 <p><code>spawn</code> uses a special default receiver internally:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">struct</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> spawn_receiver</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  using</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> receiver_concept</span><span style="color:#D73A49;--shiki-dark:#F97583"> =</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> stdexec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">receiver_tag</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
@@ -121,7 +121,7 @@
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    |</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> then</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(maybe_fail)</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    |</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> upon_error</span><span style="color:#24292E;--shiki-dark:#E1E4E8">([](</span><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#E36209;--shiki-dark:#FFAB70"> e</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) {</span><span style="color:#6A737D;--shiki-dark:#6A737D"> /* handle error, avoid terminate */</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> })</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">);</span></span></code></pre></div>
-<h2 id="use-case-comparison">Use Case Comparison</h2>
+<h2 id="use-case-comparison"><a aria-hidden="true" tabindex="-1" href="#use-case-comparison"><span class="icon icon-link"></span></a>Use Case Comparison</h2>
 <div class="table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch">
 
 
@@ -148,9 +148,9 @@
 
 
 <table><thead><tr><th>Scenario</th><th>Recommended</th></tr></thead><tbody><tr><td><code>main</code> waiting for multiple async tasks</td><td><code>sync_wait(when_all(...))</code></td></tr><tr><td>Background logging/monitoring with no interest in results</td><td><code>spawn(...)</code></td></tr><tr><td>Start computation early, collect result later</td><td><code>ensure_started(...)</code></td></tr><tr><td>Manage task lifecycle</td><td><code>async_scope::spawn()</code> / <code>async_scope::spawn_future()</code></td></tr></tbody></table></div>
-<h2 id="limitations">Limitations</h2>
+<h2 id="limitations"><a aria-hidden="true" tabindex="-1" href="#limitations"><span class="icon icon-link"></span></a>Limitations</h2>
 <p><code>spawn</code> discards its operation’s result. The standard draft’s <code>spawn_receiver</code> has <strong>no <code>set_error</code> handler</strong> — if the sender declares error completion signatures, <code>connect</code> fails at compile time. stdexec’s <code>spawn_receiver</code> calls <code>std::terminate()</code> on error instead. Either way, use <code>spawn</code> only for side-path operations where errors are handled upstream via <code>upon_error</code>.</p>
-<p>After <code>ensure_started</code> starts (stdexec API; not in current draft), the returned sender can be <code>sync_wait</code>-ed multiple times, but cannot be <code>connect</code>-ed multiple times.</p></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/22-sync-wait/" data-astro-cid-ykvenys5>← 22 · sync_wait / sync_wait_with_variant —— Blocking Wait for Results</a><a href="/exec/tutorials/24-write-env-unstoppable/" data-astro-cid-ykvenys5>24 · write_env / unstoppable —— Modifying Environment Properties →</a></nav></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
+<p>After <code>ensure_started</code> starts (stdexec API; not in current draft), the returned sender can be <code>sync_wait</code>-ed multiple times, but cannot be <code>connect</code>-ed multiple times.</p></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/22-sync-wait/" data-astro-cid-ykvenys5>← 22 · sync_wait / sync_wait_with_variant —— Blocking Wait for Results</a><a href="/exec/tutorials/24-write-env-unstoppable/" data-astro-cid-ykvenys5>24 · write_env / unstoppable —— Modifying Environment Properties →</a></nav></div></div></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
       (function() {
         const STORAGE_KEY = "exectutorial-theme";
 
@@ -183,5 +183,55 @@
           try { localStorage.setItem(STORAGE_KEY, next); } catch(e) {}
           setTheme(next);
         });
+      })();
+    </script><script>
+      (function() {
+        function buildToc(containerId, navId) {
+          var container = document.getElementById(containerId);
+          var nav = document.getElementById(navId);
+          if (!nav) return;
+          var headings = document.querySelectorAll(".article-content h2, .article-content h3");
+          if (headings.length === 0) { if (container) container.style.display = "none"; return; }
+
+          var ul = document.createElement("ul");
+          headings.forEach(function(h) {
+            if (!h.id) return;
+            var li = document.createElement("li");
+            var a = document.createElement("a");
+            a.href = "#" + h.id;
+            a.textContent = h.textContent.replace(/¶$/, "").trim();
+            a.className = "toc-" + h.tagName.toLowerCase();
+            li.appendChild(a);
+            ul.appendChild(li);
+          });
+          nav.appendChild(ul);
+        }
+
+        buildToc("tocSidebar", "tocNav");
+        buildToc(null, "tocNavMobile");
+
+        // active heading highlight
+        var tocLinks = document.querySelectorAll("#tocNav a, #tocNavMobile a");
+        if (tocLinks.length > 0) {
+          var headings = document.querySelectorAll(".article-content h2, .article-content h3");
+          function onScroll() {
+            var scrollY = window.scrollY + 80;
+            var active = null;
+            headings.forEach(function(h) {
+              if (h.offsetTop <= scrollY) active = h;
+            });
+            tocLinks.forEach(function(link) { link.classList.remove("active"); });
+            if (active) {
+              var id = active.id;
+              tocLinks.forEach(function(link) {
+                if (link.getAttribute("href") === "#" + id) {
+                  link.classList.add("active");
+                }
+              });
+            }
+          }
+          window.addEventListener("scroll", onScroll, { passive: true });
+          onScroll();
+        }
       })();
     </script></body></html>

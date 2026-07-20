@@ -5,12 +5,12 @@
         if(!s&&matchMedia("(prefers-color-scheme:light)").matches)theme="light";
         document.documentElement.setAttribute("data-theme",theme);
       })();
-    </script><link rel="stylesheet" href="/exec/_astro/01-why-stdexec.hXKgsPrw.css"></head><body data-astro-cid-ykvenys5><div class="container" data-astro-cid-ykvenys5><header data-astro-cid-ykvenys5><div class="title-area" data-astro-cid-ykvenys5><a href="/exec/tutorials/" style="color:var(--fg-muted);text-decoration:none;font-size:0.85rem;" data-astro-cid-ykvenys5>← Back to index</a><h1 data-astro-cid-ykvenys5>31 · parallel_scheduler — CPU Parallel Computing Scheduler</h1></div><button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" data-astro-cid-ykvenys5>🌙</button></header><article class="article-content" data-astro-cid-ykvenys5>
-<h2 id="when-do-you-need-parallel_scheduler">When Do You Need parallel_scheduler?</h2>
+    </script><link rel="stylesheet" href="/exec/_astro/01-why-stdexec.YzjJ_D8W.css"></head><body data-astro-cid-ykvenys5><div class="layout-wrap" data-astro-cid-ykvenys5><aside class="toc-sidebar" id="tocSidebar" data-astro-cid-ykvenys5><div class="toc-label" data-astro-cid-ykvenys5>On this page</div><nav id="tocNav" data-astro-cid-ykvenys5></nav></aside><div class="layout-main" data-astro-cid-ykvenys5><div class="container" data-astro-cid-ykvenys5><header data-astro-cid-ykvenys5><div class="title-area" data-astro-cid-ykvenys5><a href="/exec/tutorials/" style="color:var(--fg-muted);text-decoration:none;font-size:0.85rem;" data-astro-cid-ykvenys5>← Back to index</a><h1 data-astro-cid-ykvenys5>31 · parallel_scheduler — CPU Parallel Computing Scheduler</h1></div><button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" data-astro-cid-ykvenys5>🌙</button></header><details class="toc-mobile" id="tocMobile" data-astro-cid-ykvenys5><summary data-astro-cid-ykvenys5>On this page</summary><nav id="tocNavMobile" data-astro-cid-ykvenys5></nav></details><article class="article-content" data-astro-cid-ykvenys5>
+<h2 id="when-do-you-need-parallel_scheduler"><a aria-hidden="true" tabindex="-1" href="#when-do-you-need-parallel_scheduler"><span class="icon icon-link"></span></a>When Do You Need parallel_scheduler?</h2>
 <p>If you’re doing CPU-intensive work — image processing, scientific computing, data compression — you want to use every CPU core. You could build your own thread pool + task queue, but <code>parallel_scheduler</code> has built-in work-stealing that’s more efficient than a hand-rolled load balancer.</p>
 <p><code>parallel_scheduler</code> is C++26 std::execution’s official counterpart to C++17’s <code>std::execution::par</code>. It’s the only scheduler in the standard specifically designed for CPU parallel computation.</p>
 <hr>
-<h2 id="basic-usage">Basic Usage</h2>
+<h2 id="basic-usage"><a aria-hidden="true" tabindex="-1" href="#basic-usage"><span class="icon icon-link"></span></a>Basic Usage</h2>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> par_sch </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> get_parallel_scheduler</span><span style="color:#24292E;--shiki-dark:#E1E4E8">();</span></span>
 <span class="line"></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">sync_wait</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span></span>
@@ -22,7 +22,7 @@
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">);</span></span></code></pre></div>
 <p>Simpler than <code>static_thread_pool</code> — you don’t specify thread count; the implementation auto-matches hardware concurrency.</p>
 <hr>
-<h2 id="architecture-frontend--backend">Architecture: Frontend + Backend</h2>
+<h2 id="architecture-frontend--backend"><a aria-hidden="true" tabindex="-1" href="#architecture-frontend--backend"><span class="icon icon-link"></span></a>Architecture: Frontend + Backend</h2>
 <p><code>parallel_scheduler</code> uses a separated frontend (type erasure layer) and backend (concrete implementation) architecture:</p>
 <pre class="mermaid">flowchart TD
     U["User code: bulk(N, f)"]
@@ -33,7 +33,7 @@
     U --> F --> B --> D</pre>
 <p>This layering lets you replace the underlying implementation <strong>without changing a single line of user code</strong>. If your company has a custom GPU task scheduler, or uses TBB’s scheduling system, you just swap the backend layer — all user code stays the same.</p>
 <hr>
-<h2 id="compile-time-backend-replacement">Compile-Time Backend Replacement</h2>
+<h2 id="compile-time-backend-replacement"><a aria-hidden="true" tabindex="-1" href="#compile-time-backend-replacement"><span class="icon icon-link"></span></a>Compile-Time Backend Replacement</h2>
 <p>The replacement uses C++ weak symbol tricks:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Your file: my_backend.cpp</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">#include</span><span style="color:#032F62;--shiki-dark:#9ECBFF"> &#x3C;stdexec/execution.hpp></span></span>
@@ -46,7 +46,7 @@
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span></code></pre></div>
 <p>Above, defining a strong-symbol function is all it takes — the linker overrides the library’s default weak symbol. No preprocessor macros, no config files, no library modifications. Just one .cpp file.</p>
 <hr>
-<h2 id="how-frontend-talks-to-backend-receiver_proxy">How Frontend Talks to Backend: <code>receiver_proxy</code></h2>
+<h2 id="how-frontend-talks-to-backend-receiver_proxy"><a aria-hidden="true" tabindex="-1" href="#how-frontend-talks-to-backend-receiver_proxy"><span class="icon icon-link"></span></a>How Frontend Talks to Backend: <code>receiver_proxy</code></h2>
 <p>The frontend exposes the receiver to the backend through a <code>receiver_proxy</code> — using virtual functions to erase the concrete receiver type:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> receiver_proxy</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">public:</span></span>
@@ -58,7 +58,7 @@
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">};</span></span></code></pre></div>
 <p>The templated <code>__receiver_proxy_base&#x3C;Rcvr></code> implements this virtual interface, bridging “concrete receiver” and “type-erased proxy.” The backend only calls virtual functions — it never needs to know the concrete receiver type.</p>
 <hr>
-<h2 id="how-bulk-executes-on-parallel_scheduler">How <code>bulk</code> Executes on parallel_scheduler</h2>
+<h2 id="how-bulk-executes-on-parallel_scheduler"><a aria-hidden="true" tabindex="-1" href="#how-bulk-executes-on-parallel_scheduler"><span class="icon icon-link"></span></a>How <code>bulk</code> Executes on parallel_scheduler</h2>
 <pre class="mermaid">graph TD
   A["bulk(just(0), 1000, work_fn)"] --> B["Fetch parallel_scheduler's domain"]
   B --> C["Domain replaces bulk with __bulk_sender"]
@@ -74,7 +74,7 @@
 <span class="line"><span>Thread 3: [750, 1000)  → execute(750, 1000)</span></span></code></pre>
 <p>Each thread calls <code>bulk_item_receiver_proxy::execute(begin, end)</code> once, running a <code>for</code> loop over its assigned chunk.</p>
 <hr>
-<h2 id="default-backend-work-stealing">Default Backend: Work-Stealing</h2>
+<h2 id="default-backend-work-stealing"><a aria-hidden="true" tabindex="-1" href="#default-backend-work-stealing"><span class="icon icon-link"></span></a>Default Backend: Work-Stealing</h2>
 <p>stdexec’s default <code>parallel_scheduler</code> uses <code>std::thread</code> + <strong>work-stealing</strong>:</p>
 <pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="plaintext"><code><span class="line"><span>Worker 0: [task][task][task][ ]  ← Local queue (LIFO, cache-friendly)</span></span>
 <span class="line"><span>Worker 1: [task][task][ ][ ]     ← Others can steal from here</span></span>
@@ -87,7 +87,7 @@
 <li><strong>No central scheduler</strong>: no global task distribution lock, reducing contention</li>
 </ul>
 <hr>
-<h2 id="parallel_scheduler-vs-static_thread_pool">parallel_scheduler vs static_thread_pool</h2>
+<h2 id="parallel_scheduler-vs-static_thread_pool"><a aria-hidden="true" tabindex="-1" href="#parallel_scheduler-vs-static_thread_pool"><span class="icon icon-link"></span></a>parallel_scheduler vs static_thread_pool</h2>
 <div class="table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch">
 
 
@@ -135,13 +135,13 @@
 
 <table><thead><tr><th>Feature</th><th>static_thread_pool</th><th>parallel_scheduler</th></tr></thead><tbody><tr><td>Standard</td><td>stdexec extension</td><td>Standard <code>[exec.par.scheduler]</code></td></tr><tr><td>Thread count</td><td>Specified at construction</td><td>Implementation-defined (usually = hardware concurrency)</td></tr><tr><td>Work distribution</td><td>Per-worker MPSC queue</td><td>Work-stealing</td></tr><tr><td>Backend replaceable</td><td>No (fixed impl)</td><td>Yes (weak symbol override)</td></tr><tr><td><code>bulk</code> support</td><td>Via bulk algorithm outer dispatch</td><td>Native backend <code>schedule_bulk_*</code></td></tr><tr><td>Use case</td><td>General async tasks</td><td>CPU parallel / data parallelism</td></tr><tr><td>Heap allocation</td><td>Operation states typically stack-allocated</td><td>May involve proxy heap allocation</td></tr></tbody></table></div>
 <hr>
-<h2 id="limitations">Limitations</h2>
+<h2 id="limitations"><a aria-hidden="true" tabindex="-1" href="#limitations"><span class="icon icon-link"></span></a>Limitations</h2>
 <ol>
 <li><strong>Default implementation depends on <code>std::thread</code></strong> — may be unavailable in embedded or WASM environments. These platforms need a backend replacement.</li>
 <li><strong>Not suited for precise thread count control</strong> — thread count is implementation-defined. If you need exactly N threads (e.g., hardware pinning), use <code>static_thread_pool</code>.</li>
 <li><strong>Heap allocation</strong> — <code>receiver_proxy</code> type erasure may introduce heap allocation. By contrast, <code>static_thread_pool</code> operation states can be fully stack-allocated.</li>
 <li><strong>Platform dependency</strong> — <code>get_parallel_scheduler()</code> behavior may differ subtly across Windows, Linux, and macOS.</li>
-</ol></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/30-run-loop/" data-astro-cid-ykvenys5>← 30 · run_loop — The Simplest Execution Context</a><a href="/exec/tutorials/32-implement-then/" data-astro-cid-ykvenys5>32 · Implementing then from Scratch — Custom Sender + Receiver + Operation State →</a></nav></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
+</ol></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/30-run-loop/" data-astro-cid-ykvenys5>← 30 · run_loop — The Simplest Execution Context</a><a href="/exec/tutorials/32-implement-then/" data-astro-cid-ykvenys5>32 · Implementing then from Scratch — Custom Sender + Receiver + Operation State →</a></nav></div></div></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
       (function() {
         const STORAGE_KEY = "exectutorial-theme";
 
@@ -174,5 +174,55 @@
           try { localStorage.setItem(STORAGE_KEY, next); } catch(e) {}
           setTheme(next);
         });
+      })();
+    </script><script>
+      (function() {
+        function buildToc(containerId, navId) {
+          var container = document.getElementById(containerId);
+          var nav = document.getElementById(navId);
+          if (!nav) return;
+          var headings = document.querySelectorAll(".article-content h2, .article-content h3");
+          if (headings.length === 0) { if (container) container.style.display = "none"; return; }
+
+          var ul = document.createElement("ul");
+          headings.forEach(function(h) {
+            if (!h.id) return;
+            var li = document.createElement("li");
+            var a = document.createElement("a");
+            a.href = "#" + h.id;
+            a.textContent = h.textContent.replace(/¶$/, "").trim();
+            a.className = "toc-" + h.tagName.toLowerCase();
+            li.appendChild(a);
+            ul.appendChild(li);
+          });
+          nav.appendChild(ul);
+        }
+
+        buildToc("tocSidebar", "tocNav");
+        buildToc(null, "tocNavMobile");
+
+        // active heading highlight
+        var tocLinks = document.querySelectorAll("#tocNav a, #tocNavMobile a");
+        if (tocLinks.length > 0) {
+          var headings = document.querySelectorAll(".article-content h2, .article-content h3");
+          function onScroll() {
+            var scrollY = window.scrollY + 80;
+            var active = null;
+            headings.forEach(function(h) {
+              if (h.offsetTop <= scrollY) active = h;
+            });
+            tocLinks.forEach(function(link) { link.classList.remove("active"); });
+            if (active) {
+              var id = active.id;
+              tocLinks.forEach(function(link) {
+                if (link.getAttribute("href") === "#" + id) {
+                  link.classList.add("active");
+                }
+              });
+            }
+          }
+          window.addEventListener("scroll", onScroll, { passive: true });
+          onScroll();
+        }
       })();
     </script></body></html>

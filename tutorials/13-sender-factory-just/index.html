@@ -5,22 +5,22 @@
         if(!s&&matchMedia("(prefers-color-scheme:light)").matches)theme="light";
         document.documentElement.setAttribute("data-theme",theme);
       })();
-    </script><link rel="stylesheet" href="/exec/_astro/01-why-stdexec.hXKgsPrw.css"></head><body data-astro-cid-ykvenys5><div class="container" data-astro-cid-ykvenys5><header data-astro-cid-ykvenys5><div class="title-area" data-astro-cid-ykvenys5><a href="/exec/tutorials/" style="color:var(--fg-muted);text-decoration:none;font-size:0.85rem;" data-astro-cid-ykvenys5>← Back to index</a><h1 data-astro-cid-ykvenys5>13 · Sender Factory: just / just_error / just_stopped</h1></div><button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" data-astro-cid-ykvenys5>🌙</button></header><article class="article-content" data-astro-cid-ykvenys5>
-<h2 id="why-do-we-need-just">Why Do We Need just?</h2>
+    </script><link rel="stylesheet" href="/exec/_astro/01-why-stdexec.YzjJ_D8W.css"></head><body data-astro-cid-ykvenys5><div class="layout-wrap" data-astro-cid-ykvenys5><aside class="toc-sidebar" id="tocSidebar" data-astro-cid-ykvenys5><div class="toc-label" data-astro-cid-ykvenys5>On this page</div><nav id="tocNav" data-astro-cid-ykvenys5></nav></aside><div class="layout-main" data-astro-cid-ykvenys5><div class="container" data-astro-cid-ykvenys5><header data-astro-cid-ykvenys5><div class="title-area" data-astro-cid-ykvenys5><a href="/exec/tutorials/" style="color:var(--fg-muted);text-decoration:none;font-size:0.85rem;" data-astro-cid-ykvenys5>← Back to index</a><h1 data-astro-cid-ykvenys5>13 · Sender Factory: just / just_error / just_stopped</h1></div><button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" data-astro-cid-ykvenys5>🌙</button></header><details class="toc-mobile" id="tocMobile" data-astro-cid-ykvenys5><summary data-astro-cid-ykvenys5>On this page</summary><nav id="tocNavMobile" data-astro-cid-ykvenys5></nav></details><article class="article-content" data-astro-cid-ykvenys5>
+<h2 id="why-do-we-need-just"><a aria-hidden="true" tabindex="-1" href="#why-do-we-need-just"><span class="icon icon-link"></span></a>Why Do We Need just?</h2>
 <p>In C++26 std::execution’s async model, everything that flows through a pipeline must be a sender.
 But not all data in your program begins its life asynchronously.
 You might need to feed a config value, a cached integer, or a hardcoded constant into an async pipeline.</p>
 <p>You shouldn’t have to spin up a thread pool just to pass a <code>42</code> downstream. That’s where <code>just</code> comes in.</p>
 <p><code>just</code> simply wraps a plain value into a sender. Once started, this sender <strong>immediately and synchronously</strong> calls <code>set_value</code> to hand the value to the downstream receiver.</p>
 <p>If you know JavaScript: <code>just</code> is to sender what <code>Promise.resolve()</code> is to Promise — a way to lift a synchronous value into the async world.</p>
-<h2 id="basic-usage">Basic Usage</h2>
+<h2 id="basic-usage"><a aria-hidden="true" tabindex="-1" href="#basic-usage"><span class="icon icon-link"></span></a>Basic Usage</h2>
 <p>The <code>just</code> family has three factory functions, one for each completion signal:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">namespace</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> std</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">execution</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  inline</span><span style="color:#D73A49;--shiki-dark:#F97583"> constexpr</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> unspecified just </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6A737D;--shiki-dark:#6A737D"> /* ... */</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  inline</span><span style="color:#D73A49;--shiki-dark:#F97583"> constexpr</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> unspecified just_error </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6A737D;--shiki-dark:#6A737D"> /* ... */</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  inline</span><span style="color:#D73A49;--shiki-dark:#F97583"> constexpr</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> unspecified just_stopped </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6A737D;--shiki-dark:#6A737D"> /* ... */</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span></code></pre></div>
-<h2 id="justargs--immediate-success"><code>just(args...)</code> —— Immediate Success</h2>
+<h2 id="justargs--immediate-success"><a aria-hidden="true" tabindex="-1" href="#justargs--immediate-success"><span class="icon icon-link"></span></a><code>just(args...)</code> —— Immediate Success</h2>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">sender </span><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> s1 </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> just</span><span style="color:#24292E;--shiki-dark:#E1E4E8">();</span></span>
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Completion signature: set_value_t()</span></span>
 <span class="line"></span>
@@ -30,13 +30,13 @@ You might need to feed a config value, a cached integer, or a hardcoded constant
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">sender </span><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> s3 </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> just</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#005CC5;--shiki-dark:#79B8FF">2.0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#032F62;--shiki-dark:#9ECBFF">"hello"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">);</span></span>
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Completion signature: set_value_t(int, double, const char*)</span></span></code></pre></div>
 <p>The code above creates three senders. <code>just()</code> sends an empty “I’m done” signal; <code>just(42)</code> passes the integer 42 downstream; <code>just(1, 2.0, "hello")</code> delivers three values of different types at once.</p>
-<h3 id="how-it-works-internally">How It Works Internally</h3>
+<h3 id="how-it-works-internally"><a aria-hidden="true" tabindex="-1" href="#how-it-works-internally"><span class="icon icon-link"></span></a>How It Works Internally</h3>
 <p>The sender returned by <code>just(v)</code> calls <code>set_value</code> directly inside <code>start()</code>, synchronously:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">void</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> start</span><span style="color:#24292E;--shiki-dark:#E1E4E8">() </span><span style="color:#D73A49;--shiki-dark:#F97583">&#x26;</span><span style="color:#D73A49;--shiki-dark:#F97583"> noexcept</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">  stdexec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">set_value</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">std</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">move</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(rcvr_), args_...);</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span></code></pre></div>
 <p>The implementation is about as simple as it gets — no thread scheduling, no queues, just a direct, synchronous handoff to the downstream receiver.</p>
-<h3 id="typical-use-cases">Typical Use Cases</h3>
+<h3 id="typical-use-cases"><a aria-hidden="true" tabindex="-1" href="#typical-use-cases"><span class="icon icon-link"></span></a>Typical Use Cases</h3>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// As a pipeline starting point</span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">sync_wait</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">  just</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">42</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
@@ -49,7 +49,7 @@ You might need to feed a config value, a cached integer, or a hardcoded constant
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  some_sender,</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  []() { </span><span style="color:#D73A49;--shiki-dark:#F97583">return</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> just</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">); }</span><span style="color:#6A737D;--shiki-dark:#6A737D">  // return 0 on success</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">);</span></span></code></pre></div>
-<h2 id="just_errorerr--immediate-failure"><code>just_error(err)</code> —— Immediate Failure</h2>
+<h2 id="just_errorerr--immediate-failure"><a aria-hidden="true" tabindex="-1" href="#just_errorerr--immediate-failure"><span class="icon icon-link"></span></a><code>just_error(err)</code> —— Immediate Failure</h2>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Immediately sends set_error()</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">sender </span><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> e </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> just_error</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">std</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">make_exception_ptr</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">std</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::runtime_error{</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"oops"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">}));</span></span>
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Completion signature: set_error_t(std::exception_ptr)</span></span>
@@ -64,7 +64,7 @@ You might need to feed a config value, a cached integer, or a hardcoded constant
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  return</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> just</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(x);</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span></code></pre></div>
 <p>This <code>validate</code> function returns a “failed immediately” sender when the input is invalid, or a value-carrying sender when it’s valid. Both branches return senders, keeping the types consistent.</p>
-<h2 id="just_stopped--immediate-cancellation"><code>just_stopped()</code> —— Immediate Cancellation</h2>
+<h2 id="just_stopped--immediate-cancellation"><a aria-hidden="true" tabindex="-1" href="#just_stopped--immediate-cancellation"><span class="icon icon-link"></span></a><code>just_stopped()</code> —— Immediate Cancellation</h2>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">sender </span><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> s </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> just_stopped</span><span style="color:#24292E;--shiki-dark:#E1E4E8">();</span></span>
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Completion signature: set_stopped_t()</span></span></code></pre></div>
 <p>This sender tells the downstream “I’ve been cancelled.” Its most common use is also in conditional branches, expressing “this path is a dead end”:</p>
@@ -73,7 +73,7 @@ You might need to feed a config value, a cached integer, or a hardcoded constant
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    return</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> just_stopped</span><span style="color:#24292E;--shiki-dark:#E1E4E8">();</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  return</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> just</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">42</span><span style="color:#24292E;--shiki-dark:#E1E4E8">);</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span></code></pre></div>
-<h2 id="completion-signature-comparison">Completion Signature Comparison</h2>
+<h2 id="completion-signature-comparison"><a aria-hidden="true" tabindex="-1" href="#completion-signature-comparison"><span class="icon icon-link"></span></a>Completion Signature Comparison</h2>
 <div class="table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch">
 
 
@@ -104,7 +104,7 @@ You might need to feed a config value, a cached integer, or a hardcoded constant
 
 
 <table><thead><tr><th>Factory</th><th>Completion Signature</th></tr></thead><tbody><tr><td><code>just()</code></td><td><code>set_value_t()</code></td></tr><tr><td><code>just(v)</code></td><td><code>set_value_t(decay_t&#x3C;decltype(v)>)</code></td></tr><tr><td><code>just(v1, v2)</code></td><td><code>set_value_t(decay_t&#x3C;decltype(v1)>, decay_t&#x3C;decltype(v2)>)</code></td></tr><tr><td><code>just_error(e)</code></td><td><code>set_error_t(decay_t&#x3C;decltype(e)>)</code></td></tr><tr><td><code>just_stopped()</code></td><td><code>set_stopped_t()</code></td></tr></tbody></table></div>
-<h2 id="composing-in-pipelines">Composing in Pipelines</h2>
+<h2 id="composing-in-pipelines"><a aria-hidden="true" tabindex="-1" href="#composing-in-pipelines"><span class="icon icon-link"></span></a>Composing in Pipelines</h2>
 <p>All <code>just</code> factories plug directly into pipelines:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> pipeline </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> just</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">              |</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> then</span><span style="color:#24292E;--shiki-dark:#E1E4E8">([](</span><span style="color:#D73A49;--shiki-dark:#F97583">int</span><span style="color:#E36209;--shiki-dark:#FFAB70"> x</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) { </span><span style="color:#D73A49;--shiki-dark:#F97583">return</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> x </span><span style="color:#D73A49;--shiki-dark:#F97583">+</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">; })</span></span>
@@ -121,7 +121,7 @@ You might need to feed a config value, a cached integer, or a hardcoded constant
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">          return</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> just_error</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">std</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">make_exception_ptr</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">std</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::runtime_error{</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"bad luck"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">}));</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">      })</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">);</span></span></code></pre></div>
-<p>The code above shows <code>let_value</code> dynamically picking between <code>just(42)</code> and <code>just_error(...)</code> at runtime. This kind of branching is the core use case of <code>let_value</code>, covered in depth in chapter 17.</p></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/12b-completion-sig-metaprog/" data-astro-cid-ykvenys5>← 12b · Completion Signature Metaprogramming — gather-signatures and Friends</a><a href="/exec/tutorials/14-read-env/" data-astro-cid-ykvenys5>14 · read_env — Reading Properties from the Environment →</a></nav></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
+<p>The code above shows <code>let_value</code> dynamically picking between <code>just(42)</code> and <code>just_error(...)</code> at runtime. This kind of branching is the core use case of <code>let_value</code>, covered in depth in chapter 17.</p></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/12b-completion-sig-metaprog/" data-astro-cid-ykvenys5>← 12b · Completion Signature Metaprogramming — gather-signatures and Friends</a><a href="/exec/tutorials/14-read-env/" data-astro-cid-ykvenys5>14 · read_env — Reading Properties from the Environment →</a></nav></div></div></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
       (function() {
         const STORAGE_KEY = "exectutorial-theme";
 
@@ -154,5 +154,55 @@ You might need to feed a config value, a cached integer, or a hardcoded constant
           try { localStorage.setItem(STORAGE_KEY, next); } catch(e) {}
           setTheme(next);
         });
+      })();
+    </script><script>
+      (function() {
+        function buildToc(containerId, navId) {
+          var container = document.getElementById(containerId);
+          var nav = document.getElementById(navId);
+          if (!nav) return;
+          var headings = document.querySelectorAll(".article-content h2, .article-content h3");
+          if (headings.length === 0) { if (container) container.style.display = "none"; return; }
+
+          var ul = document.createElement("ul");
+          headings.forEach(function(h) {
+            if (!h.id) return;
+            var li = document.createElement("li");
+            var a = document.createElement("a");
+            a.href = "#" + h.id;
+            a.textContent = h.textContent.replace(/¶$/, "").trim();
+            a.className = "toc-" + h.tagName.toLowerCase();
+            li.appendChild(a);
+            ul.appendChild(li);
+          });
+          nav.appendChild(ul);
+        }
+
+        buildToc("tocSidebar", "tocNav");
+        buildToc(null, "tocNavMobile");
+
+        // active heading highlight
+        var tocLinks = document.querySelectorAll("#tocNav a, #tocNavMobile a");
+        if (tocLinks.length > 0) {
+          var headings = document.querySelectorAll(".article-content h2, .article-content h3");
+          function onScroll() {
+            var scrollY = window.scrollY + 80;
+            var active = null;
+            headings.forEach(function(h) {
+              if (h.offsetTop <= scrollY) active = h;
+            });
+            tocLinks.forEach(function(link) { link.classList.remove("active"); });
+            if (active) {
+              var id = active.id;
+              tocLinks.forEach(function(link) {
+                if (link.getAttribute("href") === "#" + id) {
+                  link.classList.add("active");
+                }
+              });
+            }
+          }
+          window.addEventListener("scroll", onScroll, { passive: true });
+          onScroll();
+        }
       })();
     </script></body></html>

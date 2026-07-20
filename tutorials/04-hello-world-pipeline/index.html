@@ -5,12 +5,12 @@
         if(!s&&matchMedia("(prefers-color-scheme:light)").matches)theme="light";
         document.documentElement.setAttribute("data-theme",theme);
       })();
-    </script><link rel="stylesheet" href="/exec/_astro/01-why-stdexec.hXKgsPrw.css"></head><body data-astro-cid-ykvenys5><div class="container" data-astro-cid-ykvenys5><header data-astro-cid-ykvenys5><div class="title-area" data-astro-cid-ykvenys5><a href="/exec/tutorials/" style="color:var(--fg-muted);text-decoration:none;font-size:0.85rem;" data-astro-cid-ykvenys5>← Back to index</a><h1 data-astro-cid-ykvenys5>04 · Hello World Pipeline — schedule | then | sync_wait</h1></div><button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" data-astro-cid-ykvenys5>🌙</button></header><article class="article-content" data-astro-cid-ykvenys5>
+    </script><link rel="stylesheet" href="/exec/_astro/01-why-stdexec.YzjJ_D8W.css"></head><body data-astro-cid-ykvenys5><div class="layout-wrap" data-astro-cid-ykvenys5><aside class="toc-sidebar" id="tocSidebar" data-astro-cid-ykvenys5><div class="toc-label" data-astro-cid-ykvenys5>On this page</div><nav id="tocNav" data-astro-cid-ykvenys5></nav></aside><div class="layout-main" data-astro-cid-ykvenys5><div class="container" data-astro-cid-ykvenys5><header data-astro-cid-ykvenys5><div class="title-area" data-astro-cid-ykvenys5><a href="/exec/tutorials/" style="color:var(--fg-muted);text-decoration:none;font-size:0.85rem;" data-astro-cid-ykvenys5>← Back to index</a><h1 data-astro-cid-ykvenys5>04 · Hello World Pipeline — schedule | then | sync_wait</h1></div><button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" data-astro-cid-ykvenys5>🌙</button></header><details class="toc-mobile" id="tocMobile" data-astro-cid-ykvenys5><summary data-astro-cid-ykvenys5>On this page</summary><nav id="tocNavMobile" data-astro-cid-ykvenys5></nav></details><article class="article-content" data-astro-cid-ykvenys5>
 <blockquote>
 <p><strong>Related Tests</strong>: <code>tests/test_basics.cpp</code></p>
 </blockquote>
 <p>The previous chapters covered concepts. Now let’s write our first real <code>std::execution</code> program.</p>
-<h2 id="your-first-stdexec-program">Your First stdexec Program</h2>
+<h2 id="your-first-stdexec-program"><a aria-hidden="true" tabindex="-1" href="#your-first-stdexec-program"><span class="icon icon-link"></span></a>Your First stdexec Program</h2>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">#include</span><span style="color:#032F62;--shiki-dark:#9ECBFF"> &#x3C;iostream></span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">#include</span><span style="color:#032F62;--shiki-dark:#9ECBFF"> &#x3C;stdexec/execution.hpp></span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">#include</span><span style="color:#032F62;--shiki-dark:#9ECBFF"> &#x3C;exec/static_thread_pool.hpp></span></span>
@@ -48,7 +48,7 @@
 <li>Calls <code>start()</code> to begin execution, then blocks until completion, and returns the result</li>
 </ol>
 <p>How does <code>sync_wait</code> know which thread pool to use? Because the Scheduler was captured inside the Sender when <code>schedule(sch)</code> was called. It propagates through the pipeline, so when <code>sync_wait</code> kicks things off, the Sender knows exactly where to run.</p>
-<h2 id="pipe-syntax">Pipe Syntax</h2>
+<h2 id="pipe-syntax"><a aria-hidden="true" tabindex="-1" href="#pipe-syntax"><span class="icon icon-link"></span></a>Pipe Syntax</h2>
 <p>The pipeline above is equivalent to nested function calls:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Nested function call (not recommended)</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> result </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> sync_wait</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span></span>
@@ -68,7 +68,7 @@
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    |</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> then</span><span style="color:#24292E;--shiki-dark:#E1E4E8">([](</span><span style="color:#D73A49;--shiki-dark:#F97583">int</span><span style="color:#E36209;--shiki-dark:#FFAB70"> a</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) { </span><span style="color:#D73A49;--shiki-dark:#F97583">return</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> a </span><span style="color:#D73A49;--shiki-dark:#F97583">+</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 42</span><span style="color:#24292E;--shiki-dark:#E1E4E8">; })</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">);</span></span></code></pre></div>
 <p>Both forms are completely equivalent. Pipe syntax reads left to right, which is more intuitive — like Unix pipes. We’ll dig into how <code>operator|</code> works in a later chapter.</p>
-<h2 id="sync_wait-return-value">sync_wait Return Value</h2>
+<h2 id="sync_wait-return-value"><a aria-hidden="true" tabindex="-1" href="#sync_wait-return-value"><span class="icon icon-link"></span></a>sync_wait Return Value</h2>
 <p><code>sync_wait</code> returns <code>std::optional&#x3C;std::tuple&#x3C;Ts...>></code>. The three completion signals map to three outcomes:</p>
 <div class="table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch">
 
@@ -97,7 +97,7 @@
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> opt </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> sync_wait</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">just_error</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">std</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::exception_ptr{}));</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">if</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (</span><span style="color:#D73A49;--shiki-dark:#F97583">!</span><span style="color:#24292E;--shiki-dark:#E1E4E8">opt) {</span><span style="color:#6A737D;--shiki-dark:#6A737D"> /* error or cancellation occurred */</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> }</span></span></code></pre></div>
 <p>In the code above, <code>when_all(just(1), just(2.0))</code> fires <code>set_value(1, 2.0)</code>, so <code>sync_wait</code> returns <code>std::optional{std::tuple{1, 2.0}}</code>. After unpacking, <code>x=1, y=2.0</code>.</p>
-<h2 id="querying-the-environment">Querying the Environment</h2>
+<h2 id="querying-the-environment"><a aria-hidden="true" tabindex="-1" href="#querying-the-environment"><span class="icon icon-link"></span></a>Querying the Environment</h2>
 <p>Senders in a pipeline can also query the current execution environment:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">sync_wait</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">when_all</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">  just</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">42</span><span style="color:#24292E;--shiki-dark:#E1E4E8">),</span></span>
@@ -105,13 +105,13 @@
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">  get_stop_token</span><span style="color:#24292E;--shiki-dark:#E1E4E8">()</span><span style="color:#6A737D;--shiki-dark:#6A737D">       // query the stop token</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">));</span></span></code></pre></div>
 <p>In the code above, <code>get_scheduler()</code> and <code>get_stop_token()</code> aren’t ordinary Sender Factories — they read information from the Receiver’s environment. This is especially useful when crossing execution contexts.</p>
-<h3 id="summary">Summary</h3>
+<h3 id="summary"><a aria-hidden="true" tabindex="-1" href="#summary"><span class="icon icon-link"></span></a>Summary</h3>
 <ol>
 <li>Pipeline construction is an <strong>O(1) lazy operation</strong> that does no work</li>
 <li><code>sync_wait</code> is a <strong>synchronization boundary</strong> that pulls the async world back into the sync world</li>
 <li>All errors and cancellations are propagated through <code>std::optional</code></li>
 <li>Pipe syntax and nested function call syntax are equivalent; pipe syntax is recommended</li>
-</ol></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/03b-async-operations/" data-astro-cid-ykvenys5>← 03b · Formal Model of Asynchronous Operations</a><a href="/exec/tutorials/05-thread-pools/" data-astro-cid-ykvenys5>05 · Thread Pools and Execution Contexts →</a></nav></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
+</ol></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/03b-async-operations/" data-astro-cid-ykvenys5>← 03b · Formal Model of Asynchronous Operations</a><a href="/exec/tutorials/05-thread-pools/" data-astro-cid-ykvenys5>05 · Thread Pools and Execution Contexts →</a></nav></div></div></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
       (function() {
         const STORAGE_KEY = "exectutorial-theme";
 
@@ -144,5 +144,55 @@
           try { localStorage.setItem(STORAGE_KEY, next); } catch(e) {}
           setTheme(next);
         });
+      })();
+    </script><script>
+      (function() {
+        function buildToc(containerId, navId) {
+          var container = document.getElementById(containerId);
+          var nav = document.getElementById(navId);
+          if (!nav) return;
+          var headings = document.querySelectorAll(".article-content h2, .article-content h3");
+          if (headings.length === 0) { if (container) container.style.display = "none"; return; }
+
+          var ul = document.createElement("ul");
+          headings.forEach(function(h) {
+            if (!h.id) return;
+            var li = document.createElement("li");
+            var a = document.createElement("a");
+            a.href = "#" + h.id;
+            a.textContent = h.textContent.replace(/¶$/, "").trim();
+            a.className = "toc-" + h.tagName.toLowerCase();
+            li.appendChild(a);
+            ul.appendChild(li);
+          });
+          nav.appendChild(ul);
+        }
+
+        buildToc("tocSidebar", "tocNav");
+        buildToc(null, "tocNavMobile");
+
+        // active heading highlight
+        var tocLinks = document.querySelectorAll("#tocNav a, #tocNavMobile a");
+        if (tocLinks.length > 0) {
+          var headings = document.querySelectorAll(".article-content h2, .article-content h3");
+          function onScroll() {
+            var scrollY = window.scrollY + 80;
+            var active = null;
+            headings.forEach(function(h) {
+              if (h.offsetTop <= scrollY) active = h;
+            });
+            tocLinks.forEach(function(link) { link.classList.remove("active"); });
+            if (active) {
+              var id = active.id;
+              tocLinks.forEach(function(link) {
+                if (link.getAttribute("href") === "#" + id) {
+                  link.classList.add("active");
+                }
+              });
+            }
+          }
+          window.addEventListener("scroll", onScroll, { passive: true });
+          onScroll();
+        }
       })();
     </script></body></html>

@@ -5,8 +5,8 @@
         if(!s&&matchMedia("(prefers-color-scheme:light)").matches)theme="light";
         document.documentElement.setAttribute("data-theme",theme);
       })();
-    </script><link rel="stylesheet" href="/exec/_astro/01-why-stdexec.hXKgsPrw.css"></head><body data-astro-cid-ykvenys5><div class="container" data-astro-cid-ykvenys5><header data-astro-cid-ykvenys5><div class="title-area" data-astro-cid-ykvenys5><a href="/exec/tutorials/" style="color:var(--fg-muted);text-decoration:none;font-size:0.85rem;" data-astro-cid-ykvenys5>← Back to index</a><h1 data-astro-cid-ykvenys5>27 · tag_invoke — Zero-Overhead Extension Points</h1></div><button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" data-astro-cid-ykvenys5>🌙</button></header><article class="article-content" data-astro-cid-ykvenys5>
-<h2 id="the-c-extension-problem">The C++ Extension Problem</h2>
+    </script><link rel="stylesheet" href="/exec/_astro/01-why-stdexec.YzjJ_D8W.css"></head><body data-astro-cid-ykvenys5><div class="layout-wrap" data-astro-cid-ykvenys5><aside class="toc-sidebar" id="tocSidebar" data-astro-cid-ykvenys5><div class="toc-label" data-astro-cid-ykvenys5>On this page</div><nav id="tocNav" data-astro-cid-ykvenys5></nav></aside><div class="layout-main" data-astro-cid-ykvenys5><div class="container" data-astro-cid-ykvenys5><header data-astro-cid-ykvenys5><div class="title-area" data-astro-cid-ykvenys5><a href="/exec/tutorials/" style="color:var(--fg-muted);text-decoration:none;font-size:0.85rem;" data-astro-cid-ykvenys5>← Back to index</a><h1 data-astro-cid-ykvenys5>27 · tag_invoke — Zero-Overhead Extension Points</h1></div><button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" data-astro-cid-ykvenys5>🌙</button></header><details class="toc-mobile" id="tocMobile" data-astro-cid-ykvenys5><summary data-astro-cid-ykvenys5>On this page</summary><nav id="tocNavMobile" data-astro-cid-ykvenys5></nav></details><article class="article-content" data-astro-cid-ykvenys5>
+<h2 id="the-c-extension-problem"><a aria-hidden="true" tabindex="-1" href="#the-c-extension-problem"><span class="icon icon-link"></span></a>The C++ Extension Problem</h2>
 <p>Suppose you’ve written an async library with this core interface:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Your library defines a CPO (Customization Point Object)</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">inline</span><span style="color:#D73A49;--shiki-dark:#F97583"> constexpr</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> schedule_t</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> schedule{};</span></span></code></pre></div>
@@ -28,7 +28,7 @@
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span></code></pre></div>
 <p>The compiler finds the <code>tag_invoke</code> overload via ADL (Argument Dependent Lookup) in <code>my_scheduler</code>’s namespace. No inheritance, no class-definition modification, no template specialization — just a free function in your namespace.</p>
 <hr>
-<h2 id="tag_invokes-two-step-dispatch"><code>tag_invoke</code>’s Two-Step Dispatch</h2>
+<h2 id="tag_invokes-two-step-dispatch"><a aria-hidden="true" tabindex="-1" href="#tag_invokes-two-step-dispatch"><span class="icon icon-link"></span></a><code>tag_invoke</code>’s Two-Step Dispatch</h2>
 <p>When you write <code>schedule(my_scheduler)</code>, a two-step dispatch happens internally:</p>
 <pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="plaintext"><code><span class="line"><span>schedule(my_scheduler)</span></span>
 <span class="line"><span>  → Step 1: Does my_scheduler have a schedule() member?</span></span>
@@ -50,7 +50,7 @@
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">};</span></span></code></pre></div>
 <p><code>*this</code> is <code>schedule_t{}</code> — the tag itself is passed as the first argument to <code>tag_invoke</code>. This distinguishes “this is a <code>schedule</code> call” from “this is a <code>connect</code> call.”</p>
 <hr>
-<h2 id="compared-to-virtual-functions">Compared to Virtual Functions</h2>
+<h2 id="compared-to-virtual-functions"><a aria-hidden="true" tabindex="-1" href="#compared-to-virtual-functions"><span class="icon icon-link"></span></a>Compared to Virtual Functions</h2>
 <p><code>tag_invoke</code> and virtual functions are two answers to the same question — how to call the right implementation when you don’t know the concrete type at compile time.</p>
 <div class="table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch">
 
@@ -90,7 +90,7 @@
 <table><thead><tr><th></th><th>Virtual Functions</th><th>tag_invoke</th></tr></thead><tbody><tr><td>Dispatch timing</td><td>Runtime (vtable)</td><td>Compile time (ADL + overload resolution)</td></tr><tr><td>Runtime overhead</td><td>Yes (pointer indirection)</td><td>None (direct call after compilation)</td></tr><tr><td>noexcept support</td><td>Restricted</td><td>Full support</td></tr><tr><td>GPU compatible</td><td>Not available</td><td>Available</td></tr><tr><td>Invasiveness</td><td>High (must inherit base class)</td><td>Low (just write a free function)</td></tr></tbody></table></div>
 <p>Since all overload resolution happens at compile time, the compiled code looks like a direct function call — no vtable indirection, no runtime query.</p>
 <hr>
-<h2 id="defining-your-own-cpo">Defining Your Own CPO</h2>
+<h2 id="defining-your-own-cpo"><a aria-hidden="true" tabindex="-1" href="#defining-your-own-cpo"><span class="icon icon-link"></span></a>Defining Your Own CPO</h2>
 <p>To provide custom behavior for your type, you need two things:</p>
 <p>(1) Define a CPO type (just an empty struct with <code>operator()</code>):</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">struct</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> my_cpo_t</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
@@ -112,7 +112,7 @@
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">my_cpo</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(my_type{});</span><span style="color:#6A737D;--shiki-dark:#6A737D">  // → 42 (found via ADL)</span></span></code></pre></div>
 <p>Note the <code>friend</code> keyword — it lets <code>tag_invoke</code> be defined inside the class body while still being a namespace-scope free function discoverable by ADL. This is a C++ idiom that keeps the definition compact.</p>
 <hr>
-<h2 id="relationship-with-the-domain-mechanism">Relationship with the Domain Mechanism</h2>
+<h2 id="relationship-with-the-domain-mechanism"><a aria-hidden="true" tabindex="-1" href="#relationship-with-the-domain-mechanism"><span class="icon icon-link"></span></a>Relationship with the Domain Mechanism</h2>
 <p>These two concepts are easy to confuse. A simple distinction:</p>
 <div class="table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch">
 
@@ -146,7 +146,7 @@
 <li><strong>Domain</strong>: answers “at a high level, which implementation should be chosen?” — bulk on GPU should be a CUDA kernel, on CPU should be a thread loop</li>
 </ul>
 <hr>
-<h2 id="built-in-cpo-reference">Built-in CPO Reference</h2>
+<h2 id="built-in-cpo-reference"><a aria-hidden="true" tabindex="-1" href="#built-in-cpo-reference"><span class="icon icon-link"></span></a>Built-in CPO Reference</h2>
 <p>All core stdexec operations are CPOs that can be customized via <code>tag_invoke</code>:</p>
 <div class="table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch">
 
@@ -200,7 +200,7 @@
 
 <table><thead><tr><th>CPO</th><th>Purpose</th><th>Customization Scenario</th></tr></thead><tbody><tr><td><code>schedule</code></td><td>Get a sender from a scheduler</td><td>Implementing a custom scheduler</td></tr><tr><td><code>connect</code></td><td>Connect a sender and receiver</td><td>Implementing a custom sender</td></tr><tr><td><code>start</code></td><td>Start an operation</td><td>Rarely customized</td></tr><tr><td><code>set_value</code> / <code>set_error</code> / <code>set_stopped</code></td><td>Emit completion signals</td><td>Implementing a custom receiver</td></tr><tr><td><code>get_env</code></td><td>Get the environment</td><td>Implementing a custom receiver</td></tr><tr><td><code>get_scheduler</code></td><td>Query the scheduler</td><td>Implementing a custom env</td></tr><tr><td><code>get_domain</code></td><td>Query the domain</td><td>Implementing a custom scheduler</td></tr><tr><td><code>get_stop_token</code></td><td>Query the stop token</td><td>Implementing a custom env</td></tr></tbody></table></div>
 <hr>
-<h2 id="sender_adaptor_closure--making-your-algorithm-pipeable"><code>sender_adaptor_closure</code> — Making Your Algorithm Pipeable</h2>
+<h2 id="sender_adaptor_closure--making-your-algorithm-pipeable"><a aria-hidden="true" tabindex="-1" href="#sender_adaptor_closure--making-your-algorithm-pipeable"><span class="icon icon-link"></span></a><code>sender_adaptor_closure</code> — Making Your Algorithm Pipeable</h2>
 <p>If you want users to call your custom sender adaptor with <code>|</code> pipe syntax:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">struct</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> my_adaptor</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> : stdexec::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">sender_adaptor_closure</span><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#6F42C1;--shiki-dark:#B392F0">my_adaptor</span><span style="color:#24292E;--shiki-dark:#E1E4E8">> {</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  template</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> &#x3C;</span><span style="color:#6F42C1;--shiki-dark:#B392F0">stdexec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#D73A49;--shiki-dark:#F97583">sender</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Sndr</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
@@ -213,12 +213,12 @@
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">sender </span><span style="color:#D73A49;--shiki-dark:#F97583">|</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> my_adaptor{}</span></span></code></pre></div>
 <p>Inheriting <code>sender_adaptor_closure</code> automatically gives your type <code>operator|</code> support — the foundation for building composable pipelines.</p>
 <hr>
-<h2 id="limitations">Limitations</h2>
+<h2 id="limitations"><a aria-hidden="true" tabindex="-1" href="#limitations"><span class="icon icon-link"></span></a>Limitations</h2>
 <ol>
 <li><strong>ADL dependency</strong> — <code>tag_invoke</code> overloads must be in the same namespace as the argument type. If you’re using a third-party type and can’t modify its namespace, you can’t add <code>tag_invoke</code> overloads for it. You’ll need an adapter wrapper pattern. (Note: the C++26 draft replaced <code>tag_invoke</code> with member function customization for standard CPOs; <code>tag_invoke</code> remains in use by stdexec and other libraries.)</li>
 <li><strong>Error messages can be cryptic</strong> — when <code>tag_invoke</code> can’t find a matching overload, the compiler often produces long template instantiation backtraces. This is because SFINAE runs many rounds behind the scenes. stdexec typically adds extra <code>static_assert</code>s to improve error messages, but this isn’t something <code>tag_invoke</code> itself can fix.</li>
 <li><strong>Subtle relationship with member functions</strong> — stdexec CPOs try the member function path <strong>first</strong>; if your type coincidentally has a member with the same name, that member takes priority over any <code>tag_invoke</code> overload (which is the deprecated fallback). Standard CPOs (<code>schedule</code>, <code>connect</code>, etc.) check the member function first, and only fall back to <code>tag_invoke</code> if no member exists. Third-party CPO implementations may order dispatch differently, so check the documentation.</li>
-</ol></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/26b-apply-sender/" data-astro-cid-ykvenys5>← 26b · apply_sender — The Domain Hook Consumers Use</a><a href="/exec/tutorials/28-stop-token-cancellation/" data-astro-cid-ykvenys5>28 · Stop Token — Cooperative Cancellation →</a></nav></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
+</ol></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/26b-apply-sender/" data-astro-cid-ykvenys5>← 26b · apply_sender — The Domain Hook Consumers Use</a><a href="/exec/tutorials/28-stop-token-cancellation/" data-astro-cid-ykvenys5>28 · Stop Token — Cooperative Cancellation →</a></nav></div></div></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
       (function() {
         const STORAGE_KEY = "exectutorial-theme";
 
@@ -251,5 +251,55 @@
           try { localStorage.setItem(STORAGE_KEY, next); } catch(e) {}
           setTheme(next);
         });
+      })();
+    </script><script>
+      (function() {
+        function buildToc(containerId, navId) {
+          var container = document.getElementById(containerId);
+          var nav = document.getElementById(navId);
+          if (!nav) return;
+          var headings = document.querySelectorAll(".article-content h2, .article-content h3");
+          if (headings.length === 0) { if (container) container.style.display = "none"; return; }
+
+          var ul = document.createElement("ul");
+          headings.forEach(function(h) {
+            if (!h.id) return;
+            var li = document.createElement("li");
+            var a = document.createElement("a");
+            a.href = "#" + h.id;
+            a.textContent = h.textContent.replace(/¶$/, "").trim();
+            a.className = "toc-" + h.tagName.toLowerCase();
+            li.appendChild(a);
+            ul.appendChild(li);
+          });
+          nav.appendChild(ul);
+        }
+
+        buildToc("tocSidebar", "tocNav");
+        buildToc(null, "tocNavMobile");
+
+        // active heading highlight
+        var tocLinks = document.querySelectorAll("#tocNav a, #tocNavMobile a");
+        if (tocLinks.length > 0) {
+          var headings = document.querySelectorAll(".article-content h2, .article-content h3");
+          function onScroll() {
+            var scrollY = window.scrollY + 80;
+            var active = null;
+            headings.forEach(function(h) {
+              if (h.offsetTop <= scrollY) active = h;
+            });
+            tocLinks.forEach(function(link) { link.classList.remove("active"); });
+            if (active) {
+              var id = active.id;
+              tocLinks.forEach(function(link) {
+                if (link.getAttribute("href") === "#" + id) {
+                  link.classList.add("active");
+                }
+              });
+            }
+          }
+          window.addEventListener("scroll", onScroll, { passive: true });
+          onScroll();
+        }
       })();
     </script></body></html>

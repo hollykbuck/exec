@@ -5,11 +5,11 @@
         if(!s&&matchMedia("(prefers-color-scheme:light)").matches)theme="light";
         document.documentElement.setAttribute("data-theme",theme);
       })();
-    </script><link rel="stylesheet" href="/exec/_astro/01-why-stdexec.hXKgsPrw.css"></head><body data-astro-cid-ykvenys5><div class="container" data-astro-cid-ykvenys5><header data-astro-cid-ykvenys5><div class="title-area" data-astro-cid-ykvenys5><a href="/exec/tutorials/" style="color:var(--fg-muted);text-decoration:none;font-size:0.85rem;" data-astro-cid-ykvenys5>← Back to index</a><h1 data-astro-cid-ykvenys5>32 · Implementing then from Scratch — Custom Sender + Receiver + Operation State</h1></div><button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" data-astro-cid-ykvenys5>🌙</button></header><article class="article-content" data-astro-cid-ykvenys5>
-<h2 id="why-implement-then-yourself">Why Implement then Yourself?</h2>
+    </script><link rel="stylesheet" href="/exec/_astro/01-why-stdexec.YzjJ_D8W.css"></head><body data-astro-cid-ykvenys5><div class="layout-wrap" data-astro-cid-ykvenys5><aside class="toc-sidebar" id="tocSidebar" data-astro-cid-ykvenys5><div class="toc-label" data-astro-cid-ykvenys5>On this page</div><nav id="tocNav" data-astro-cid-ykvenys5></nav></aside><div class="layout-main" data-astro-cid-ykvenys5><div class="container" data-astro-cid-ykvenys5><header data-astro-cid-ykvenys5><div class="title-area" data-astro-cid-ykvenys5><a href="/exec/tutorials/" style="color:var(--fg-muted);text-decoration:none;font-size:0.85rem;" data-astro-cid-ykvenys5>← Back to index</a><h1 data-astro-cid-ykvenys5>32 · Implementing then from Scratch — Custom Sender + Receiver + Operation State</h1></div><button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" data-astro-cid-ykvenys5>🌙</button></header><details class="toc-mobile" id="tocMobile" data-astro-cid-ykvenys5><summary data-astro-cid-ykvenys5>On this page</summary><nav id="tocNavMobile" data-astro-cid-ykvenys5></nav></details><article class="article-content" data-astro-cid-ykvenys5>
+<h2 id="why-implement-then-yourself"><a aria-hidden="true" tabindex="-1" href="#why-implement-then-yourself"><span class="icon icon-link"></span></a>Why Implement then Yourself?</h2>
 <p>For the first 31 chapters you’ve been <strong>using</strong> senders and receivers. In this chapter you’ll hand-write one. The <code>then</code> you build won’t be faster than the standard library’s, but you’ll finally understand how a sender and receiver are glued together — how a sender’s <code>connect</code> produces an operation state, and how a receiver’s three signals get intercepted and forwarded.</p>
 <p>It’s like the driving instructor popping the hood — you won’t necessarily be able to fix the engine after seeing it, but you’ll understand how the power gets to the wheels.</p>
-<h2 id="the-four-core-pieces">The Four Core Pieces</h2>
+<h2 id="the-four-core-pieces"><a aria-hidden="true" tabindex="-1" href="#the-four-core-pieces"><span class="icon icon-link"></span></a>The Four Core Pieces</h2>
 <p>Implementing a sender adaptor requires four things. You can’t skip any of them:</p>
 <p>(1) <strong>Sender type</strong> — holds the child sender and the function object, exposes <code>connect()</code>
 (2) <strong>Operation State</strong> — the product of <code>connect()</code>, holds the child operation state and the external receiver
@@ -23,7 +23,7 @@
 <li>Completion Signatures is the <strong>spec sheet</strong> — “input format X, output format Y”</li>
 </ul>
 <hr>
-<h2 id="step-1-define-the-sender-type">Step 1: Define the Sender Type</h2>
+<h2 id="step-1-define-the-sender-type"><a aria-hidden="true" tabindex="-1" href="#step-1-define-the-sender-type"><span class="icon icon-link"></span></a>Step 1: Define the Sender Type</h2>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">template</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> &#x3C;</span><span style="color:#6F42C1;--shiki-dark:#B392F0">stdexec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#D73A49;--shiki-dark:#F97583">sender</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Sndr</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#6F42C1;--shiki-dark:#B392F0">std</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#D73A49;--shiki-dark:#F97583">invocable</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Fn</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">struct</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> then_sender</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  using</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> sender_concept</span><span style="color:#D73A49;--shiki-dark:#F97583"> =</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> stdexec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">sender_tag</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
@@ -38,7 +38,7 @@
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">};</span></span></code></pre></div>
 <p>Above, <code>then_sender</code> is just a struct holding two things — the child sender it “catches” and the function to apply to its result. The <code>sender_concept</code> tag tells the type system “this is a sender.”</p>
 <hr>
-<h2 id="step-2-declare-completion-signatures">Step 2: Declare Completion Signatures</h2>
+<h2 id="step-2-declare-completion-signatures"><a aria-hidden="true" tabindex="-1" href="#step-2-declare-completion-signatures"><span class="icon icon-link"></span></a>Step 2: Declare Completion Signatures</h2>
 <p>Completion signatures tell downstream code at compile time “what signals I will emit”:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">template</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> &#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#24292E;--shiki-dark:#E1E4E8">... </span><span style="color:#6F42C1;--shiki-dark:#B392F0">Args</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">using</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> _set_value_t</span><span style="color:#D73A49;--shiki-dark:#F97583"> =</span></span>
@@ -57,7 +57,7 @@
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span></code></pre></div>
 <p>The core idea above is “type translation” — the upstream sender says “I will emit <code>set_value(int, double)</code>,” and after <code>then(f)</code>, you say “I will emit <code>set_value(std::invoke_result_t&#x3C;f, int, double>)</code>.” <code>__transform_completion_signatures_t</code> is the tool that performs this translation. We also add a default <code>set_error_t(std::exception_ptr)</code> since the callback <code>f</code> might throw.</p>
 <hr>
-<h2 id="step-3-define-the-operation-state">Step 3: Define the Operation State</h2>
+<h2 id="step-3-define-the-operation-state"><a aria-hidden="true" tabindex="-1" href="#step-3-define-the-operation-state"><span class="icon icon-link"></span></a>Step 3: Define the Operation State</h2>
 <p>The operation state is what <code>connect()</code> returns — it chains the child sender and the external receiver together:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">template</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> &#x3C;</span><span style="color:#6F42C1;--shiki-dark:#B392F0">stdexec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#D73A49;--shiki-dark:#F97583">receiver</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> R</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Sndr</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Fn</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">struct</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> then_op</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
@@ -79,7 +79,7 @@
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">};</span></span></code></pre></div>
 <p>Above, the constructor does two things at once — saves the external receiver and calls <code>connect</code> to create the child operation state. <code>start()</code> is deliberately simple: it only starts the child operation, handing execution control to the child sender.</p>
 <hr>
-<h2 id="step-4-define-the-internal-receiver">Step 4: Define the Internal Receiver</h2>
+<h2 id="step-4-define-the-internal-receiver"><a aria-hidden="true" tabindex="-1" href="#step-4-define-the-internal-receiver"><span class="icon icon-link"></span></a>Step 4: Define the Internal Receiver</h2>
 <p>The internal receiver is the “brain” of <code>then</code> — it receives the child sender’s signals, calls the function <code>f</code>, then forwards the result to the external receiver:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">template</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> &#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Op</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">struct</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> then_receiver</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
@@ -121,7 +121,7 @@
 </ul>
 <p><code>set_error</code> and <code>set_stopped</code> are trivial — just forward as-is to the external receiver. The environment (<code>get_env</code>) also passes through unchanged.</p>
 <hr>
-<h2 id="step-5-implement-connect">Step 5: Implement connect</h2>
+<h2 id="step-5-implement-connect"><a aria-hidden="true" tabindex="-1" href="#step-5-implement-connect"><span class="icon icon-link"></span></a>Step 5: Implement connect</h2>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Inside then_sender:</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">template</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> &#x3C;</span><span style="color:#6F42C1;--shiki-dark:#B392F0">stdexec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#D73A49;--shiki-dark:#F97583">receiver</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> R</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  requires</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> stdexec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::sender_to</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;</span><span style="color:#24292E;--shiki-dark:#E1E4E8">Sndr, then_receiver</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;</span><span style="color:#24292E;--shiki-dark:#E1E4E8">then_op</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;</span><span style="color:#24292E;--shiki-dark:#E1E4E8">Sndr, Fn, R</span><span style="color:#D73A49;--shiki-dark:#F97583">>>></span></span>
@@ -129,7 +129,7 @@
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  return</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> then_op</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;</span><span style="color:#24292E;--shiki-dark:#E1E4E8">Sndr, Fn, R</span><span style="color:#D73A49;--shiki-dark:#F97583">></span><span style="color:#24292E;--shiki-dark:#E1E4E8">{</span><span style="color:#6F42C1;--shiki-dark:#B392F0">std</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">move</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(sndr_), </span><span style="color:#6F42C1;--shiki-dark:#B392F0">std</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">move</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(fn_), </span><span style="color:#6F42C1;--shiki-dark:#B392F0">std</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">move</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(r)};</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span></code></pre></div>
 <hr>
-<h2 id="step-6-pipe-adaptor">Step 6: Pipe Adaptor</h2>
+<h2 id="step-6-pipe-adaptor"><a aria-hidden="true" tabindex="-1" href="#step-6-pipe-adaptor"><span class="icon icon-link"></span></a>Step 6: Pipe Adaptor</h2>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">struct</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> then_t</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  template</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> &#x3C;</span><span style="color:#6F42C1;--shiki-dark:#B392F0">stdexec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#D73A49;--shiki-dark:#F97583">sender</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Sndr</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Fn</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  auto</span><span style="color:#D73A49;--shiki-dark:#F97583"> operator</span><span style="color:#6F42C1;--shiki-dark:#B392F0">()</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">Sndr</span><span style="color:#E36209;--shiki-dark:#FFAB70"> sndr</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#6F42C1;--shiki-dark:#B392F0">Fn</span><span style="color:#E36209;--shiki-dark:#FFAB70"> fn</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) </span><span style="color:#D73A49;--shiki-dark:#F97583">const</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
@@ -144,7 +144,7 @@
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">};</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">inline</span><span style="color:#D73A49;--shiki-dark:#F97583"> constexpr</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> then_t</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> then{};</span></span></code></pre></div>
 <hr>
-<h2 id="complete-recap">Complete Recap</h2>
+<h2 id="complete-recap"><a aria-hidden="true" tabindex="-1" href="#complete-recap"><span class="icon icon-link"></span></a>Complete Recap</h2>
 <p>Implementing <code>then</code> requires seven elements:</p>
 <ol>
 <li><strong>Sender type</strong> — holds the child sender and the function object</li>
@@ -159,14 +159,14 @@
 <p>stdexec’s <code>examples/algorithms/then.hpp</code> is the complete reference implementation containing all of the above.</p>
 </blockquote>
 <hr>
-<h2 id="limitations">Limitations</h2>
+<h2 id="limitations"><a aria-hidden="true" tabindex="-1" href="#limitations"><span class="icon icon-link"></span></a>Limitations</h2>
 <p>This hand-rolled implementation is a <strong>minimal educational version</strong>, missing production necessities:</p>
 <ul>
 <li><strong>Move-semantics optimization</strong> — extensive use of <code>std::move</code> to avoid accidental copies of large objects</li>
 <li><strong>SBO (Small Buffer Optimization)</strong> — local buffering of small function objects to avoid heap allocation</li>
 <li><strong><code>connect</code> noexcept consistency</strong> — the standard requires that if <code>connect</code> is noexcept for one receiver with a given environment, it must be noexcept for all receivers with that environment. The educational implementation doesn’t track this.</li>
 <li><strong>Compile-time zero overhead</strong> — using <code>[[no_unique_address]]</code> and EBO to eliminate space wasted by empty function objects</li>
-</ul></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/31-parallel-scheduler/" data-astro-cid-ykvenys5>← 31 · parallel_scheduler — CPU Parallel Computing Scheduler</a><a href="/exec/tutorials/33-implement-retry/" data-astro-cid-ykvenys5>33 · Implementing retry from Scratch — Error Recovery Pattern →</a></nav></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
+</ul></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/31-parallel-scheduler/" data-astro-cid-ykvenys5>← 31 · parallel_scheduler — CPU Parallel Computing Scheduler</a><a href="/exec/tutorials/33-implement-retry/" data-astro-cid-ykvenys5>33 · Implementing retry from Scratch — Error Recovery Pattern →</a></nav></div></div></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
       (function() {
         const STORAGE_KEY = "exectutorial-theme";
 
@@ -199,5 +199,55 @@
           try { localStorage.setItem(STORAGE_KEY, next); } catch(e) {}
           setTheme(next);
         });
+      })();
+    </script><script>
+      (function() {
+        function buildToc(containerId, navId) {
+          var container = document.getElementById(containerId);
+          var nav = document.getElementById(navId);
+          if (!nav) return;
+          var headings = document.querySelectorAll(".article-content h2, .article-content h3");
+          if (headings.length === 0) { if (container) container.style.display = "none"; return; }
+
+          var ul = document.createElement("ul");
+          headings.forEach(function(h) {
+            if (!h.id) return;
+            var li = document.createElement("li");
+            var a = document.createElement("a");
+            a.href = "#" + h.id;
+            a.textContent = h.textContent.replace(/¶$/, "").trim();
+            a.className = "toc-" + h.tagName.toLowerCase();
+            li.appendChild(a);
+            ul.appendChild(li);
+          });
+          nav.appendChild(ul);
+        }
+
+        buildToc("tocSidebar", "tocNav");
+        buildToc(null, "tocNavMobile");
+
+        // active heading highlight
+        var tocLinks = document.querySelectorAll("#tocNav a, #tocNavMobile a");
+        if (tocLinks.length > 0) {
+          var headings = document.querySelectorAll(".article-content h2, .article-content h3");
+          function onScroll() {
+            var scrollY = window.scrollY + 80;
+            var active = null;
+            headings.forEach(function(h) {
+              if (h.offsetTop <= scrollY) active = h;
+            });
+            tocLinks.forEach(function(link) { link.classList.remove("active"); });
+            if (active) {
+              var id = active.id;
+              tocLinks.forEach(function(link) {
+                if (link.getAttribute("href") === "#" + id) {
+                  link.classList.add("active");
+                }
+              });
+            }
+          }
+          window.addEventListener("scroll", onScroll, { passive: true });
+          onScroll();
+        }
       })();
     </script></body></html>

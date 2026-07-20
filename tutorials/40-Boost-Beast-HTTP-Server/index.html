@@ -5,13 +5,13 @@
         if(!s&&matchMedia("(prefers-color-scheme:light)").matches)theme="light";
         document.documentElement.setAttribute("data-theme",theme);
       })();
-    </script><link rel="stylesheet" href="/exec/_astro/01-why-stdexec.hXKgsPrw.css"></head><body data-astro-cid-ykvenys5><div class="container" data-astro-cid-ykvenys5><header data-astro-cid-ykvenys5><div class="title-area" data-astro-cid-ykvenys5><a href="/exec/tutorials/" style="color:var(--fg-muted);text-decoration:none;font-size:0.85rem;" data-astro-cid-ykvenys5>← Back to index</a><h1 data-astro-cid-ykvenys5>40 · Boost.Beast HTTP Server — Building a Network Service with Sender Pipeline</h1></div><button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" data-astro-cid-ykvenys5>🌙</button></header><article class="article-content" data-astro-cid-ykvenys5>
+    </script><link rel="stylesheet" href="/exec/_astro/01-why-stdexec.YzjJ_D8W.css"></head><body data-astro-cid-ykvenys5><div class="layout-wrap" data-astro-cid-ykvenys5><aside class="toc-sidebar" id="tocSidebar" data-astro-cid-ykvenys5><div class="toc-label" data-astro-cid-ykvenys5>On this page</div><nav id="tocNav" data-astro-cid-ykvenys5></nav></aside><div class="layout-main" data-astro-cid-ykvenys5><div class="container" data-astro-cid-ykvenys5><header data-astro-cid-ykvenys5><div class="title-area" data-astro-cid-ykvenys5><a href="/exec/tutorials/" style="color:var(--fg-muted);text-decoration:none;font-size:0.85rem;" data-astro-cid-ykvenys5>← Back to index</a><h1 data-astro-cid-ykvenys5>40 · Boost.Beast HTTP Server — Building a Network Service with Sender Pipeline</h1></div><button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" data-astro-cid-ykvenys5>🌙</button></header><details class="toc-mobile" id="tocMobile" data-astro-cid-ykvenys5><summary data-astro-cid-ykvenys5>On this page</summary><nav id="tocNavMobile" data-astro-cid-ykvenys5></nav></details><article class="article-content" data-astro-cid-ykvenys5>
 <blockquote>
 <p><strong>Standard Section</strong>: —
 <strong>stdexec Reference</strong>: <code>exec/asio/use_sender.hpp</code>, <code>exec/asio/asio_thread_pool.hpp</code>
 <strong>Related Tests</strong>: <code>tests/test_beast_server.cpp</code></p>
 </blockquote>
-<h2 id="overview">Overview</h2>
+<h2 id="overview"><a aria-hidden="true" tabindex="-1" href="#overview"><span class="icon icon-link"></span></a>Overview</h2>
 <p>This section demonstrates how to combine <strong>Boost.Beast</strong> (HTTP/WebSocket library) with <strong>stdexec</strong>’s sender/receiver model to build a fully sender-pipeline-based HTTP server.</p>
 <p>Core idea:</p>
 <pre class="mermaid">graph TD
@@ -22,13 +22,13 @@
   D --> E["ASIO async_* operations → stdexec Sender"]
   E --> F["co_await / then / let_value"]
   F --> G["HTTP request processing pipeline"]</pre>
-<h2 id="prerequisites">Prerequisites</h2>
-<h3 id="dependencies">Dependencies</h3>
+<h2 id="prerequisites"><a aria-hidden="true" tabindex="-1" href="#prerequisites"><span class="icon icon-link"></span></a>Prerequisites</h2>
+<h3 id="dependencies"><a aria-hidden="true" tabindex="-1" href="#dependencies"><span class="icon icon-link"></span></a>Dependencies</h3>
 <p>Ensure your project includes Boost.Beast and stdexec ASIO support. In <code>conanfile.txt</code>:</p>
 <div class="code-block-wrap"><span class="code-lang">ini</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="ini"><code><span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">[requires]</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">boost/1.91.0</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">p2300/...           </span><span style="color:#6A737D;--shiki-dark:#6A737D"># Must use enable_asio=True option</span></span></code></pre></div>
-<h3 id="key-headers">Key Headers</h3>
+<h3 id="key-headers"><a aria-hidden="true" tabindex="-1" href="#key-headers"><span class="icon icon-link"></span></a>Key Headers</h3>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Corresponding test: test_beast_server.cpp</span></span>
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// ASIO + stdexec bridge</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">#include</span><span style="color:#032F62;--shiki-dark:#9ECBFF"> &#x3C;exec/asio/use_sender.hpp></span></span>
@@ -41,7 +41,7 @@
 <span class="line"></span>
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// stdexec</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">#include</span><span style="color:#032F62;--shiki-dark:#9ECBFF"> &#x3C;stdexec/execution.hpp></span></span></code></pre></div>
-<h2 id="step-1-turn-asio-operations-into-senders-with-use_sender">Step 1: Turn ASIO Operations into Senders with <code>use_sender</code></h2>
+<h2 id="step-1-turn-asio-operations-into-senders-with-use_sender"><a aria-hidden="true" tabindex="-1" href="#step-1-turn-asio-operations-into-senders-with-use_sender"><span class="icon icon-link"></span></a>Step 1: Turn ASIO Operations into Senders with <code>use_sender</code></h2>
 <p><code>exec::asio::use_sender</code> is an ASIO completion token that makes any ASIO async operation return a <strong>stdexec sender</strong>:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">namespace</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> beast</span><span style="color:#D73A49;--shiki-dark:#F97583"> =</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> boost</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">beast</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">namespace</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> http</span><span style="color:#D73A49;--shiki-dark:#F97583"> =</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> beast</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">http</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
@@ -57,7 +57,7 @@
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Using use_sender → returns sender</span></span>
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// net::async_read(sock, buf, asioex::use_sender)</span></span>
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// → sender&#x3C;set_value_t(error_code, size_t)></span></span></code></pre></div>
-<h3 id="wrapping-socket-accept-as-a-sender">Wrapping socket accept as a sender</h3>
+<h3 id="wrapping-socket-accept-as-a-sender"><a aria-hidden="true" tabindex="-1" href="#wrapping-socket-accept-as-a-sender"><span class="icon icon-link"></span></a>Wrapping socket accept as a sender</h3>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Corresponding test: test_beast_server.cpp → "beast server accepts and responds"</span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">ex</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::sender </span><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> async_accept</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">tcp</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::acceptor</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x26;</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> acceptor) {</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  return</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> net</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">async_accept</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span></span>
@@ -67,7 +67,7 @@
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  );</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span></code></pre></div>
 <p>Calling <code>async_accept</code> returns a sender that emits <code>set_value(error_code, socket)</code> when a new connection arrives.</p>
-<h2 id="step-2-http-request-handling-coroutine">Step 2: HTTP Request Handling Coroutine</h2>
+<h2 id="step-2-http-request-handling-coroutine"><a aria-hidden="true" tabindex="-1" href="#step-2-http-request-handling-coroutine"><span class="icon icon-link"></span></a>Step 2: HTTP Request Handling Coroutine</h2>
 <p>Use stdexec’s <code>task&#x3C;T></code> coroutine to write request handlers. Since <code>task&#x3C;T></code> can <code>co_await</code> any sender, ASIO’s <code>use_sender</code> senders work directly in coroutines:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Corresponding test: test_beast_server.cpp</span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">ex</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">task</span><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#6F42C1;--shiki-dark:#B392F0">http</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">response</span><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#6F42C1;--shiki-dark:#B392F0">http</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">string_body</span><span style="color:#24292E;--shiki-dark:#E1E4E8">>> </span><span style="color:#6F42C1;--shiki-dark:#B392F0">handle_request</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span></span>
@@ -92,7 +92,7 @@
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  res.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">prepare_payload</span><span style="color:#24292E;--shiki-dark:#E1E4E8">();</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  co_return</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> res;</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span></code></pre></div>
-<h2 id="step-3-connection-lifecycle-management">Step 3: Connection Lifecycle Management</h2>
+<h2 id="step-3-connection-lifecycle-management"><a aria-hidden="true" tabindex="-1" href="#step-3-connection-lifecycle-management"><span class="icon icon-link"></span></a>Step 3: Connection Lifecycle Management</h2>
 <p>Complete connection handling — read request → process → send response, all chained via sender pipeline:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Corresponding test: test_beast_server.cpp</span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">ex</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">task</span><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">void</span><span style="color:#24292E;--shiki-dark:#E1E4E8">> </span><span style="color:#6F42C1;--shiki-dark:#B392F0">read_and_echo</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">beast</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">tcp_stream</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x26;</span><span style="color:#E36209;--shiki-dark:#FFAB70"> stream</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) {</span></span>
@@ -111,7 +111,7 @@
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">  beast</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::error_code shut_ec;</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  stream.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">socket</span><span style="color:#24292E;--shiki-dark:#E1E4E8">().</span><span style="color:#6F42C1;--shiki-dark:#B392F0">shutdown</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">tcp</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">socket</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::shutdown_send, shut_ec);</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span></code></pre></div>
-<h3 id="pure-pipeline-version-without-coroutines">Pure Pipeline Version (Without Coroutines)</h3>
+<h3 id="pure-pipeline-version-without-coroutines"><a aria-hidden="true" tabindex="-1" href="#pure-pipeline-version-without-coroutines"><span class="icon icon-link"></span></a>Pure Pipeline Version (Without Coroutines)</h3>
 <p>If you prefer sender pipelines over coroutines, you can chain with <code>let_value</code>:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Corresponding test: test_beast_server.cpp</span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">ex</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::sender </span><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> handle_connection_pipeline</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">tcp</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::socket raw_sock) {</span></span>
@@ -129,7 +129,7 @@
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">        // Done</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">      });</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span></code></pre></div>
-<h2 id="step-4-accept-loop">Step 4: Accept Loop</h2>
+<h2 id="step-4-accept-loop"><a aria-hidden="true" tabindex="-1" href="#step-4-accept-loop"><span class="icon icon-link"></span></a>Step 4: Accept Loop</h2>
 <p>Use <code>async_scope</code> to manage all connection lifecycles, ensuring structured concurrency:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Corresponding test: test_beast_server.cpp → "beast server accept loop"</span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">ex</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">task</span><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">void</span><span style="color:#24292E;--shiki-dark:#E1E4E8">> </span><span style="color:#6F42C1;--shiki-dark:#B392F0">run_server</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">tcp</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">endpoint</span><span style="color:#E36209;--shiki-dark:#FFAB70"> endpoint</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) {</span></span>
@@ -159,7 +159,7 @@
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">  // Wait for all connections to finish</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  co_await</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> scope.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">on_empty</span><span style="color:#24292E;--shiki-dark:#E1E4E8">();</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span></code></pre></div>
-<h2 id="step-5-start-the-server">Step 5: Start the Server</h2>
+<h2 id="step-5-start-the-server"><a aria-hidden="true" tabindex="-1" href="#step-5-start-the-server"><span class="icon icon-link"></span></a>Step 5: Start the Server</h2>
 <p>Run the server on an ASIO thread pool, with <code>sync_wait</code> blocking in main:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Corresponding test: test_beast_server.cpp → "beast server start and stop"</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">int</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> main</span><span style="color:#24292E;--shiki-dark:#E1E4E8">() {</span></span>
@@ -174,7 +174,7 @@
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    )</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  );</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span></code></pre></div>
-<h2 id="complete-server">Complete Server</h2>
+<h2 id="complete-server"><a aria-hidden="true" tabindex="-1" href="#complete-server"><span class="icon icon-link"></span></a>Complete Server</h2>
 <p>Below is a complete HTTP server based on <code>use_sender</code>, driven by <code>sync_wait</code> for connection handling:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Corresponding test: test_beast_server.cpp</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">#include</span><span style="color:#032F62;--shiki-dark:#9ECBFF"> &#x3C;exec/asio/use_sender.hpp></span></span>
@@ -269,13 +269,13 @@
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">  std</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::jthread </span><span style="color:#6F42C1;--shiki-dark:#B392F0">server_thread</span><span style="color:#24292E;--shiki-dark:#E1E4E8">([</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x26;</span><span style="color:#24292E;--shiki-dark:#E1E4E8">] { </span><span style="color:#6F42C1;--shiki-dark:#B392F0">run_server</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(ctx, acceptor); });</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  server_thread.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">join</span><span style="color:#24292E;--shiki-dark:#E1E4E8">();</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span></code></pre></div>
-<h2 id="design-highlights">Design Highlights</h2>
-<h3 id="1-asio-as-execution-resource">1. ASIO as Execution Resource</h3>
+<h2 id="design-highlights"><a aria-hidden="true" tabindex="-1" href="#design-highlights"><span class="icon icon-link"></span></a>Design Highlights</h2>
+<h3 id="1-asio-as-execution-resource"><a aria-hidden="true" tabindex="-1" href="#1-asio-as-execution-resource"><span class="icon icon-link"></span></a>1. ASIO as Execution Resource</h3>
 <p><code>exec::asio::asio_thread_pool</code> wraps <code>net::io_context</code>, serving both as a stdexec scheduler and an ASIO execution context:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">asioex</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::asio_thread_pool pool{</span><span style="color:#005CC5;--shiki-dark:#79B8FF">4</span><span style="color:#24292E;--shiki-dark:#E1E4E8">};</span><span style="color:#6A737D;--shiki-dark:#6A737D">    // 4 threads</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> sch </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> pool.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">get_scheduler</span><span style="color:#24292E;--shiki-dark:#E1E4E8">();</span><span style="color:#6A737D;--shiki-dark:#6A737D">      // stdexec scheduler</span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">net</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::io_context</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x26;</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> ctx </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> pool.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">context</span><span style="color:#24292E;--shiki-dark:#E1E4E8">();</span><span style="color:#6A737D;--shiki-dark:#6A737D"> // ASIO io_context</span></span></code></pre></div>
-<h3 id="2-use_sender-bridge-pattern">2. <code>use_sender</code> Bridge Pattern</h3>
+<h3 id="2-use_sender-bridge-pattern"><a aria-hidden="true" tabindex="-1" href="#2-use_sender-bridge-pattern"><span class="icon icon-link"></span></a>2. <code>use_sender</code> Bridge Pattern</h3>
 <p><code>exec::asio::use_sender</code> converts ASIO async operations (<code>async_accept</code>, <code>async_read</code>, <code>async_write</code>) into stdexec senders. Conversion rules:</p>
 <div class="table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch">
 
@@ -299,16 +299,16 @@
 
 
 <table><thead><tr><th>ASIO Operation Signature</th><th>Corresponding Sender Completion Signature</th></tr></thead><tbody><tr><td><code>async_read_some(sock, buf, token)</code></td><td><code>set_value_t(size_t)</code> — on success, error_code is stripped; on failure, converted to <code>set_error</code></td></tr><tr><td><code>async_write(sock, buf, token)</code></td><td><code>set_value_t(size_t)</code> — same as above</td></tr><tr><td><code>async_accept(acceptor, sock, token)</code></td><td><code>set_value_t(error_code, socket)</code> — accept does not strip error_code</td></tr></tbody></table></div>
-<h3 id="3-structured-concurrency">3. Structured Concurrency</h3>
+<h3 id="3-structured-concurrency"><a aria-hidden="true" tabindex="-1" href="#3-structured-concurrency"><span class="icon icon-link"></span></a>3. Structured Concurrency</h3>
 <p>Use <code>async_scope</code> to manage all connection tasks:</p>
 <ul>
 <li>Each connection starts via <code>scope.spawn()</code></li>
 <li>Before server exit, <code>scope.on_empty()</code> waits for all connections to complete</li>
 <li>Exceptions are caught via <code>upon_error</code>, isolated from other connections</li>
 </ul>
-<h3 id="4-allocator-support">4. Allocator Support</h3>
+<h3 id="4-allocator-support"><a aria-hidden="true" tabindex="-1" href="#4-allocator-support"><span class="icon icon-link"></span></a>4. Allocator Support</h3>
 <p><code>use_sender</code> follows stdexec’s environment mechanism, reading the allocator from the receiver environment via ASIO’s <code>associated_allocator</code> trait.</p>
-<h4 id="principle">Principle</h4>
+<h4 id="principle"><a aria-hidden="true" tabindex="-1" href="#principle"><span class="icon icon-link"></span></a>Principle</h4>
 <p>The <code>use_sender</code> completion token specializes <code>associated_allocator</code> in <code>completion_token.hpp</code>:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// stdexec exec/asio/completion_token.hpp</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">template</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> &#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Receiver</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
@@ -319,7 +319,7 @@
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  }</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">};</span></span></code></pre></div>
 <p>This means when ASIO needs to allocate memory for a handler, it calls <code>get_allocator(get_env(receiver))</code> to obtain the allocator.</p>
-<h4 id="injecting-custom-allocators">Injecting Custom Allocators</h4>
+<h4 id="injecting-custom-allocators"><a aria-hidden="true" tabindex="-1" href="#injecting-custom-allocators"><span class="icon icon-link"></span></a>Injecting Custom Allocators</h4>
 <p>Inject via <code>write_env</code> + <code>prop{get_allocator, my_allocator}</code>:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Corresponding test: test_beast_server.cpp → "use_sender propagates allocator"</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">template</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> &#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">class</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> T</span><span style="color:#24292E;--shiki-dark:#E1E4E8">></span></span>
@@ -337,14 +337,14 @@
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  some_sender,</span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">  ex</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::prop{</span><span style="color:#6F42C1;--shiki-dark:#B392F0">ex</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::get_allocator, tracker_allocator</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;char></span><span style="color:#24292E;--shiki-dark:#E1E4E8">{}}</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">);</span></span></code></pre></div>
-<h4 id="reading-the-allocator-in-a-coroutine">Reading the Allocator in a Coroutine</h4>
+<h4 id="reading-the-allocator-in-a-coroutine"><a aria-hidden="true" tabindex="-1" href="#reading-the-allocator-in-a-coroutine"><span class="icon icon-link"></span></a>Reading the Allocator in a Coroutine</h4>
 <p><code>task&#x3C;T></code> can read the allocator from the environment via <code>read_env(get_allocator)</code>:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Corresponding test: test_beast_server.cpp → "custom allocator propagates through task environment"</span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">ex</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">task</span><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">void</span><span style="color:#24292E;--shiki-dark:#E1E4E8">> </span><span style="color:#6F42C1;--shiki-dark:#B392F0">check_allocator</span><span style="color:#24292E;--shiki-dark:#E1E4E8">() {</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> alloc </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#D73A49;--shiki-dark:#F97583"> co_await</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> ex</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">read_env</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">ex</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::get_allocator);</span></span>
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">  // alloc is the allocator from the current receiver environment</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span></code></pre></div>
-<h3 id="5-go-style-value-context">5. Go-style Value Context</h3>
+<h3 id="5-go-style-value-context"><a aria-hidden="true" tabindex="-1" href="#5-go-style-value-context"><span class="icon icon-link"></span></a>5. Go-style Value Context</h3>
 <p>stdexec’s environment mechanism naturally supports request-scoped value passing similar to Go’s <code>context.Context</code>. Core mapping:</p>
 <div class="table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch">
 
@@ -372,7 +372,7 @@
 
 
 <table><thead><tr><th>Go context</th><th>stdexec Environment</th></tr></thead><tbody><tr><td><code>context.WithValue(ctx, key, val)</code></td><td><code>write_env(sndr, env{prop{key, val}})</code></td></tr><tr><td><code>ctx.Value(key)</code></td><td><code>read_env(key)</code></td></tr><tr><td>Automatically propagated along call chain</td><td>Automatically propagated downward in pipeline</td></tr><tr><td>Custom key type</td><td>Custom query CPO type</td></tr></tbody></table></div>
-<h4 id="defining-a-query-cpo-analogous-to-gos-context-key">Defining a Query CPO (Analogous to Go’s context key)</h4>
+<h4 id="defining-a-query-cpo-analogous-to-gos-context-key"><a aria-hidden="true" tabindex="-1" href="#defining-a-query-cpo-analogous-to-gos-context-key"><span class="icon icon-link"></span></a>Defining a Query CPO (Analogous to Go’s context key)</h4>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Corresponding test: test_beast_server.cpp</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">struct</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> request_id_t</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> : ex::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">__query</span><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#005CC5;--shiki-dark:#79B8FF">request_id_t</span><span style="color:#24292E;--shiki-dark:#E1E4E8">> {</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  using</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> ex</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">__query</span><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#005CC5;--shiki-dark:#79B8FF">request_id_t</span><span style="color:#24292E;--shiki-dark:#E1E4E8">>::operator();</span></span>
@@ -381,7 +381,7 @@
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  }</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">};</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">inline</span><span style="color:#D73A49;--shiki-dark:#F97583"> constexpr</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> request_id_t</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> request_id{};</span></span></code></pre></div>
-<h4 id="writing-context-analogous-to-go-contextwithvalue">Writing Context (Analogous to Go: context.WithValue)</h4>
+<h4 id="writing-context-analogous-to-go-contextwithvalue"><a aria-hidden="true" tabindex="-1" href="#writing-context-analogous-to-go-contextwithvalue"><span class="icon icon-link"></span></a>Writing Context (Analogous to Go: context.WithValue)</h4>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Corresponding test: test_beast_server.cpp → "value context: write_env injects custom values"</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> ctx_env </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> ex</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::env{</span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">  ex</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::prop{request_id, </span><span style="color:#6F42C1;--shiki-dark:#B392F0">std</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::string{</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"req-42"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">}},</span></span>
@@ -401,13 +401,13 @@
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    }),</span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">  std</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">move</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(ctx_env)</span><span style="color:#6A737D;--shiki-dark:#6A737D">    // Inject environment, analogous to context.WithValue</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">);</span></span></code></pre></div>
-<h4 id="reading-context-analogous-to-go-ctxvalue">Reading Context (Analogous to Go: ctx.Value)</h4>
+<h4 id="reading-context-analogous-to-go-ctxvalue"><a aria-hidden="true" tabindex="-1" href="#reading-context-analogous-to-go-ctxvalue"><span class="icon icon-link"></span></a>Reading Context (Analogous to Go: ctx.Value)</h4>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Corresponding test: test_beast_server.cpp → "value context: propagates through let_value"</span></span>
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Read in let_value/pipeline:</span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">ex</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">let_value</span><span style="color:#24292E;--shiki-dark:#E1E4E8">([](</span><span style="color:#D73A49;--shiki-dark:#F97583">int</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) {</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  return</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> ex</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">read_env</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(request_id);</span><span style="color:#6A737D;--shiki-dark:#6A737D">  // ← analogous to ctx.Value("request_id")</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">})</span></span></code></pre></div>
-<h4 id="nested-overrides">Nested Overrides</h4>
+<h4 id="nested-overrides"><a aria-hidden="true" tabindex="-1" href="#nested-overrides"><span class="icon icon-link"></span></a>Nested Overrides</h4>
 <p>Inner <code>write_env</code> (closest to <code>read_env</code>) overrides outer, analogous to Go’s nearest-write-wins:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">ex</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">write_env</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6A737D;--shiki-dark:#6A737D">                                      // Outer</span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">  ex</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">write_env</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6A737D;--shiki-dark:#6A737D">                                     // Inner</span></span>
@@ -416,7 +416,7 @@
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  ),</span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">  ex</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::env{</span><span style="color:#6F42C1;--shiki-dark:#B392F0">ex</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::prop{request_id, </span><span style="color:#032F62;--shiki-dark:#9ECBFF">"outer-id"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">}}</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">);</span></span></code></pre></div>
-<h4 id="integration-in-beast-server">Integration in Beast Server</h4>
+<h4 id="integration-in-beast-server"><a aria-hidden="true" tabindex="-1" href="#integration-in-beast-server"><span class="icon icon-link"></span></a>Integration in Beast Server</h4>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Inject trace_id / request_id per connection</span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">ex</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">task</span><span style="color:#24292E;--shiki-dark:#E1E4E8">&#x3C;</span><span style="color:#D73A49;--shiki-dark:#F97583">void</span><span style="color:#24292E;--shiki-dark:#E1E4E8">> </span><span style="color:#6F42C1;--shiki-dark:#B392F0">handle_session_with_context</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">beast</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">tcp_stream</span><span style="color:#E36209;--shiki-dark:#FFAB70"> stream</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) {</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> ctx_env </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> ex</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::env{</span></span>
@@ -431,8 +431,8 @@
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">    std</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">move</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(ctx_env)</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  );</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span></code></pre></div>
-<h3 id="6-timeout-and-cancellation">6. Timeout and Cancellation</h3>
-<h4 id="approach-1-cancel-pending-operations-via-socketcancel">Approach 1: Cancel Pending Operations via <code>socket.cancel()</code></h4>
+<h3 id="6-timeout-and-cancellation"><a aria-hidden="true" tabindex="-1" href="#6-timeout-and-cancellation"><span class="icon icon-link"></span></a>6. Timeout and Cancellation</h3>
+<h4 id="approach-1-cancel-pending-operations-via-socketcancel"><a aria-hidden="true" tabindex="-1" href="#approach-1-cancel-pending-operations-via-socketcancel"><span class="icon icon-link"></span></a>Approach 1: Cancel Pending Operations via <code>socket.cancel()</code></h4>
 <p>When an async operation initiated by <code>use_sender</code> is still pending, it can be cancelled via <code>socket.cancel()</code>:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Corresponding test: test_beast_server.cpp → "socket.cancel() stops pending async_read_some"</span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">std</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::array</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;char</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#005CC5;--shiki-dark:#79B8FF">256</span><span style="color:#D73A49;--shiki-dark:#F97583">></span><span style="color:#24292E;--shiki-dark:#E1E4E8"> buf;</span></span>
@@ -448,7 +448,7 @@
 <li><code>use_sender</code> converts the <code>operation_aborted</code> error code to <code>set_error</code></li>
 <li><code>sync_wait</code> converts <code>set_error</code> to an exception, returning <code>nullopt</code> to the caller</li>
 </ul>
-<h4 id="approach-2-timeout-via-inplace_stop_source--steady_timer">Approach 2: Timeout via <code>inplace_stop_source</code> + <code>steady_timer</code></h4>
+<h4 id="approach-2-timeout-via-inplace_stop_source--steady_timer"><a aria-hidden="true" tabindex="-1" href="#approach-2-timeout-via-inplace_stop_source--steady_timer"><span class="icon icon-link"></span></a>Approach 2: Timeout via <code>inplace_stop_source</code> + <code>steady_timer</code></h4>
 <p>Combine <code>asio::steady_timer</code> with <code>inplace_stop_source</code> for timeout-based cancellation:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Corresponding test: test_beast_server.cpp → "socket.cancel() stops pending async_read_some"</span></span>
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Background thread: initiate async read with use_sender</span></span>
@@ -465,7 +465,7 @@
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Drive io_context to process cancellation callback</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">ctx.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">run</span><span style="color:#24292E;--shiki-dark:#E1E4E8">();</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">reader.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">join</span><span style="color:#24292E;--shiki-dark:#E1E4E8">();</span></span></code></pre></div>
-<h4 id="approach-3-inject-stop-token-into-sender-pipeline">Approach 3: Inject Stop Token into Sender Pipeline</h4>
+<h4 id="approach-3-inject-stop-token-into-sender-pipeline"><a aria-hidden="true" tabindex="-1" href="#approach-3-inject-stop-token-into-sender-pipeline"><span class="icon icon-link"></span></a>Approach 3: Inject Stop Token into Sender Pipeline</h4>
 <p>Use <code>write_env</code> to inject an <code>inplace_stop_token</code> into the pipeline environment:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">stdexec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::inplace_stop_source stop_src;</span></span>
 <span class="line"></span>
@@ -476,7 +476,7 @@
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Trigger graceful shutdown from another thread</span></span>
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// stop_src.request_stop();</span></span>
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// ctx.stop();</span></span></code></pre></div>
-<h2 id="tests">Tests</h2>
+<h2 id="tests"><a aria-hidden="true" tabindex="-1" href="#tests"><span class="icon icon-link"></span></a>Tests</h2>
 <p>Complete integration tests can be found in <code>tests/test_beast_server.cpp</code>, covering:</p>
 <ol>
 <li><strong>Connection handling</strong>: start server → send HTTP request → verify JSON response</li>
@@ -484,7 +484,7 @@
 <li><strong>404 handling</strong>: test unknown paths return 404</li>
 <li><strong>Cancellation</strong>: <code>socket.cancel()</code> stops pending async_read_some</li>
 </ol>
-<h2 id="comparison-with-pure-asio">Comparison with Pure ASIO</h2>
+<h2 id="comparison-with-pure-asio"><a aria-hidden="true" tabindex="-1" href="#comparison-with-pure-asio"><span class="icon icon-link"></span></a>Comparison with Pure ASIO</h2>
 <div class="table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch">
 
 
@@ -520,7 +520,7 @@
 
 
 
-<table><thead><tr><th>Aspect</th><th>Pure ASIO</th><th>ASIO + stdexec</th></tr></thead><tbody><tr><td>Composition</td><td>Callback nesting / <code>std::function</code></td><td>Sender pipeline / <code>co_await</code></td></tr><tr><td>Error handling</td><td>Check error_code per callback</td><td><code>upon_error</code> / unified handling</td></tr><tr><td>Cancellation</td><td>Manual propagation</td><td>Stop token mechanism</td></tr><tr><td>Structured concurrency</td><td>Manual connection lifecycle management</td><td><code>async_scope</code> automatic management</td></tr><tr><td>Integration with compute tasks</td><td>Requires extra thread pool</td><td>Switch via <code>continues_on</code></td></tr></tbody></table></div></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/39-third-party-integration/" data-astro-cid-ykvenys5>← 39 · Third-party Framework Integration</a><a href="/exec/tutorials/41-appendix-port-libunifex/" data-astro-cid-ykvenys5>41 · Appendix: Porting libunifex Synchronization Primitives →</a></nav></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
+<table><thead><tr><th>Aspect</th><th>Pure ASIO</th><th>ASIO + stdexec</th></tr></thead><tbody><tr><td>Composition</td><td>Callback nesting / <code>std::function</code></td><td>Sender pipeline / <code>co_await</code></td></tr><tr><td>Error handling</td><td>Check error_code per callback</td><td><code>upon_error</code> / unified handling</td></tr><tr><td>Cancellation</td><td>Manual propagation</td><td>Stop token mechanism</td></tr><tr><td>Structured concurrency</td><td>Manual connection lifecycle management</td><td><code>async_scope</code> automatic management</td></tr><tr><td>Integration with compute tasks</td><td>Requires extra thread pool</td><td>Switch via <code>continues_on</code></td></tr></tbody></table></div></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/39-third-party-integration/" data-astro-cid-ykvenys5>← 39 · Third-party Framework Integration</a><a href="/exec/tutorials/41-appendix-port-libunifex/" data-astro-cid-ykvenys5>41 · Appendix: Porting libunifex Synchronization Primitives →</a></nav></div></div></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
       (function() {
         const STORAGE_KEY = "exectutorial-theme";
 
@@ -553,5 +553,55 @@
           try { localStorage.setItem(STORAGE_KEY, next); } catch(e) {}
           setTheme(next);
         });
+      })();
+    </script><script>
+      (function() {
+        function buildToc(containerId, navId) {
+          var container = document.getElementById(containerId);
+          var nav = document.getElementById(navId);
+          if (!nav) return;
+          var headings = document.querySelectorAll(".article-content h2, .article-content h3");
+          if (headings.length === 0) { if (container) container.style.display = "none"; return; }
+
+          var ul = document.createElement("ul");
+          headings.forEach(function(h) {
+            if (!h.id) return;
+            var li = document.createElement("li");
+            var a = document.createElement("a");
+            a.href = "#" + h.id;
+            a.textContent = h.textContent.replace(/¶$/, "").trim();
+            a.className = "toc-" + h.tagName.toLowerCase();
+            li.appendChild(a);
+            ul.appendChild(li);
+          });
+          nav.appendChild(ul);
+        }
+
+        buildToc("tocSidebar", "tocNav");
+        buildToc(null, "tocNavMobile");
+
+        // active heading highlight
+        var tocLinks = document.querySelectorAll("#tocNav a, #tocNavMobile a");
+        if (tocLinks.length > 0) {
+          var headings = document.querySelectorAll(".article-content h2, .article-content h3");
+          function onScroll() {
+            var scrollY = window.scrollY + 80;
+            var active = null;
+            headings.forEach(function(h) {
+              if (h.offsetTop <= scrollY) active = h;
+            });
+            tocLinks.forEach(function(link) { link.classList.remove("active"); });
+            if (active) {
+              var id = active.id;
+              tocLinks.forEach(function(link) {
+                if (link.getAttribute("href") === "#" + id) {
+                  link.classList.add("active");
+                }
+              });
+            }
+          }
+          window.addEventListener("scroll", onScroll, { passive: true });
+          onScroll();
+        }
       })();
     </script></body></html>

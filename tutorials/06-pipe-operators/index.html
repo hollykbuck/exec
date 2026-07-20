@@ -5,11 +5,11 @@
         if(!s&&matchMedia("(prefers-color-scheme:light)").matches)theme="light";
         document.documentElement.setAttribute("data-theme",theme);
       })();
-    </script><link rel="stylesheet" href="/exec/_astro/01-why-stdexec.hXKgsPrw.css"></head><body data-astro-cid-ykvenys5><div class="container" data-astro-cid-ykvenys5><header data-astro-cid-ykvenys5><div class="title-area" data-astro-cid-ykvenys5><a href="/exec/tutorials/" style="color:var(--fg-muted);text-decoration:none;font-size:0.85rem;" data-astro-cid-ykvenys5>← Back to index</a><h1 data-astro-cid-ykvenys5>06 · Pipe Operators — How operator| Composes Senders</h1></div><button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" data-astro-cid-ykvenys5>🌙</button></header><article class="article-content" data-astro-cid-ykvenys5>
+    </script><link rel="stylesheet" href="/exec/_astro/01-why-stdexec.YzjJ_D8W.css"></head><body data-astro-cid-ykvenys5><div class="layout-wrap" data-astro-cid-ykvenys5><aside class="toc-sidebar" id="tocSidebar" data-astro-cid-ykvenys5><div class="toc-label" data-astro-cid-ykvenys5>On this page</div><nav id="tocNav" data-astro-cid-ykvenys5></nav></aside><div class="layout-main" data-astro-cid-ykvenys5><div class="container" data-astro-cid-ykvenys5><header data-astro-cid-ykvenys5><div class="title-area" data-astro-cid-ykvenys5><a href="/exec/tutorials/" style="color:var(--fg-muted);text-decoration:none;font-size:0.85rem;" data-astro-cid-ykvenys5>← Back to index</a><h1 data-astro-cid-ykvenys5>06 · Pipe Operators — How operator| Composes Senders</h1></div><button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" data-astro-cid-ykvenys5>🌙</button></header><details class="toc-mobile" id="tocMobile" data-astro-cid-ykvenys5><summary data-astro-cid-ykvenys5>On this page</summary><nav id="tocNavMobile" data-astro-cid-ykvenys5></nav></details><article class="article-content" data-astro-cid-ykvenys5>
 <blockquote>
 <p><strong>Related Tests</strong>: <code>tests/test_pipe.cpp</code></p>
 </blockquote>
-<h2 id="the-problem">The Problem</h2>
+<h2 id="the-problem"><a aria-hidden="true" tabindex="-1" href="#the-problem"><span class="icon icon-link"></span></a>The Problem</h2>
 <p>In the previous chapters, you’ve seen <code>just(42) | then(f) | sync_wait</code>. But have you ever wondered: what would the code look like without <code>operator|</code>?</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Nested function call — reads from inside out, counterintuitive</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> r </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> upon_error</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span></span>
@@ -34,7 +34,7 @@
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">       |</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> then</span><span style="color:#24292E;--shiki-dark:#E1E4E8">([](</span><span style="color:#D73A49;--shiki-dark:#F97583">int</span><span style="color:#E36209;--shiki-dark:#FFAB70"> x</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) { </span><span style="color:#D73A49;--shiki-dark:#F97583">return</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> x </span><span style="color:#D73A49;--shiki-dark:#F97583">+</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">; })</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">       |</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> upon_error</span><span style="color:#24292E;--shiki-dark:#E1E4E8">([](</span><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#E36209;--shiki-dark:#FFAB70"> e</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) { </span><span style="color:#D73A49;--shiki-dark:#F97583">return</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">; });</span></span></code></pre></div>
 <p>Now the order you read is the order of execution: schedule first, then handle values, handle cancellation, do computation, handle errors. Same philosophy as Unix pipes — data flows from left to right.</p>
-<h2 id="standard-definition">Standard Definition</h2>
+<h2 id="standard-definition"><a aria-hidden="true" tabindex="-1" href="#standard-definition"><span class="icon icon-link"></span></a>Standard Definition</h2>
 <p>The standard (<code>[exec.adapt.obj]</code>) defines:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Left-associative binary operator</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">sender </span><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#D73A49;--shiki-dark:#F97583"> operator</span><span style="color:#6F42C1;--shiki-dark:#B392F0">|</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">sender</span><span style="color:#D73A49;--shiki-dark:#F97583"> auto</span><span style="color:#E36209;--shiki-dark:#FFAB70"> sndr</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#6F42C1;--shiki-dark:#B392F0">sender_adaptor_closure</span><span style="color:#D73A49;--shiki-dark:#F97583"> auto</span><span style="color:#E36209;--shiki-dark:#FFAB70"> closure</span><span style="color:#24292E;--shiki-dark:#E1E4E8">);</span></span></code></pre></div>
@@ -43,7 +43,7 @@
 <li>Right operand is a <strong>Sender Adaptor Closure object</strong> (an invocable function object)</li>
 <li>Equivalent to <code>closure(sndr)</code> — calling the closure object with the sender</li>
 </ul>
-<h2 id="two-forms-of-sender-adaptors">Two Forms of Sender Adaptors</h2>
+<h2 id="two-forms-of-sender-adaptors"><a aria-hidden="true" tabindex="-1" href="#two-forms-of-sender-adaptors"><span class="icon icon-link"></span></a>Two Forms of Sender Adaptors</h2>
 <p>Most adaptors support two call forms:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Form 1: Function call</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> s1 </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> then</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">schedule</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(sch), f);</span></span>
@@ -73,7 +73,7 @@
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// → then([] { return 42; })(schedule(sch))</span></span>
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// → then(schedule(sch), [] { return 42; })</span></span></code></pre></div>
 <p>In the code above, <code>then(f)</code> returns a closure object that “remembers” <code>f</code>. When <code>operator|</code> passes a Sender to it, the closure combines both and calls the full <code>then(sndr, f)</code>.</p>
-<h2 id="pre-composing-pipelines">Pre-composing Pipelines</h2>
+<h2 id="pre-composing-pipelines"><a aria-hidden="true" tabindex="-1" href="#pre-composing-pipelines"><span class="icon icon-link"></span></a>Pre-composing Pipelines</h2>
 <p>Multiple closure objects can be pre-composed into a composite closure:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Pre-define a set of operations</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> pipeline </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> then</span><span style="color:#24292E;--shiki-dark:#E1E4E8">([](</span><span style="color:#D73A49;--shiki-dark:#F97583">int</span><span style="color:#E36209;--shiki-dark:#FFAB70"> x</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) { </span><span style="color:#D73A49;--shiki-dark:#F97583">return</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> x </span><span style="color:#D73A49;--shiki-dark:#F97583">+</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">; })</span></span>
@@ -84,7 +84,7 @@
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> result </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> sync_wait</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">just</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">41</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) </span><span style="color:#D73A49;--shiki-dark:#F97583">|</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> pipeline);</span></span>
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Equivalent to: sync_wait(upon_error(then(then(just(41), +1), *2), error_handler))</span></span></code></pre></div>
 <p>In the code above, <code>pipeline</code> is a pre-composed closure object. You can store it, pass it around, and reuse it — like defining a “processing chain” that can be applied to any sender at any time.</p>
-<h2 id="consumer-pipe-syntax">Consumer Pipe Syntax</h2>
+<h2 id="consumer-pipe-syntax"><a aria-hidden="true" tabindex="-1" href="#consumer-pipe-syntax"><span class="icon icon-link"></span></a>Consumer Pipe Syntax</h2>
 <p>Sender consumers can also be invoked via pipe syntax:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">just</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">42</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  |</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> then</span><span style="color:#24292E;--shiki-dark:#E1E4E8">([](</span><span style="color:#D73A49;--shiki-dark:#F97583">int</span><span style="color:#E36209;--shiki-dark:#FFAB70"> x</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) { </span><span style="color:#D73A49;--shiki-dark:#F97583">return</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> x </span><span style="color:#D73A49;--shiki-dark:#F97583">+</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">; })</span></span>
@@ -93,14 +93,14 @@
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Equivalent to</span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">sync_wait</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">just</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">42</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) </span><span style="color:#D73A49;--shiki-dark:#F97583">|</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> then</span><span style="color:#24292E;--shiki-dark:#E1E4E8">([](</span><span style="color:#D73A49;--shiki-dark:#F97583">int</span><span style="color:#E36209;--shiki-dark:#FFAB70"> x</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) { </span><span style="color:#D73A49;--shiki-dark:#F97583">return</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> x </span><span style="color:#D73A49;--shiki-dark:#F97583">+</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">; }));</span></span></code></pre></div>
 <p>In the code above, <code>sync_wait</code> sits at the end of the pipeline, consuming the final sender and returning the result.</p>
-<h2 id="why-pipe-operators">Why Pipe Operators?</h2>
+<h2 id="why-pipe-operators"><a aria-hidden="true" tabindex="-1" href="#why-pipe-operators"><span class="icon icon-link"></span></a>Why Pipe Operators?</h2>
 <p>The Ranges library was the first to introduce <code>operator|</code> for range adaptors in C++20. C++26 std::execution follows the same design:</p>
 <ol>
 <li><strong>Readability</strong>: linear left-to-right reading, matches how we think</li>
 <li><strong>Composability</strong>: closure objects can be stored, passed around, and pre-composed</li>
 <li><strong>Consistency</strong>: consistent pipe style with the Ranges library</li>
 <li><strong>Laziness</strong>: closure objects do no work, they only build the pipeline</li>
-</ol></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/05-thread-pools/" data-astro-cid-ykvenys5>← 05 · Thread Pools and Execution Contexts</a><a href="/exec/tutorials/07-coroutines/" data-astro-cid-ykvenys5>07 · Coroutine Integration — co_await sender in task&lt;T&gt; →</a></nav></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
+</ol></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/05-thread-pools/" data-astro-cid-ykvenys5>← 05 · Thread Pools and Execution Contexts</a><a href="/exec/tutorials/07-coroutines/" data-astro-cid-ykvenys5>07 · Coroutine Integration — co_await sender in task&lt;T&gt; →</a></nav></div></div></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
       (function() {
         const STORAGE_KEY = "exectutorial-theme";
 
@@ -133,5 +133,55 @@
           try { localStorage.setItem(STORAGE_KEY, next); } catch(e) {}
           setTheme(next);
         });
+      })();
+    </script><script>
+      (function() {
+        function buildToc(containerId, navId) {
+          var container = document.getElementById(containerId);
+          var nav = document.getElementById(navId);
+          if (!nav) return;
+          var headings = document.querySelectorAll(".article-content h2, .article-content h3");
+          if (headings.length === 0) { if (container) container.style.display = "none"; return; }
+
+          var ul = document.createElement("ul");
+          headings.forEach(function(h) {
+            if (!h.id) return;
+            var li = document.createElement("li");
+            var a = document.createElement("a");
+            a.href = "#" + h.id;
+            a.textContent = h.textContent.replace(/¶$/, "").trim();
+            a.className = "toc-" + h.tagName.toLowerCase();
+            li.appendChild(a);
+            ul.appendChild(li);
+          });
+          nav.appendChild(ul);
+        }
+
+        buildToc("tocSidebar", "tocNav");
+        buildToc(null, "tocNavMobile");
+
+        // active heading highlight
+        var tocLinks = document.querySelectorAll("#tocNav a, #tocNavMobile a");
+        if (tocLinks.length > 0) {
+          var headings = document.querySelectorAll(".article-content h2, .article-content h3");
+          function onScroll() {
+            var scrollY = window.scrollY + 80;
+            var active = null;
+            headings.forEach(function(h) {
+              if (h.offsetTop <= scrollY) active = h;
+            });
+            tocLinks.forEach(function(link) { link.classList.remove("active"); });
+            if (active) {
+              var id = active.id;
+              tocLinks.forEach(function(link) {
+                if (link.getAttribute("href") === "#" + id) {
+                  link.classList.add("active");
+                }
+              });
+            }
+          }
+          window.addEventListener("scroll", onScroll, { passive: true });
+          onScroll();
+        }
       })();
     </script></body></html>

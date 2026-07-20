@@ -5,13 +5,13 @@
         if(!s&&matchMedia("(prefers-color-scheme:light)").matches)theme="light";
         document.documentElement.setAttribute("data-theme",theme);
       })();
-    </script><link rel="stylesheet" href="/exec/_astro/01-why-stdexec.hXKgsPrw.css"></head><body data-astro-cid-ykvenys5><div class="container" data-astro-cid-ykvenys5><header data-astro-cid-ykvenys5><div class="title-area" data-astro-cid-ykvenys5><a href="/exec/tutorials/" style="color:var(--fg-muted);text-decoration:none;font-size:0.85rem;" data-astro-cid-ykvenys5>← Back to index</a><h1 data-astro-cid-ykvenys5>20 · bulk — Data Parallel Operations</h1></div><button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" data-astro-cid-ykvenys5>🌙</button></header><article class="article-content" data-astro-cid-ykvenys5>
-<h2 id="the-bottleneck-of-for-loops">The Bottleneck of for Loops</h2>
+    </script><link rel="stylesheet" href="/exec/_astro/01-why-stdexec.YzjJ_D8W.css"></head><body data-astro-cid-ykvenys5><div class="layout-wrap" data-astro-cid-ykvenys5><aside class="toc-sidebar" id="tocSidebar" data-astro-cid-ykvenys5><div class="toc-label" data-astro-cid-ykvenys5>On this page</div><nav id="tocNav" data-astro-cid-ykvenys5></nav></aside><div class="layout-main" data-astro-cid-ykvenys5><div class="container" data-astro-cid-ykvenys5><header data-astro-cid-ykvenys5><div class="title-area" data-astro-cid-ykvenys5><a href="/exec/tutorials/" style="color:var(--fg-muted);text-decoration:none;font-size:0.85rem;" data-astro-cid-ykvenys5>← Back to index</a><h1 data-astro-cid-ykvenys5>20 · bulk — Data Parallel Operations</h1></div><button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" data-astro-cid-ykvenys5>🌙</button></header><details class="toc-mobile" id="tocMobile" data-astro-cid-ykvenys5><summary data-astro-cid-ykvenys5>On this page</summary><nav id="tocNavMobile" data-astro-cid-ykvenys5></nav></details><article class="article-content" data-astro-cid-ykvenys5>
+<h2 id="the-bottleneck-of-for-loops"><a aria-hidden="true" tabindex="-1" href="#the-bottleneck-of-for-loops"><span class="icon icon-link"></span></a>The Bottleneck of for Loops</h2>
 <p>When you process a million elements with a <code>for</code> loop on a single thread, every other CPU core sits idle.
 A <code>for</code> loop is sequential — element 1 must finish before element 2 starts.</p>
 <p><code>bulk</code> takes a completely different approach: it hands N independent operations to the scheduler <strong>all at once</strong>, letting the scheduler decide how to distribute them across multiple threads (or even thousands of GPU cores) for parallel execution.</p>
 <p>If the underlying scheduler has only one thread, <code>bulk</code> degrades to a sequential for loop. On a GPU scheduler, it becomes a CUDA kernel running on thousands of cores in parallel.</p>
-<h2 id="basic-syntax">Basic Syntax</h2>
+<h2 id="basic-syntax"><a aria-hidden="true" tabindex="-1" href="#basic-syntax"><span class="icon icon-link"></span></a>Basic Syntax</h2>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">namespace</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> std</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::</span><span style="color:#6F42C1;--shiki-dark:#B392F0">execution</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  inline</span><span style="color:#D73A49;--shiki-dark:#F97583"> constexpr</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> bulk_t</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> bulk{};</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  inline</span><span style="color:#D73A49;--shiki-dark:#F97583"> constexpr</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> bulk_chunked_t</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> bulk_chunked{};</span></span>
@@ -22,7 +22,7 @@ A <code>for</code> loop is sequential — element 1 must finish before element 2
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// shape: size of the parallel index space</span></span>
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// f: callback, signature invocable(Idx, Ts...) → void</span></span>
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// For each idx ∈ [0, shape), calls f(idx, upstream values...)</span></span></code></pre></div>
-<h2 id="basic-usage">Basic Usage</h2>
+<h2 id="basic-usage"><a aria-hidden="true" tabindex="-1" href="#basic-usage"><span class="icon icon-link"></span></a>Basic Usage</h2>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">auto</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> result </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> sync_wait</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">  just</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">100</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    |</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> bulk</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">10</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, [](</span><span style="color:#D73A49;--shiki-dark:#F97583">int</span><span style="color:#E36209;--shiki-dark:#FFAB70"> idx</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#D73A49;--shiki-dark:#F97583">int&#x26;</span><span style="color:#E36209;--shiki-dark:#FFAB70"> total</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) {</span></span>
@@ -32,7 +32,7 @@ A <code>for</code> loop is sequential — element 1 must finish before element 2
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">      })</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">);</span></span></code></pre></div>
 <p>The code above: <code>just(100)</code> produces the value 100, and <code>bulk(10, ...)</code> passes it to 10 parallel callbacks. Each callback sees the same <code>total = 100</code> (hence <code>int&#x26;</code> — passed by reference), but a different <code>idx</code>.</p>
-<h2 id="bulk-vs-for"><code>bulk</code> vs <code>for</code></h2>
+<h2 id="bulk-vs-for"><a aria-hidden="true" tabindex="-1" href="#bulk-vs-for"><span class="icon icon-link"></span></a><code>bulk</code> vs <code>for</code></h2>
 <div class="table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch">
 
 
@@ -55,19 +55,19 @@ A <code>for</code> loop is sequential — element 1 must finish before element 2
 
 
 <table><thead><tr><th><code>for</code> loop</th><th><code>bulk</code></th></tr></thead><tbody><tr><td>Single thread, sequential; index order guaranteed</td><td>Multi-thread/multi-core parallel; index execution order <strong>not guaranteed</strong></td></tr><tr><td>Operates on data directly</td><td>Data flows through sender pipeline</td></tr><tr><td>Callbacks share variables directly</td><td>Shared data requires external synchronization (atomics, locks)</td></tr></tbody></table></div>
-<h2 id="execution-semantics">Execution Semantics</h2>
+<h2 id="execution-semantics"><a aria-hidden="true" tabindex="-1" href="#execution-semantics"><span class="icon icon-link"></span></a>Execution Semantics</h2>
 <pre class="mermaid">graph LR
   A["Input: set_value(Ts...)"] --> B["For each idx ∈ [0, shape)"]
   B --> C["Execute f(idx, Ts...)&#x3C;br/>may be parallel on&#x3C;br/>different execution agents"]
   C --> D["Output: set_value(Ts...)&#x3C;br/>input values pass through unchanged"]</pre>
-<h3 id="key-properties">Key Properties</h3>
+<h3 id="key-properties"><a aria-hidden="true" tabindex="-1" href="#key-properties"><span class="icon icon-link"></span></a>Key Properties</h3>
 <ul>
 <li><code>shape</code> defines the parallel index space <code>[0, shape)</code></li>
 <li><code>f</code> is called once per index, calls may run on <strong>different execution agents</strong></li>
 <li><code>f</code> receives the index and upstream values (as references)</li>
 <li>Side effects of <code>f</code> (writing shared data) require external synchronization</li>
 </ul>
-<h2 id="parallel-sum-example">Parallel Sum Example</h2>
+<h2 id="parallel-sum-example"><a aria-hidden="true" tabindex="-1" href="#parallel-sum-example"><span class="icon icon-link"></span></a>Parallel Sum Example</h2>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">std</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::vector</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;int></span><span style="color:#24292E;--shiki-dark:#E1E4E8"> data </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span><span style="color:#005CC5;--shiki-dark:#79B8FF">1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#005CC5;--shiki-dark:#79B8FF">2</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#005CC5;--shiki-dark:#79B8FF">3</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#005CC5;--shiki-dark:#79B8FF">4</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#005CC5;--shiki-dark:#79B8FF">5</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#005CC5;--shiki-dark:#79B8FF">6</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#005CC5;--shiki-dark:#79B8FF">7</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#005CC5;--shiki-dark:#79B8FF">8</span><span style="color:#24292E;--shiki-dark:#E1E4E8">};</span></span>
 <span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">std</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::atomic</span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;int></span><span style="color:#24292E;--shiki-dark:#E1E4E8"> sum{</span><span style="color:#005CC5;--shiki-dark:#79B8FF">0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">};</span></span>
 <span class="line"></span>
@@ -79,7 +79,7 @@ A <code>for</code> loop is sequential — element 1 must finish before element 2
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">);</span></span>
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// sum = 36</span></span></code></pre></div>
 <p>The code above: <code>data</code> has 8 elements, <code>bulk</code> spawns 8 parallel callbacks. Each callback reads <code>data[idx]</code> and atomically adds it to <code>sum</code>. Note the <code>std::atomic</code> — a plain <code>int</code> with concurrent writes is undefined behavior.</p>
-<h2 id="bulk_chunked-and-bulk_unchunked"><code>bulk_chunked</code> and <code>bulk_unchunked</code></h2>
+<h2 id="bulk_chunked-and-bulk_unchunked"><a aria-hidden="true" tabindex="-1" href="#bulk_chunked-and-bulk_unchunked"><span class="icon icon-link"></span></a><code>bulk_chunked</code> and <code>bulk_unchunked</code></h2>
 <p>The standard provides three variants:</p>
 <div class="table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch">
 
@@ -103,7 +103,7 @@ A <code>for</code> loop is sequential — element 1 must finish before element 2
 
 
 <table><thead><tr><th>Variant</th><th>Behavior</th></tr></thead><tbody><tr><td><code>bulk</code></td><td>Default; scheduler decides whether to chunk</td></tr><tr><td><code>bulk_chunked</code></td><td>Guarantees chunking (index range split into contiguous chunks, one chunk per execution agent)</td></tr><tr><td><code>bulk_unchunked</code></td><td>Guarantees no chunking (one execution agent per index)</td></tr></tbody></table></div>
-<h2 id="bulk-on-gpu">Bulk on GPU</h2>
+<h2 id="bulk-on-gpu"><a aria-hidden="true" tabindex="-1" href="#bulk-on-gpu"><span class="icon icon-link"></span></a>Bulk on GPU</h2>
 <p><code>nvexec</code> (NVIDIA’s GPU backend) provides a GPU implementation of bulk:</p>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">nvexec</span><span style="color:#24292E;--shiki-dark:#E1E4E8">::stream_scheduler gpu_sch{};</span></span>
 <span class="line"></span>
@@ -114,14 +114,14 @@ A <code>for</code> loop is sequential — element 1 must finish before element 2
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">      })</span></span>
 <span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">);</span></span></code></pre></div>
 <p>The code above processes 1024 elements on the GPU with 1024 CUDA threads, each thread handling one index.</p>
-<h2 id="completion-signatures">Completion Signatures</h2>
+<h2 id="completion-signatures"><a aria-hidden="true" tabindex="-1" href="#completion-signatures"><span class="icon icon-link"></span></a>Completion Signatures</h2>
 <div class="code-block-wrap"><span class="code-lang">cpp</span><pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="cpp"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// bulk's completion signature = input sender's completion signature (passthrough)</span></span>
 <span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">decltype</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">just</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">42</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) </span><span style="color:#D73A49;--shiki-dark:#F97583">|</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> bulk</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">10</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, [](</span><span style="color:#D73A49;--shiki-dark:#F97583">int</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#D73A49;--shiki-dark:#F97583">int&#x26;</span><span style="color:#24292E;--shiki-dark:#E1E4E8">){}))</span></span>
 <span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Completion signature: completion_signatures&#x3C;set_value_t(int)></span></span></code></pre></div>
-<h2 id="limitations">Limitations</h2>
+<h2 id="limitations"><a aria-hidden="true" tabindex="-1" href="#limitations"><span class="icon icon-link"></span></a>Limitations</h2>
 <p>There is <strong>no guaranteed execution order</strong> between index callbacks — index 9 may finish before index 1. Callbacks must not have data dependencies on each other (e.g., using <code>bulk</code> for a prefix sum is incorrect).</p>
 <p>Shared data requires external synchronization (atomics, mutexes, or scheduler-provided sync primitives). If you need sequential “each step depends on the previous” semantics, use a traditional <code>then</code> chain instead of <code>bulk</code>.</p>
-<p>Also, <code>bulk</code> callbacks can only return <code>void</code> — it’s designed for side-effect operations. You cannot pass per-index computation results downstream; collect them yourself in a shared container inside the callback.</p></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/19-when-all/" data-astro-cid-ykvenys5>← 19 · when_all — Waiting for Multiple Senders in Parallel</a><a href="/exec/tutorials/21-into-variant/" data-astro-cid-ykvenys5>21 · into_variant / stopped_as_optional / stopped_as_error — Type Erasure and Signal Conversion →</a></nav></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
+<p>Also, <code>bulk</code> callbacks can only return <code>void</code> — it’s designed for side-effect operations. You cannot pass per-index computation results downstream; collect them yourself in a shared container inside the callback.</p></article><nav class="nav-links" data-astro-cid-ykvenys5><a href="/exec/tutorials/19-when-all/" data-astro-cid-ykvenys5>← 19 · when_all — Waiting for Multiple Senders in Parallel</a><a href="/exec/tutorials/21-into-variant/" data-astro-cid-ykvenys5>21 · into_variant / stopped_as_optional / stopped_as_error — Type Erasure and Signal Conversion →</a></nav></div></div></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
       (function() {
         const STORAGE_KEY = "exectutorial-theme";
 
@@ -154,5 +154,55 @@ A <code>for</code> loop is sequential — element 1 must finish before element 2
           try { localStorage.setItem(STORAGE_KEY, next); } catch(e) {}
           setTheme(next);
         });
+      })();
+    </script><script>
+      (function() {
+        function buildToc(containerId, navId) {
+          var container = document.getElementById(containerId);
+          var nav = document.getElementById(navId);
+          if (!nav) return;
+          var headings = document.querySelectorAll(".article-content h2, .article-content h3");
+          if (headings.length === 0) { if (container) container.style.display = "none"; return; }
+
+          var ul = document.createElement("ul");
+          headings.forEach(function(h) {
+            if (!h.id) return;
+            var li = document.createElement("li");
+            var a = document.createElement("a");
+            a.href = "#" + h.id;
+            a.textContent = h.textContent.replace(/¶$/, "").trim();
+            a.className = "toc-" + h.tagName.toLowerCase();
+            li.appendChild(a);
+            ul.appendChild(li);
+          });
+          nav.appendChild(ul);
+        }
+
+        buildToc("tocSidebar", "tocNav");
+        buildToc(null, "tocNavMobile");
+
+        // active heading highlight
+        var tocLinks = document.querySelectorAll("#tocNav a, #tocNavMobile a");
+        if (tocLinks.length > 0) {
+          var headings = document.querySelectorAll(".article-content h2, .article-content h3");
+          function onScroll() {
+            var scrollY = window.scrollY + 80;
+            var active = null;
+            headings.forEach(function(h) {
+              if (h.offsetTop <= scrollY) active = h;
+            });
+            tocLinks.forEach(function(link) { link.classList.remove("active"); });
+            if (active) {
+              var id = active.id;
+              tocLinks.forEach(function(link) {
+                if (link.getAttribute("href") === "#" + id) {
+                  link.classList.add("active");
+                }
+              });
+            }
+          }
+          window.addEventListener("scroll", onScroll, { passive: true });
+          onScroll();
+        }
       })();
     </script></body></html>

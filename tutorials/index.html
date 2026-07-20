@@ -5,13 +5,13 @@
         if(!s&&matchMedia("(prefers-color-scheme:light)").matches)theme="light";
         document.documentElement.setAttribute("data-theme",theme);
       })();
-    </script><link rel="stylesheet" href="/exec/_astro/01-why-stdexec.hXKgsPrw.css"></head><body data-astro-cid-ykvenys5><div class="container" data-astro-cid-ykvenys5><header data-astro-cid-ykvenys5><div class="title-area" data-astro-cid-ykvenys5><a href="/exec/tutorials/" style="color:var(--fg-muted);text-decoration:none;font-size:0.85rem;" data-astro-cid-ykvenys5>← Back to index</a><h1 data-astro-cid-ykvenys5>C++26 std::execution Tutorial Series</h1></div><button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" data-astro-cid-ykvenys5>🌙</button></header><article class="article-content" data-astro-cid-ykvenys5>
+    </script><link rel="stylesheet" href="/exec/_astro/01-why-stdexec.YzjJ_D8W.css"></head><body data-astro-cid-ykvenys5><div class="layout-wrap" data-astro-cid-ykvenys5><aside class="toc-sidebar" id="tocSidebar" data-astro-cid-ykvenys5><div class="toc-label" data-astro-cid-ykvenys5>On this page</div><nav id="tocNav" data-astro-cid-ykvenys5></nav></aside><div class="layout-main" data-astro-cid-ykvenys5><div class="container" data-astro-cid-ykvenys5><header data-astro-cid-ykvenys5><div class="title-area" data-astro-cid-ykvenys5><a href="/exec/tutorials/" style="color:var(--fg-muted);text-decoration:none;font-size:0.85rem;" data-astro-cid-ykvenys5>← Back to index</a><h1 data-astro-cid-ykvenys5>C++26 std::execution Tutorial Series</h1></div><button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" data-astro-cid-ykvenys5>🌙</button></header><details class="toc-mobile" id="tocMobile" data-astro-cid-ykvenys5><summary data-astro-cid-ykvenys5>On this page</summary><nav id="tocNavMobile" data-astro-cid-ykvenys5></nav></details><article class="article-content" data-astro-cid-ykvenys5>
 <p>A systematic introduction to the C++26 std::execution Sender/Receiver model from scratch.</p>
 <p>It is recommended to read in order, but you can jump to topics of interest if you are already familiar with some concepts.</p>
 <p>Each chapter has runnable test code at <a href="https://github.com/hollykbuck/execcode/">https://github.com/hollykbuck/execcode/</a>. I use GitHub Actions to verify every test compiles and passes on Windows, Linux, and macOS. Don’t tell me this code doesn’t work on my machine :), it works on Microsoft’s machine.</p>
 <p>Feel free to send feedback, suggestions, and discussion to <a href="https://github.com/hollykbuck/exec/discussions">https://github.com/hollykbuck/exec/discussions</a>! Email is also welcome at slam_prance536#simplelogin.com.</p>
-<h2 id="table-of-contents">Table of Contents</h2>
-<h3 id="phase-1-motivation-and-core-concepts">Phase 1: Motivation and Core Concepts</h3>
+<h2 id="table-of-contents"><a aria-hidden="true" tabindex="-1" href="#table-of-contents"><span class="icon icon-link"></span></a>Table of Contents</h2>
+<h3 id="phase-1-motivation-and-core-concepts"><a aria-hidden="true" tabindex="-1" href="#phase-1-motivation-and-core-concepts"><span class="icon icon-link"></span></a>Phase 1: Motivation and Core Concepts</h3>
 <div class="table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch">
 
 
@@ -38,7 +38,7 @@
 
 
 <table><thead><tr><th>#</th><th>Topic</th></tr></thead><tbody><tr><td><a href="/exec/tutorials/01-why-stdexec/">01</a></td><td>Why std::execution?</td></tr><tr><td><a href="/exec/tutorials/02-core-abstractions/">02</a></td><td>Three Core Abstractions — receiver / sender / scheduler</td></tr><tr><td><a href="/exec/tutorials/03-completion-signals/">03</a></td><td>Three Completion Signals — set_value / set_error / set_stopped</td></tr><tr><td><a href="/exec/tutorials/03b-async-operations/">03b</a></td><td>Formal Model of Asynchronous Operations</td></tr></tbody></table></div>
-<h3 id="phase-2-getting-started-with-stdexec">Phase 2: Getting Started with stdexec</h3>
+<h3 id="phase-2-getting-started-with-stdexec"><a aria-hidden="true" tabindex="-1" href="#phase-2-getting-started-with-stdexec"><span class="icon icon-link"></span></a>Phase 2: Getting Started with stdexec</h3>
 <div class="table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch">
 
 
@@ -77,7 +77,7 @@
 
 
 <table><thead><tr><th>#</th><th>Topic</th></tr></thead><tbody><tr><td><a href="/exec/tutorials/04-hello-world-pipeline/">04</a></td><td>Hello World Pipeline — schedule | then | sync_wait</td></tr><tr><td><a href="/exec/tutorials/05-thread-pools/">05</a></td><td>Thread Pools and Execution Contexts</td></tr><tr><td><a href="/exec/tutorials/06-pipe-operators/">06</a></td><td>Pipe Operators — operator|</td></tr><tr><td><a href="/exec/tutorials/07-coroutines/">07</a></td><td>Coroutine Integration — co_await sender in task&#x3C;T></td></tr><tr><td><a href="/exec/tutorials/07b-as-awaitable/">07b</a></td><td>as_awaitable and with_awaitable_senders — How co_await Works</td></tr><tr><td><a href="/exec/tutorials/07c-task-internals/">07c</a></td><td>task&#x3C;T> Internals and task_scheduler</td></tr><tr><td><a href="/exec/tutorials/07d-affine/">07d</a></td><td>affine — Completing on the Receiver’s Scheduler</td></tr></tbody></table></div>
-<h3 id="phase-3-in-depth-standard-concepts">Phase 3: In-Depth Standard Concepts</h3>
+<h3 id="phase-3-in-depth-standard-concepts"><a aria-hidden="true" tabindex="-1" href="#phase-3-in-depth-standard-concepts"><span class="icon icon-link"></span></a>Phase 3: In-Depth Standard Concepts</h3>
 <div class="table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch">
 
 
@@ -112,7 +112,7 @@
 
 
 <table><thead><tr><th>#</th><th>Topic</th></tr></thead><tbody><tr><td><a href="/exec/tutorials/08-receiver-concept/">08</a></td><td>Receiver Concept</td></tr><tr><td><a href="/exec/tutorials/09-sender-concept/">09</a></td><td>Sender Concept</td></tr><tr><td><a href="/exec/tutorials/10-scheduler-concept/">10</a></td><td>Scheduler Concept</td></tr><tr><td><a href="/exec/tutorials/11-operation-state/">11</a></td><td>Operation State Lifecycle</td></tr><tr><td><a href="/exec/tutorials/12-completion-signatures/">12</a></td><td>Completion Signatures</td></tr><tr><td><a href="/exec/tutorials/12b-completion-sig-metaprog/">12b</a></td><td>Completion Signature Metaprogramming</td></tr></tbody></table></div>
-<h3 id="phase-4-sender-algorithms">Phase 4: Sender Algorithms</h3>
+<h3 id="phase-4-sender-algorithms"><a aria-hidden="true" tabindex="-1" href="#phase-4-sender-algorithms"><span class="icon icon-link"></span></a>Phase 4: Sender Algorithms</h3>
 <div class="table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch">
 
 
@@ -175,7 +175,7 @@
 
 
 <table><thead><tr><th>#</th><th>Topic</th></tr></thead><tbody><tr><td><a href="/exec/tutorials/13-sender-factory-just/">13</a></td><td>Sender Factories: just / just_error / just_stopped</td></tr><tr><td><a href="/exec/tutorials/14-read-env/">14</a></td><td>read_env</td></tr><tr><td><a href="/exec/tutorials/15-schedule/">15</a></td><td>schedule</td></tr><tr><td><a href="/exec/tutorials/16-then-upon/">16</a></td><td>then / upon_error / upon_stopped</td></tr><tr><td><a href="/exec/tutorials/17-let-value/">17</a></td><td>let_value / let_error / let_stopped</td></tr><tr><td><a href="/exec/tutorials/18-starts-on-continues-on/">18</a></td><td>starts_on / continues_on / on</td></tr><tr><td><a href="/exec/tutorials/18b-schedule-from/">18b</a></td><td>schedule_from and Scheduler Transition Internals</td></tr><tr><td><a href="/exec/tutorials/19-when-all/">19</a></td><td>when_all</td></tr><tr><td><a href="/exec/tutorials/20-bulk/">20</a></td><td>bulk</td></tr><tr><td><a href="/exec/tutorials/21-into-variant/">21</a></td><td>into_variant / stopped_as_optional / stopped_as_error</td></tr><tr><td><a href="/exec/tutorials/22-sync-wait/">22</a></td><td>sync_wait / sync_wait_with_variant</td></tr><tr><td><a href="/exec/tutorials/23-spawn-ensure-started/">23</a></td><td>spawn / ensure_started</td></tr><tr><td><a href="/exec/tutorials/24-write-env-unstoppable/">24</a></td><td>write_env / unstoppable</td></tr></tbody></table></div>
-<h3 id="phase-5-advanced-topics">Phase 5: Advanced Topics</h3>
+<h3 id="phase-5-advanced-topics"><a aria-hidden="true" tabindex="-1" href="#phase-5-advanced-topics"><span class="icon icon-link"></span></a>Phase 5: Advanced Topics</h3>
 <div class="table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch">
 
 
@@ -222,7 +222,7 @@
 
 
 <table><thead><tr><th>#</th><th>Topic</th></tr></thead><tbody><tr><td><a href="/exec/tutorials/25-query-system-env/">25</a></td><td>Query System and Environment</td></tr><tr><td><a href="/exec/tutorials/25b-env-composition/">25b</a></td><td>Environment Composition and Query Forwarding</td></tr><tr><td><a href="/exec/tutorials/26-domain-mechanism/">26</a></td><td>Domain Mechanism</td></tr><tr><td><a href="/exec/tutorials/26b-apply-sender/">26b</a></td><td>apply_sender — The Domain Hook Consumers Use</td></tr><tr><td><a href="/exec/tutorials/27-tag-invoke-cpo/">27</a></td><td>tag_invoke and CPOs</td></tr><tr><td><a href="/exec/tutorials/28-stop-token-cancellation/">28</a></td><td>Stop Tokens and Cancellation</td></tr><tr><td><a href="/exec/tutorials/29-structured-concurrency/">29</a></td><td>Structured Concurrency — async_scope</td></tr><tr><td><a href="/exec/tutorials/30-run-loop/">30</a></td><td>run_loop</td></tr><tr><td><a href="/exec/tutorials/31-parallel-scheduler/">31</a></td><td>parallel_scheduler</td></tr></tbody></table></div>
-<h3 id="phase-6-hands-on-implementation">Phase 6: Hands-On Implementation</h3>
+<h3 id="phase-6-hands-on-implementation"><a aria-hidden="true" tabindex="-1" href="#phase-6-hands-on-implementation"><span class="icon icon-link"></span></a>Phase 6: Hands-On Implementation</h3>
 <div class="table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch">
 
 
@@ -249,7 +249,7 @@
 
 
 <table><thead><tr><th>#</th><th>Topic</th></tr></thead><tbody><tr><td><a href="/exec/tutorials/32-implement-then/">32</a></td><td>Implementing then from Scratch</td></tr><tr><td><a href="/exec/tutorials/33-implement-retry/">33</a></td><td>Implementing retry from Scratch</td></tr><tr><td><a href="/exec/tutorials/34-custom-scheduler/">34</a></td><td>Writing a Custom Scheduler</td></tr><tr><td><a href="/exec/tutorials/35-impls-for/">35</a></td><td>Using the impls-for System</td></tr></tbody></table></div>
-<h3 id="phase-7-backends-and-ecosystem">Phase 7: Backends and Ecosystem</h3>
+<h3 id="phase-7-backends-and-ecosystem"><a aria-hidden="true" tabindex="-1" href="#phase-7-backends-and-ecosystem"><span class="icon icon-link"></span></a>Phase 7: Backends and Ecosystem</h3>
 <div class="table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch">
 
 
@@ -285,7 +285,7 @@
 | # | Topic | Source |
 |--|-------|--------|
 | [41](41-appendix-port-libunifex.md) | **Appendix: Porting libunifex Synchronization Primitives** — async_mutex(v1/v2) / async_manual_reset_event / async_pass | `libunifex` → `stdexec` | -->
-<h2 id="reference">Reference</h2>
+<h2 id="reference"><a aria-hidden="true" tabindex="-1" href="#reference"><span class="icon icon-link"></span></a>Reference</h2>
 <p>Other people’s excellent work:</p>
 <p><a href="https://github.com/Caturra000/uring_exec">Caturra000/uring_exec</a> — The author wrote an insightful article explaining how they adapted stdexec for io_uring.</p>
 <p>Status quo:</p>
@@ -295,7 +295,7 @@
 <span class="line"><span>git clone https://github.com/hollykbuck/stdexec.git</span></span>
 <span class="line"><span># optional: git checkout 086ccb28f85dcd7103247b6b56db540083e3a556</span></span>
 <span class="line"><span>cd stdexec</span></span>
-<span class="line"><span>conan export .</span></span></code></pre></article><nav class="nav-links" data-astro-cid-ykvenys5><span class="disabled" data-astro-cid-ykvenys5>← Previous</span><a href="/exec/tutorials/01-why-stdexec/" data-astro-cid-ykvenys5>01 · Why std::execution? →</a></nav></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
+<span class="line"><span>conan export .</span></span></code></pre></article><nav class="nav-links" data-astro-cid-ykvenys5><span class="disabled" data-astro-cid-ykvenys5>← Previous</span><a href="/exec/tutorials/01-why-stdexec/" data-astro-cid-ykvenys5>01 · Why std::execution? →</a></nav></div></div></div><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script>
       (function() {
         const STORAGE_KEY = "exectutorial-theme";
 
@@ -328,5 +328,55 @@
           try { localStorage.setItem(STORAGE_KEY, next); } catch(e) {}
           setTheme(next);
         });
+      })();
+    </script><script>
+      (function() {
+        function buildToc(containerId, navId) {
+          var container = document.getElementById(containerId);
+          var nav = document.getElementById(navId);
+          if (!nav) return;
+          var headings = document.querySelectorAll(".article-content h2, .article-content h3");
+          if (headings.length === 0) { if (container) container.style.display = "none"; return; }
+
+          var ul = document.createElement("ul");
+          headings.forEach(function(h) {
+            if (!h.id) return;
+            var li = document.createElement("li");
+            var a = document.createElement("a");
+            a.href = "#" + h.id;
+            a.textContent = h.textContent.replace(/¶$/, "").trim();
+            a.className = "toc-" + h.tagName.toLowerCase();
+            li.appendChild(a);
+            ul.appendChild(li);
+          });
+          nav.appendChild(ul);
+        }
+
+        buildToc("tocSidebar", "tocNav");
+        buildToc(null, "tocNavMobile");
+
+        // active heading highlight
+        var tocLinks = document.querySelectorAll("#tocNav a, #tocNavMobile a");
+        if (tocLinks.length > 0) {
+          var headings = document.querySelectorAll(".article-content h2, .article-content h3");
+          function onScroll() {
+            var scrollY = window.scrollY + 80;
+            var active = null;
+            headings.forEach(function(h) {
+              if (h.offsetTop <= scrollY) active = h;
+            });
+            tocLinks.forEach(function(link) { link.classList.remove("active"); });
+            if (active) {
+              var id = active.id;
+              tocLinks.forEach(function(link) {
+                if (link.getAttribute("href") === "#" + id) {
+                  link.classList.add("active");
+                }
+              });
+            }
+          }
+          window.addEventListener("scroll", onScroll, { passive: true });
+          onScroll();
+        }
       })();
     </script></body></html>
